@@ -28,9 +28,31 @@ void fooo()
    //MAGIC_CHECK((_3m | child<0, 0>), 3.0);
 }
 
+struct Tr
+{
+    Tr() { std::puts("Tr();"); };
+    Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
+    Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
+    Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
+    Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
+    ~Tr()noexcept { std::puts("~Tr();"); }
+};
+
 int main()
 {
     fooo();
+
+    constexpr auto layout = std::array
+    {
+        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
+    };
+
+    std::array vector{ Tr{}, Tr{} };
+
+    std::puts("==================");
+    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    std::puts("==================");
+
     /*{
         using vec = std::array<int, 2>;
         using mat = std::array<vec, 2>;
