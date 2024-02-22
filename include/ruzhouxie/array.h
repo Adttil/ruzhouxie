@@ -12,7 +12,7 @@ namespace ruzhouxie
 	using std::array;
 }
 
-#else//For freestanding implementation which maybe do not has std::array.
+#else// For freestanding implementation which maybe do not has std::array.
 
 namespace ruzhouxie
 {

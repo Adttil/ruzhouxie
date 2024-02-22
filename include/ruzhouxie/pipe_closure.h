@@ -30,6 +30,7 @@ namespace ruzhouxie
 		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self)
 			AS_EXPRESSION(as_base<Fn>(FWD(self))(view{  FWD(t) })*/
 
+
 		template<typename T, specified<pipe_closure> Self>
 		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self) 
 			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(t)))

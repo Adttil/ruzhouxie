@@ -10,7 +10,7 @@
 namespace ruzhouxie::detail
 {
 	template<typename T>
-	concept principled = requires()
+	concept principled = requires
 	{
 		requires (not std::same_as<decltype(getter_trait<T>::choose_default_getter()), tag_invoke_getter>);
 	};

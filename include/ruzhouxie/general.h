@@ -86,7 +86,7 @@ namespace ruzhouxie
 	using std::declval;
 
 	template<bool Condition>
-	constexpr auto&& move_if(auto&& ref)noexcept
+	RUZHOUXIE_INTRINSIC constexpr auto&& move_if(auto&& ref)noexcept
 	{
 		if constexpr (Condition) 
 		{

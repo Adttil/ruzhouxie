@@ -59,26 +59,6 @@ namespace ruzhouxie
 			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I...>)
 	};
 
-	//template<typename T>
-	//struct view
-	//{
-	//	RUZHOUXIE_MAYBE_EMPTY T raw_value;
-
-	//	template<size_t I, specified<view> Self>
-	//	RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-	//		AS_EXPRESSION(FWD(self, raw_value) | child<I>)
-	//};
-
-	///*template<typename...T>
-	//struct result_tuple : tuple<T...> {};*/
-	//template<inheritable T>
-	//struct view<T> : T, detail::view_base<view<T>>
-	//{
-	//	template<size_t I, specified<view> Self>
-	//	RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-	//		AS_EXPRESSION(as_base<T>(FWD(self)) | child<I>)
-	//};
-
 	template<typename T>
 	view(T&&) -> view<T>;
 }

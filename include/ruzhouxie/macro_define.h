@@ -80,22 +80,4 @@ requires requires{ __VA_ARGS__; }\
 	return __VA_ARGS__;\
 }
 
-#define AS_EXPRESSION2(...) noexcept(noexcept(__VA_ARGS__))\
-requires requires{ __VA_ARGS__; }\
-{\
-	return __VA_ARGS__;\
-}
-
-//#define TRY_EVALUATE(Ids, ...) [&]()->decltype(auto)\
-//{\
-//	if constexpr (unevaluated<decltype(__VA_ARGS__), Ids>)\
-//	{\
-//		return __VA_ARGS__ | evaluate<Ids>;\
-//	}\
-//	else\
-//	{\
-//		return __VA_ARGS__;\
-//	}\
-//}()
-
 #endif

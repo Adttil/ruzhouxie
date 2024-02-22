@@ -68,12 +68,6 @@ namespace ruzhouxie
 			constexpr size_t cur = child_count<T> - sizeof...(J);
 			constexpr auto ids = merge_id_set<id_tree_to_set<id_tree_get<cur + J>(id_tree<T>())>()...>();
 			return FWD(t) | child<cur - 1, ids>;
-			// if constexpr (requires{
-			// 	{FWD(t) | child<cur - 1, ids> | make_tree<std::tuple_element_t<cur - 1, Tuple>>} -> concrete;
-			// })
-			// {
-			// 	return FWD(t) | child<cur - 1, ids> | make_tree<std::tuple_element_t<cur - 1, Tuple>>;
-			// }
 		}
 
 		template<typename T>

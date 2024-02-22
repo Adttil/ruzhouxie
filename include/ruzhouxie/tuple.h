@@ -1,6 +1,6 @@
 #ifndef RUZHOUXIE_TUPLE_H
 #define RUZHOUXIE_TUPLE_H
-//this tuple is aggregate 
+//this tuple is aggregate
 
 #include "general.h"
 #include "macro_define.h"

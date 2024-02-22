@@ -9,8 +9,6 @@
 
 #include "macro_define.h"
 
-
-
 namespace ruzhouxie
 {
 	namespace detail

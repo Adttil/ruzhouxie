@@ -49,5 +49,3 @@
 #undef FWDLIKE_IMPL
 
 #undef AS_EXPRESSION
-
-#undef TRY_EVALUATE

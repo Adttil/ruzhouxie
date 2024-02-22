@@ -10,8 +10,6 @@ struct Y { double a; double b; };
 
 int main()
 {
-	//MAGIC_CHECK(branched<tuple<int, float>>, true);
-	//auto&& [a, b] = lazy_zip_transform(std::plus<>{}, X{ 1, 3.04 }, std::array{ 232.0, 0.1 }) | to<tuple>();
 	auto r = zip_transform(std::plus<>{}, X{ 1, 3.04 }, std::array{ 232.0, 0.1 }) | make_tree<std::tuple<double, double>>;
 	auto&& [a, b] = r;
 	MAGIC_CHECK(a, 233.0);
