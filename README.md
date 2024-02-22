@@ -124,30 +124,31 @@ namespace rzx = ruzhouxie;
 
 struct Tr
 {
-	Tr() { std::puts("Tr();"); };
-	Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
-	Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
-	Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
-	Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
-	~Tr()noexcept { std::puts("~Tr();"); }
+    Tr() { std::puts("Tr();"); };
+    Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
+    Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
+    Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
+    Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
+    ~Tr()noexcept { std::puts("~Tr();"); }
 };
 
 int main()
 {
-	auto tpl = rzx::tuple{ Tr{}, Tr{} };
-
-	auto tpl_view = std::move(tpl) | rzx::as_ref | rzx::try_tagged;
-
-	auto tpl_tpl_view = rzx::tuple{ tpl_view, tpl_view };
-
-	std::puts("======================");
-	auto r = tpl_tpl_view | rzx::to<rzx::tuple>();
-	std::puts("======================");
+    auto tpl = rzx::tuple{ Tr{}, Tr{} };
+    
+    auto tpl_view = std::move(tpl) | rzx::as_ref | rzx::try_tagged;
+    
+    auto tpl_tpl_view = rzx::tuple{ tpl_view, tpl_view };
+    
+    std::puts("======================");
+    auto r = tpl_tpl_view | rzx::to<rzx::tuple>();
+    std::puts("======================");
 }
 ```
 
 `rzx::as_ref`的作用是将右值引用仍然按引用储存，因为默认情况下为了防止悬垂对右值引用都是按值存储的。
 这只需要两次Tr的复制构造，后两次自动使用了移动构造。程序输出如下：
+
 ![](docs/assets/auto-move-output.png)
 
 ## 第三方库
