@@ -11,7 +11,7 @@ struct foo {};
 
 int main()
 {
-
+	
 	float y{ 3.1f };
 	double z{ 1.4 };
 	X x{ 233, y, std::move(z) };

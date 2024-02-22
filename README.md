@@ -30,24 +30,22 @@ rzx::vec<2, double> result = +rzx::mat_mul_vec(matrix, vector);
 ```cpp
 namespace rzx = ruzhouxie;
 
-struct X{ int a; int b; };
-struct Y{ std::string str; X x; };
+struct X{ int a; float b; };
+X x{ 1, 1.0f };
 
-X x{ 132, 113999 };
+x = x | rzx::transform(std::negate<void>{}) | rzx::to<X>();//{ -1, -1.0f }
 
-//x: { 133, 114000 }
-x = x | rzx::transform([](auto i){ return i + 1; }) | rzx::to<X>();
+struct Y{ std::string str; int a; float b; };
+Y y{ "that's", 133, 114000.0f };
+auto tpl = std::tuple{ " pretty good!", 200.0f, 514 } };
 
-Y y{ "that's", x };
-auto tpl = std::tuple{ " pretty good!", std::array{ 200, 514 } };
-
-//result: { "that's pretty good", { 233, 114514 } }
+//{ "that's pretty good", 233.0f, 114514.0f }
 auto result = rzx::zip_transform(std::plus<void>{}, y, tpl) | rzx::to<rzx::tuple>();
 ```
 
 ## 通配的异构几何库
 实际上你可以将任意类型视为你的几何类型来进行操作。
-如果它是一个`tuple-like`的类型、聚合类、定长数组，那么不用做任何事就可以被统一处理：
+如果它是一个`tuple-like`的类型、聚合类或定长数组，那么不用做任何事就可以被统一处理：
 ```cpp
 namespace rzx = ruzhouxie;
 
