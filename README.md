@@ -17,23 +17,18 @@ rzx::mat<2, 2> matrix{
     rzx::vec<2>{ 1.0, 2.0 }
     rzx::vec<2>{ 3.0, 4.0 }
 };
+rzx::vec<2> vector{ 1.0, 2.0 };
 
-rzx::vec<2, float> vector{ 1.0, 2.0 }
-//由于本库的函数大多为惰性运算，
-//前面写+可隐式转换为任意可以匹配的类型，这里等价于：
-//rzx::mat_mul_vec(matrix, vector) | rzx::to<ruzhouxie::vec<2, double>>()
-rzx::vec<2, double> result = +rzx::mat_mul_vec(matrix, vector);
+rzx::vec<2> result = +rzx::mat_mul_vec(matrix, vector);
 ```
-
+由于本库的函数大多为惰性运算，前面写+可隐式转换为任意可以匹配的类型，这里等价于：
+```cpp
+rzx::vec<2, double> result = rzx::mat_mul_vec(matrix, vector) | rzx::to<ruzhouxie::vec<2>>();
+```
 ## 异构的“范围库”
 就如c++20标库中新增的范围库一样，你可以用类似的风格方便的进行异构运算，这使你可以免除一些重复性代码。
 ```cpp
 namespace rzx = ruzhouxie;
-
-struct X{ int a; float b; };
-X x{ 1, 1.0f };
-
-x = x | rzx::transform(std::negate<void>{}) | rzx::to<X>();//{ -1, -1.0f }
 
 struct Y{ std::string str; int a; float b; };
 Y y{ "that's", 133, 114000.0f };
@@ -70,11 +65,11 @@ std::tuple matrix{
 namespace rzx = ruzhouxie;
 
 template<size_t count>
-struct foo_t{ 
+struct iota_t{ 
     size_t begin;
 
     template<size_t I>
-    friend constexpr decltype(auto) tag_invoke(rzx::child<I>, const foo_t& self)noexcept
+    friend constexpr decltype(auto) tag_invoke(rzx::child<I>, const iota_t& self)noexcept
     {
         if constexpr(I >= count)
         {
@@ -87,9 +82,9 @@ struct foo_t{
     }
 };
 
-foo_t<2> foo1{ 1 };
-foo_t<2> foo2{ 3 };
-size_t result = rzx::dot(foo1, foo2);//{ 1, 2 } * { 3, 4 } = 11
+iota_t<2> vec1{ 1 };
+iota_t<2> vec2{ 3 };
+size_t result = rzx::dot(vec1, vec2);//{ 1, 2 } 点乘 { 3, 4 } = 11
 ```
 由于可以使用异构的几何类型，可以轻易做到一些神奇的事情，比如部分元素为编译期常量的矩阵：3D程序中经常使用的齐次矩阵，在进行投影变换前，其最后一行始终为{ 0, 0, 0, 1 }, 通过本库我们可以不实际储存这行的值，但是用一样方式来操作：
 ```cpp
