@@ -1,0 +1,136 @@
+#ifndef RUZHOUXIE_TUPLE_H
+#define RUZHOUXIE_TUPLE_H
+//this tuple is aggregate 
+
+#include "general.h"
+#include "macro_define.h"
+
+namespace ruzhouxie
+{
+	template<typename...T>
+	struct tuple;
+
+	template<typename T, typename...Rest>
+	struct tuple<T, Rest...>
+	{
+		RUZHOUXIE_MAYBE_EMPTY T              first;
+		RUZHOUXIE_MAYBE_EMPTY tuple<Rest...> rest;
+
+		/*template<size_t I> requires (I <= sizeof...(Rest))
+		RUZHOUXIE_INLINE constexpr auto&& get(this auto&& self) noexcept
+		{
+			if constexpr (I)
+			{
+				return FWD(self, rest).get<I - 1>();
+			}
+			else
+			{
+				return FWD(self, first);
+			}
+		}*/
+
+		//now structure binding is not support get with deducing this in vs17.8.1.
+
+		template<size_t I>
+			requires (I <= sizeof...(Rest))
+		RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
+		{
+			if constexpr (I)
+			{
+				return rest.template get<I - 1>();
+			}
+			else
+			{
+				return (first);
+			}
+		}
+
+		template<size_t I>
+			requires (I <= sizeof...(Rest))
+		RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+		{
+			if constexpr (I)
+			{
+				return rest.template get<I - 1>();
+			}
+			else
+			{
+				return (first);
+			}
+		}
+
+		template<size_t I>
+			requires (I <= sizeof...(Rest))
+		RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
+		{
+			if constexpr (I)
+			{
+				return std::move(rest).template get<I - 1>();
+			}
+			else
+			{
+				return fwd<tuple&&, T>(first);
+			}
+		}
+
+		template<size_t I>
+			requires (I <= sizeof...(Rest))
+		RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+		{
+			if constexpr (I)
+			{
+				return std::move(rest).template get<I - 1>();
+			}
+			else
+			{
+				return fwd<const tuple&&, T>(first);
+			}
+		}
+
+		friend constexpr bool operator==(const tuple&, const tuple&) = default;
+	};
+
+	template<typename...T>
+	tuple(T...) -> tuple<std::decay_t<T>...>;
+
+	template<typename...Args>
+	RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
+	{
+		return { FWD(args)... };
+	}
+
+	template<typename Tpl1, typename Tpl2>
+	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
+		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
+	{
+		constexpr size_t s1 = std::tuple_size_v<purified<Tpl1>>;
+		constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
+		return[&]<size_t...i, size_t...j>(std::index_sequence<i...>, std::index_sequence<j...>)
+		{
+			return tuple{ FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()... };
+		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
+	}
+
+
+	template<typename T, typename...Elems>
+	RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
+	{
+		return locate_type<T, Elems...>(fn);
+	}
+}
+
+
+template<typename...T>
+struct std::tuple_size<ruzhouxie::tuple<T...>> : std::tuple_size<std::tuple<T...>> {};
+
+template<size_t I, typename...T>
+struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
+
+
+namespace ruzhouxie
+{
+#include "generate/tuple_specialization.code"
+}
+
+#include "macro_undef.h"
+#endif
