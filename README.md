@@ -78,7 +78,7 @@ struct foo_t{
     {
         if constexpr(I >= count)
         {
-            return;//这能避免foo_t被看作具有两个分量的聚合类
+            return;//这能避免foo_t被看作具有一个分量的聚合类
         }
         else
         {
