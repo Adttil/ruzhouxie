@@ -127,20 +127,21 @@ struct Tr
 
 int main()
 {
-    auto tpl = rzx::tuple{ Tr{}, Tr{} };
-    
-    auto tpl_view = std::move(tpl) | rzx::as_ref | rzx::try_tagged;
-    
-    auto tpl_tpl_view = rzx::tuple{ tpl_view, tpl_view };
-    
-    std::puts("======================");
-    auto r = tpl_tpl_view | rzx::to<rzx::tuple>();
-    std::puts("======================");
+    constexpr auto layout = std::array//把[x, y]看作[x, x, y, x, y]的布局
+    {
+        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
+    };
+
+    std::array vector{ Tr{}, Tr{} };
+
+    std::puts("==================");
+    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    std::puts("==================");
 }
 ```
 
 `rzx::as_ref`的作用是将右值引用仍然按引用储存，因为默认情况下为了防止悬垂对右值引用都是按值存储的。
-这只需要两次Tr的复制构造，后两次自动使用了移动构造。程序输出如下：
+这里两个Tr对象都在最后一次使用时进行了完美转发，从而减少了复制构造的次数。程序输出如下：
 
 ![](docs/assets/auto-move-output.png)
 
