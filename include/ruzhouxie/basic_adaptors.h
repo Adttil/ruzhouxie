@@ -1,8 +1,8 @@
-#ifndef RUZHOUXIE_ADAPTORS_H
-#define RUZHOUXIE_ADAPTORS_H
+#ifndef RUZHOUXIE_BASIC_ADAPTORS_H
+#define RUZHOUXIE_BASIC_ADAPTORS_H
 
 #include "general.h"
-#include "evaluate.h"
+#include "id.h"
 #include "get.h"
 #include "tuple.h"
 #include "result.h"

@@ -1,9 +1,5 @@
-#include "ruzhouxie/adaptors.h"
-#include "ruzhouxie/general.h"
-#include "ruzhouxie/get.h"
 #include "test_tool.h"
 #include <array>
-#include <ruzhouxie\result.h>
 #include <ruzhouxie\tensor.h>
 #include <utility>
 

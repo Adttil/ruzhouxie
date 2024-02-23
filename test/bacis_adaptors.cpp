@@ -1,5 +1,5 @@
 #include "test_tool.h"
-#include <ruzhouxie\adaptors.h>
+#include <ruzhouxie\basic_adaptors.h>
 #include <ruzhouxie\result.h>
 //#include <ruzhouxie\constant.h>
 

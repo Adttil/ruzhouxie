@@ -1,7 +1,7 @@
 #ifndef RUZHOUXIE_TENSOR_H
 #define RUZHOUXIE_TENSOR_H
 
-#include "adaptors.h"
+#include "basic_adaptors.h"
 #include "array.h"
 #include "get.h"
 #include "pipe_closure.h"
