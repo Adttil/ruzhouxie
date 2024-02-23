@@ -38,9 +38,18 @@ struct Tr
     ~Tr()noexcept { std::puts("~Tr();"); }
 };
 
+struct test_t : std::array<Tr, 5>
+{
+
+};
+
 int main()
 {
     fooo();
+
+    struct vec2{ float x; float y; };
+    auto v = rzx::view{ vec2{ 1.0f, 2.0f } };
+    float foo = v.x + v.y;
 
     constexpr auto layout = std::array
     {
@@ -50,7 +59,11 @@ int main()
     std::array vector{ Tr{}, Tr{} };
 
     std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    auto result = test_t{ std::move(vector)
+     | rzx::as_ref
+      | rzx::try_tagged 
+      | rzx::relayout<layout>
+       | rzx::to<std::array<Tr, 5>>()};
     std::puts("==================");
 
     /*{
