@@ -127,7 +127,7 @@ struct Tr
 
 int main()
 {
-    constexpr auto layout = std::array//把[x, y]看作[x, x, y, x, y]的布局
+    constexpr auto layout = std::array//把[e0, e1]看作[e0, e0, e1, e0, e1]的布局
     {
         std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
     };
