@@ -57,6 +57,10 @@ namespace ruzhouxie
 		template<auto...I, specified<view> Self>
 		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I...>>, Self&& self)
 			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I...>)
+
+		// template<specified<view> Self>
+		// RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<id_tree<Self>>)
+		// 	AS_EXPRESSION(id_tree<T>())
 	};
 
 	template<typename T>
@@ -124,7 +128,7 @@ namespace ruzhouxie
 				{
 					return[&]<size_t...J>(std::index_sequence<J...>)->decltype(auto)
 					{
-						return FWD(self, tree) | child<layout | child<I, J> ...>;
+						return FWD(self, tree) | child<layout | child<I, J> ..., Ids>;
 					}(std::make_index_sequence<child_count<child_type<layout_type, I>>>{});
 				}
 				else 
@@ -153,7 +157,7 @@ namespace ruzhouxie
 			{
 				if constexpr (tensor_rank<layout_type> > 1uz)
 				{
-					return relayout_view<T&&, layout>{ {}, FWD(t) };
+					return relayout_view<T, layout>{ {}, FWD(t) };
 				}
 				else return[&]<size_t...I>(std::index_sequence<I...>)->decltype(auto)
 				{

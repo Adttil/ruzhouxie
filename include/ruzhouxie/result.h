@@ -155,7 +155,7 @@ namespace ruzhouxie
 		return make_tree<Tpl>;
 	}
 
-	template<template<typename...> typename Tpl = tuple, typename T>
+	template<template<typename...> typename Tpl = tuple, branched T>
 	RUZHOUXIE_INLINE constexpr decltype(auto) to(T&& t)
 	{
 		return to<Tpl>()(t);

@@ -5,10 +5,11 @@
 #include <array>
 #include <ruzhouxie\result.h>
 #include <ruzhouxie\tensor.h>
+#include <utility>
 
 namespace rzx = ruzhouxie;
 
-template <auto x> struct foo {};
+template <auto x> struct foo_t {};
 struct X { int a; double b; };
 
 void fooo()
@@ -51,7 +52,7 @@ int main()
     auto v = rzx::view{ vec2{ 1.0f, 2.0f } };
     float foo = v.x + v.y;
 
-    constexpr auto layout = std::array
+    constexpr auto layout = std::array//把[x, y]看作[x, x, y, x, y]的布局
     {
         std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
     };
@@ -59,12 +60,10 @@ int main()
     std::array vector{ Tr{}, Tr{} };
 
     std::puts("==================");
-    auto result = test_t{ std::move(vector)
-     | rzx::as_ref
-      | rzx::try_tagged 
-      | rzx::relayout<layout>
-       | rzx::to<std::array<Tr, 5>>()};
+    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
     std::puts("==================");
+
+    MAGIC_SHOW_TYPE(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
 
     /*{
         using vec = std::array<int, 2>;

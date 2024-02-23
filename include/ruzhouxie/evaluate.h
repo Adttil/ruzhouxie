@@ -500,7 +500,7 @@ namespace ruzhouxie
 						}
 						else
 						{
-							return FWD(self, value) | child<I>;
+							return self.value | child<I>;
 						}
 					}
 					else

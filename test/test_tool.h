@@ -56,6 +56,6 @@ magic_assert_impl<decltype(expression), decltype(excepted)>(__FILE__, __LINE__, 
 #define MAGIC_TYPE_CHECK(type1, type2) \
 magic_type_check_impl<type1, type2>(__FILE__, __LINE__, #type1, #type2);
 
-#define MAGIC_SHOW_TYPE(exp) std::cout << "type of [" #exp << "] is\n" << magic::visualize<decltype(exp)>({false}) << '\n';
+#define MAGIC_SHOW_TYPE(...) std::cout << "type of [" #__VA_ARGS__ << "] is\n" << magic::visualize<decltype(__VA_ARGS__)>({false}) << '\n';
 
 #endif
