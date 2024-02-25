@@ -10,19 +10,19 @@ struct X { int a; double b; };
 
 void fooo()
 {
-   using namespace ruzhouxie;
-   mat<2, 2> m{ 
-       vec<2>{ 1.0, 2.0 },
-       vec<2>{ 3.0, 4.0 }
-   };
+    using namespace ruzhouxie;
+    mat<2, 2> m{ 
+        vec<2>{ 1.0, 2.0 },
+        vec<2>{ 3.0, 4.0 }
+    };
 
-   mat<2, 2> mm = +mat_mul(m, m);
-   std::cout << (mm | child<0uz, 0uz>);
-   //mat<2, 2> _2m = +(m + m);
-   //MAGIC_CHECK((_2m | child<0, 0>), 2.0);
+    mat<2, 2> mm = +mat_mul(m, m);
+    std::cout << (mm | child<0uz, 0uz>);
+    //mat<2, 2> _2m = +(m + m);
+    //MAGIC_CHECK((_2m | child<0, 0>), 2.0);
 
-   //auto _3m = +(m * m);
-   //MAGIC_CHECK((_3m | child<0, 0>), 3.0);
+    //auto _3m = +(m * m);
+    //MAGIC_CHECK((_3m | child<0, 0>), 3.0);
 }
 
 struct Tr

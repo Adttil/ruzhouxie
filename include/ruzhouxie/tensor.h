@@ -162,10 +162,19 @@ namespace ruzhouxie
 
 	template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
 	using mat = rmat<NRow, NColumn>;
+
+	template<typename T>
+	using quat = view<array<T, 4>>;
 }
 
 namespace ruzhouxie
 {
+    template<typename T>
+	RUZHOUXIE_INLINE constexpr auto sqrt(T x)noexcept
+	{
+		return std::sqrt(x);
+	};
+
 	RUZHOUXIE_INLINE constexpr decltype(auto) tree_invoke(auto&& fn, auto&&...args)noexcept
 	{
 		if constexpr (requires{ fn(FWD(args)...); })
@@ -208,6 +217,24 @@ namespace ruzhouxie
 		}(std::make_index_sequence<child_count<decltype(mul)>>{});
 	}
 
+	RUZHOUXIE_INLINE constexpr decltype(auto) len_sq(auto&& vector)noexcept
+	{
+		return dot(FWD(vector), FWD(vector));
+	}
+
+	template<typename Vec>
+	RUZHOUXIE_INLINE constexpr decltype(auto) len(Vec&& vector)noexcept
+	{
+		if constexpr(child_count<Vec> == 1uz)
+		{
+			return FWD(vector) | child<0, empty_id_set>;
+		}
+		else
+		{
+			return sqrt(len_sq(vector));
+		}
+	}
+
 	RUZHOUXIE_INLINE constexpr decltype(auto) mat_mul_vec(auto&& _mat, auto&& vec)
 	{
 		return FWD(_mat) | transform([&](auto&& row) { return dot(row, vec); });
@@ -221,6 +248,11 @@ namespace ruzhouxie
 	RUZHOUXIE_INLINE constexpr auto mat_mul(auto&& l, auto&& r)
 	{
 		return FWD(l) | transform([&](auto&& l_row) { return vec_mul_mat(FWD(l_row), r); });
+	}
+
+	RUZHOUXIE_INLINE constexpr auto quat_to_mat()
+	{
+		
 	}
 }
 
