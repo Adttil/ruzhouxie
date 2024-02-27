@@ -1,12 +1,16 @@
 #ifndef RUZHOUXIE_BASIC_ADAPTORS_H
 #define RUZHOUXIE_BASIC_ADAPTORS_H
 
+#include "array.h"
 #include "general.h"
 #include "id.h"
 #include "get.h"
+#include "ruzhouxie/macro_define.h"
 #include "tuple.h"
 #include "result.h"
 #include "macro_define.h"
+#include <type_traits>
+#include <utility>
 
 //view_base
 namespace ruzhouxie
@@ -54,10 +58,13 @@ namespace ruzhouxie
 	template<typename T>
 	struct view : wrapper<T>, detail::view_base<view<T>>
 	{
-		template<auto...I, specified<view> Self>
-		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I...>>, Self&& self)
-			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I...>)
+		template<size_t I, specified<view> Self>
+		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
+			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I>)
 
+		template<auto Seq, auto Indices, specified<view> Self>
+		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
+			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq, Indices>)
 		// template<specified<view> Self>
 		// RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<id_tree<Self>>)
 		// 	AS_EXPRESSION(id_tree<T>())
@@ -65,6 +72,30 @@ namespace ruzhouxie
 
 	template<typename T>
 	view(T&&) -> view<T>;
+
+	namespace detail
+	{
+		struct as_ref_t
+		{
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				if constexpr (std::is_rvalue_reference_v<T&&>)
+				{
+					return view<T&&>{ FWD(t) };
+				}
+				else
+				{
+					return t;
+				}
+			}
+		};
+	};
+
+	inline namespace functors
+	{
+		inline constexpr pipe_closure<detail::as_ref_t> as_ref{};
+	}
 }
 
 
@@ -74,73 +105,60 @@ namespace ruzhouxie
 {
 	namespace detail
 	{
-		template<auto layout>
-		constexpr auto relayout_id_tree(const auto& tree) 
+		// template<auto layout>
+		// constexpr auto relayout_id_tree(const auto& tree) 
+		// {
+		// 	using layout_type = purified<decltype(layout)>;
+		// 	return[&]<size_t...I>(std::index_sequence<I...>)
+		// 	{
+		// 		if constexpr (tensor_rank<layout_type> >= 2uz)
+		// 		{
+		// 			return tuple{ relayout_id_tree<layout | child<I>>(tree)... };
+		// 		}
+		// 		else
+		// 		{
+		// 			return id_tree_get<layout | child<I>...>(tree);
+		// 		}
+		// 	}(std::make_index_sequence<child_count<layout_type>>{});
+		// }
+
+		template<typename T, auto Layout>
+		struct relayout_view : view_base<relayout_view<T, Layout>>
 		{
-			using layout_type = purified<decltype(layout)>;
-			return[&]<size_t...I>(std::index_sequence<I...>)
-			{
-				if constexpr (tensor_rank<layout_type> >= 2uz)
-				{
-					return tuple{ relayout_id_tree<layout | child<I>>(tree)... };
-				}
-				else
-				{
-					return id_tree_get<layout | child<I>...>(tree);
-				}
-			}(std::make_index_sequence<child_count<layout_type>>{});
-		}
+			static constexpr auto layout = Layout;
+			using layout_type = purified<decltype(Layout)>;
 
-		template<typename T, auto layout>
-		struct relayout_view : view_base<relayout_view<T, layout>>
-		{
-			using layout_type = purified<decltype(layout)>;
+			RUZHOUXIE_MAYBE_EMPTY T raw_tree;
 
-			RUZHOUXIE_MAYBE_EMPTY T tree;
-
-			template<size_t I, id_set Ids, specified<relayout_view> Self>
-			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I, Ids>>, Self&& self)
+			template<size_t I, specified<relayout_view> Self>
+			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 				//todo... noexcept)
 			{
 				if constexpr (I >= child_count<layout_type>)
 				{
 					return;
 				}
-				else if constexpr (tensor_rank<layout_type> > 2uz)
+				else if constexpr(indices<child_type<layout_type, I>>)
 				{
-					if constexpr (Ids.empty())
-					{
-						return relayout_view<decltype(FWD(self, tree)), layout | child<I>>
-						{
-							{}, FWD(self, tree)
-						};
-					}
-					else
-					{
-						return relayout_view<decltype(FWD(self, tree)), layout | child<I>>
-						{
-							{}, FWD(self, tree)
-						}
-						| reserved<Ids>;
-					}
+					return FWD(self, raw_tree) | child<Layout | child<I>>;
 				}
-				else if constexpr(tensor_rank<layout_type> == 2uz)
+				else
 				{
-					return[&]<size_t...J>(std::index_sequence<J...>)->decltype(auto)
+					return relayout_view<decltype(FWD(self, raw_tree)), Layout | child<I>>
 					{
-						return FWD(self, tree) | child<layout | child<I, J> ..., Ids>;
-					}(std::make_index_sequence<child_count<child_type<layout_type, I>>>{});
-				}
-				else 
-				{
-					static_assert(tensor_rank<layout_type> >= 2uz, "invalid layout.");
+						{}, FWD(self, raw_tree)
+					};
 				}
 			}
 
-			template<specified<relayout_view> Self>
-			friend constexpr auto tag_invoke(tag_t<id_tree<Self>>) noexcept
+			template<auto Seq, auto Indices, specified<relayout_view> Self>
+			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
 			{
-				return relayout_id_tree<layout>(id_tree<T>());
+				constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
+				{
+					return tuple{ Layout | child<Seq | child<Indices[I]>> ... };
+				}(std::make_index_sequence<Indices.size()>{});
+				return FWD(self, raw_tree) | get_tape<transformed_sequence>;
 			}
 		};
 	}
@@ -155,14 +173,14 @@ namespace ruzhouxie
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
 			{
-				if constexpr (tensor_rank<layout_type> > 1uz)
+				if constexpr (indices<layout_type>)
+				{
+					return FWD(t) | child<layout>;
+				}
+				else
 				{
 					return relayout_view<T, layout>{ {}, FWD(t) };
 				}
-				else return[&]<size_t...I>(std::index_sequence<I...>)->decltype(auto)
-				{
-					return FWD(t) | child<(layout | child<I>)...>;
-				}(std::make_index_sequence<child_count<layout_type>>{});
 			}
 		};
 	};
@@ -199,30 +217,77 @@ namespace ruzhouxie
 			}
 			else return[&]<size_t...J>(std::index_sequence<J...>) -> decltype(auto)
 			{
-				return FWD(self, fn)
-				(
-					FWD(self, trees) | child<J> | child<I>...
-				);
+				return FWD(self, fn)(FWD(self, trees) | child<J, I>...);
 			}(std::make_index_sequence<sizeof...(T)>{});
 		}
 
-		template<specified<zip_transform_view> Self>
-		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<id_tree<Self>>)
+		template<auto Seq, auto Indices, specified<zip_transform_view> View>
+		struct tape_type
 		{
-			/*return[]<size_t...I>(std::index_sequence<I...>)
+			template<size_t...I>
+			static constexpr auto init_tapes(View&& view, std::index_sequence<I...>)
 			{
-				return tuple{ tuple{ id_tree_get<I>(id_tree<T>())... }... };
-			}(std::make_index_sequence<child_count<Self>>{});*/
-			
-			return[]<size_t...I>(std::index_sequence<I...>)
-			{
-				constexpr auto child_id_tree = []<size_t J>()
+				return tuple<decltype(FWD(view, trees) |  child<I> | get_tape<Seq, Indices>)...>
 				{
-					return tuple{ id_tree_get<J>(id_tree<T>())... };
+					FWD(view, trees) |  child<I> | get_tape<Seq, Indices>... 
 				};
-				return tuple{ child_id_tree.template operator()<I>()... };
-			}(std::make_index_sequence<child_count<Self>>{});
+			}
+			
+			View view;
+			decltype(init_tapes(declval<View&&>(), std::index_sequence_for<T...>{})) tapes;
+
+			explicit constexpr tape_type(View&& view) 
+				: view(FWD(view))
+				, tapes(init_tapes(FWD(view), std::index_sequence_for<T...>{}))
+			{}
+
+			template<size_t I, specified<tape_type> Self>
+			friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+			{
+				if constexpr(I >= Indices.size())
+				{
+					return;
+				}
+				else 
+				{
+					return [&]<size_t...J>(std::index_sequence<J...>) -> decltype(auto)
+					{
+						return self.view.fn(FWD(self, tapes) | child<J, I> ...);
+					}(std::index_sequence_for<T...>{});
+				}
+			}
+		};
+
+		template<auto Seq, auto Indices, specified<zip_transform_view> Self>
+		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
+			//todo...noexcept
+		{
+			return tape_type<Seq, Indices, Self&&>{ FWD(self) };
 		}
+
+	private:
+		// template<auto Sequence, specified<zip_transform_view> View>
+		// static constexpr auto trans_seq_and_map()
+		// {
+		// 	struct location
+		// 	{
+		// 		bool is_temp;
+		// 		size_t index;
+		// 	};
+		// }
+
+		// template<auto Sequence, specified<zip_transform_view> View, auto Cur = tuple{}, size_t I = 0>
+		// static constexpr auto trans_seq_and_map_impl(auto& map)
+		// {
+		// 	if constexpr(I >= child_count<decltype(Sequence)>)
+		// 	{
+		// 		return Cur;
+		// 	}
+		// 	else
+		// 	{
+
+		// 	}
+		// }
 	};
 
 	namespace detail

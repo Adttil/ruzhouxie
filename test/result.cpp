@@ -1,4 +1,5 @@
 #include "test_tool.h"
+#include <tuple>
 #include <ruzhouxie\result.h>
 
 namespace rzx = ruzhouxie;
@@ -23,11 +24,9 @@ int main()
 {
 	auto tpl = rzx::tuple{ Tr{}, Tr{} };
 
-	auto tpl_view = std::move(tpl) | rzx::as_ref | rzx::try_tagged;
+	constexpr std::array index = std::array{ 0uz };
 
-	auto tpl_tpl_view = rzx::tuple{ tpl_view, tpl_view };
-
-	std::puts("======================");
-	auto r = tpl_tpl_view | rzx::to<rzx::tuple>();
-	std::puts("======================");
+	std::puts("==================");
+	auto copy = std::move(tpl) | rzx::make_tree<rzx::tuple<Tr, Tr>>;
+	std::puts("==================");
 }

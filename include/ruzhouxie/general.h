@@ -10,18 +10,24 @@
 #include <compare>
 #include <functional>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif
+
 #include "macro_define.h"
+
+#if !defined(__cpp_size_t_suffix) || __cpp_size_t_suffix <= 202006L
+constexpr size_t operator""uz(unsigned long long x)
+{
+	return x;
+}
+#endif
 
 namespace ruzhouxie
 {
 	inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
-#if !defined(__cpp_size_t_suffix) || __cpp_size_t_suffix <= 202006L
-	constexpr size_t operator""uz(unsigned long long x)
-	{
-		return x;
-	}
-#endif
+
 
 	//type without cvref.
 	template<typename T>

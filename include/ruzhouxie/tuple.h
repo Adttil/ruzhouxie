@@ -4,6 +4,7 @@
 
 #include "general.h"
 #include "macro_define.h"
+#include "ruzhouxie/macro_define.h"
 
 namespace ruzhouxie
 {
@@ -99,6 +100,12 @@ namespace ruzhouxie
 		return { FWD(args)... };
 	}
 
+	template<typename Tpl>
+	constexpr auto tuple_cat(Tpl&& tpl)
+	{
+		return FWD(tpl);
+	}
+
 	template<typename Tpl1, typename Tpl2>
 	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
 		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
@@ -111,6 +118,12 @@ namespace ruzhouxie
 		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
 	}
 
+	template<typename Tpl1, typename Tpl2, typename...Rest>
+	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
+		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
+	{
+		return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
+	}
 
 	template<typename T, typename...Elems>
 	RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)

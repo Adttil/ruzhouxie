@@ -1,9 +1,12 @@
 #ifndef RUZHOUXIE_GET_H
 #define RUZHOUXIE_GET_H
 
+#include "general.h"
 #include "pipe_closure.h"
 #include "array.h"
 #include "macro_define.h"
+#include <concepts>
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -162,6 +165,19 @@ namespace ruzhouxie
 	}
 
 	template<typename T>
+	inline constexpr size_t child_count = []<size_t N = 0uz>(this auto && self)
+	{
+		if constexpr (requires{ { declval<T&&>() | child<N> } -> concrete; })
+		{
+			return self.template operator() < N + 1uz > ();
+		}
+		else
+		{
+			return N;
+		}
+	}();
+
+	template<typename T>
 	struct getter_trait;
 
 	template<typename T>
@@ -178,65 +194,41 @@ namespace ruzhouxie
 	};
 
 	//must has this for child return a pure-rvalue.
-	template<size_t I>
-	struct detail::child_t<I>
+	template<auto I>
+	struct detail::child_t<I>// : detail::child_t<>
 	{
-		template<typename T>
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)))
+		static constexpr bool is_index = indices<purified<decltype(I)>>;
 
-		template<typename T> 
-			requires (not requires{ getter<purified<T>>{}.template get<I>(declval<T>()); })
+		template<typename T>// requires (not is_index)
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I, invalid_id_set>(FWD(t)))
+			AS_EXPRESSION(getter<purified<T>>{}.template get<static_cast<size_t>(I)>(FWD(t)))
+
+		template<typename T, size_t...J>
+		RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) 
+			AS_EXPRESSION(FWD(t) | child<static_cast<size_t>(I[J]) ...>)
+
+		template<typename T> requires is_index && (I.size() > 0uz)
+		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
+			AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
+
+		template<typename T> requires is_index && (I.size() == 0uz)
+		RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
+		{
+			return FWD(t);
+		}
 	};
 
-	template<size_t I, auto Second>
-	struct detail::child_t<I, Second>
-	{
-		static constexpr bool is_ids = not std::integral<purified<decltype(Second)>>;
-
-		template<typename T> requires (is_ids)
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I, Second>(FWD(t)))
-
-		template<typename T> requires (is_ids)
-			&& (not requires{ getter<purified<T>>{}.template get<I, Second>(declval<T>()); })
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)))
-
-		template<typename T> requires (not is_ids)
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)) | child<size_t{Second}>)
-	};
-
-	template<size_t I, auto...Rest>
+	template<auto I, auto...Rest> //requires (sizeof...(Rest) > 0uz)
 	struct detail::child_t<I, Rest...>
 	{
-		/*template<typename T>
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(getter<purified<T>>{}.template get<I, Rest...>(FWD(t)))*/
-		
 		template<typename T> 
-			//requires (not requires{ getter<purified<T>>{}.template get<I, Rest...>(declval<T>()); })
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
 			AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)) | child<Rest...>)
 	};
 
-	template<typename T>
-	inline constexpr size_t child_count = []<size_t N = 0uz>(this auto && self)
-	{
-		if constexpr (requires{ { declval<T&&>() | child<N> } -> concrete; })
-		{
-			return self.template operator() < N + 1uz > ();
-		}
-		else
-		{
-			return N;
-		}
-	}();
+	
 
-	template<typename T, size_t...I>
+	template<typename T, auto...I>
 	using child_type = decltype(declval<T>() | child<I...>);
 
 	template<typename T>
@@ -335,13 +327,13 @@ namespace ruzhouxie
 	namespace detail::tag_invoke_getter_ns
 	{
 		//for adl find.
-		template<auto...I>
+		template<size_t I>
 		void tag_invoke();
 
 		struct tag_invoke_getter
 		{
-			template<auto...I, typename T>
-			RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(tag_invoke<I...>(child<I...>, FWD(t)))
+			template<size_t I, typename T>
+			RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(tag_invoke<I>(child<I>, FWD(t)))
 		};
 	}
 	using detail::tag_invoke_getter_ns::tag_invoke_getter;
@@ -479,8 +471,7 @@ namespace ruzhouxie
 	{
 		static consteval auto choose_default_getter() noexcept
 		{
-			if constexpr (requires{ tag_invoke_getter{}.get<0uz>(declval<T>()); }
-			|| requires{ tag_invoke_getter{}.get<0uz, empty_id_set>(declval<T>()); })
+			if constexpr (requires{ tag_invoke_getter{}.get<0uz>(declval<T>()); })
 			{
 				return tag_invoke_getter{};
 			}

@@ -1,10 +1,15 @@
 #ifndef RUZHOUXIE_RESULT_H
 #define RUZHOUXIE_RESULT_H
 
+#include "array.h"
 #include "general.h"
 #include "id.h"
 #include "get.h"
 #include "macro_define.h"
+#include "tuple.h"
+#include <array>
+#include <tuple>
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -20,18 +25,18 @@ namespace ruzhouxie
 		inline constexpr pipe_closure<detail::make_tree_t<T>> make_tree{};
 	}
 
-	template<typename Target, typename Source>
+	template<typename Target>
 	struct tree_maker_trait;
 
-	template<typename Target, typename Source>
-	using tree_maker = tree_maker_trait<Target, Source>::type;
+	template<typename Target>
+	using tree_maker = tree_maker_trait<Target>::type;
 
 	template<typename Target>
 	struct detail::make_tree_t
 	{
 		template<typename T>
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(tree_maker<Target, T&&>{}(FWD(t)))
+			AS_EXPRESSION(tree_maker<Target>{}(FWD(t)))
 	};
 
 	template<typename View, typename Tree>
@@ -56,79 +61,173 @@ namespace ruzhouxie
 	}
 	using detail::tag_invoke_tree_maker_ns::tag_invoke_tree_maker;
 
-	template<typename Tuple>
-	struct tuple_maker
+	template<typename T>
+	struct processer 
 	{
-		/*template<id_set Ids, typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t);*/
-
-		template<size_t...J, typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) elem(std::index_sequence<J...>, T&& t)
+		template<typename Tree>
+		RUZHOUXIE_INLINE constexpr auto operator()(this const T& self, Tree&& tree)
 		{
-			constexpr size_t cur = child_count<T> - sizeof...(J);
-			constexpr auto ids = merge_id_set<id_tree_to_set<id_tree_get<cur + J>(id_tree<T>())>()...>();
-			return FWD(t) | child<cur - 1, ids>;
+			return self.template process_tape<Tree&&>(get_tape<self.template get_sequence<Tree&&>()>(FWD(tree)));
 		}
-
-		template<typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t)
-		{
-			if constexpr (terminal<T>)
-			{
-				if constexpr (requires { Tuple{ FWD(t) }; })
-				{
-					return FWD(t);
-				}
-				else
-				{
-					return;
-				}
-			}
-			else
-			{
-				constexpr auto foo = []<size_t...I>(std::index_sequence<I...>, T && t) -> decltype(auto)
-				{
-					if constexpr (requires{ Tuple{ elem(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... }; }) 
-					{
-						return Tuple{ elem(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... };
-					}
-					else if constexpr(requires{ Tuple{ +elem(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... }; })
-					{
-						return Tuple{ +elem(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... };
-					}
-				};
-
-				//RUZHOUXIE_INLINE_CALLS
-				return foo(std::make_index_sequence<child_count<T>>{}, FWD(t));
-			}
-		}
-
-		template<typename T>
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t) const
-			requires requires{ {impl(FWD(t))} ->concrete; }
-		{
-			static_assert(not std::is_array_v<purified<array<array<double, 2>, 2>>>);
-			return Tuple( impl(FWD(t)) );
-		}
+			//AS_EXPRESSION(self.template process_tape<Tree&&>(get_tape<self.template get_sequence<Tree&&>()>(FWD(tree))))
 	};
 
-	template<typename Target, typename Source>
+    namespace detail
+	{
+		consteval auto sequence_add_prefix(const auto& sequence, const auto& prefix)
+		{
+			return [&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple{ concat_array(prefix, sequence | child<I>)... };
+			}(std::make_index_sequence<child_count<decltype(sequence)>>{});
+		}
+
+		// template<size_t Offset>
+		// consteval auto sequence_drop(const auto& prefix)
+		// {
+		// 	return [&]<size_t...I>(std::index_sequence<I...>)
+		// 	{
+		// 		return tuple{ array_drop<Offset>(prefix, sequence | child<I>)... };
+		// 	}(std::make_index_sequence<child_count<decltype(sequence)>>{});
+		// }
+	}
+
+	template<typename Tuple>
+	struct tuple_maker : processer<tuple_maker<Tuple>>
+	{
+		//using processer<tuple_maker<Tuple>>::operator();
+
+		template<size_t I, typename T> requires branched<Tuple>
+		static consteval auto child_sequence()
+		{
+			using child_t = std::tuple_element_t<I, Tuple>;
+			auto seq = tree_maker<child_t>{}.get_sequence<child_type<T, I>>();
+			return detail::sequence_add_prefix(seq, std::array{ I } );
+		};
+		
+		template<typename T>
+		static consteval auto get_sequence()
+		{
+			if constexpr(terminal<Tuple>)
+			{
+				return tuple{ array<size_t, 0uz>{} };
+			}
+			else return []<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple_cat(child_sequence<I, T>()...);
+			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+		}
+
+		template<typename T, size_t I, typename Tape> requires branched<Tuple>
+		static constexpr auto child_process_tape(Tape&& tape)
+		{
+			constexpr size_t offset = []<size_t...J>(std::index_sequence<J...>)
+			{
+				return (0uz + ... + std::tuple_size_v<decltype(child_sequence<J, T>())>); 
+			}(std::make_index_sequence<I>{});
+
+			auto child_tape = sub_tape<offset>(FWD(tape));
+			using child_t = std::tuple_element_t<I, Tuple>;
+			return tree_maker<child_t>{}.process_tape<child_type<T, I>>(move(child_tape));
+		};
+
+		template<typename T, typename Tape>
+		constexpr auto process_tape(Tape&& tape)const
+		{
+			if constexpr(terminal<Tuple>)
+			{
+				return static_cast<Tuple>( FWD(tape) | child<0uz> );
+			}
+			else return [&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return Tuple{ child_process_tape<T, I>(FWD(tape))... };
+			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+		}
+
+		// template<typename Tree>
+		// RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
+		// {
+		// 	return process_tape<Tree&&>(get_tape<get_sequence<Tree&&>()>(FWD(tree)));
+		// }
+			//AS_EXPRESSION(process_tape<Tree&&>(get_tape<get_sequence<Tree&&>()>(FWD(tree))))
+	};
+
+	// template<typename Tuple>
+	// struct inverse_tuple_maker : processer<tuple_maker<Tuple>>
+	// {
+	// 	template<size_t I, typename T> requires branched<Tuple>
+	// 	static consteval auto child_sequence()
+	// 	{
+	// 		using child_t = std::tuple_element_t<I, Tuple>;
+	// 		auto seq = tree_maker<child_t>{}.get_sequence<child_type<T, I>>();
+	// 		return detail::sequence_add_prefix(seq, std::array{ I } );
+	// 	};
+		
+	// 	template<typename T>
+	// 	static consteval auto get_sequence()
+	// 	{
+	// 		if constexpr(terminal<Tuple>)
+	// 		{
+	// 			return tuple{ array<size_t, 0uz>{} };
+	// 		}
+	// 		else return []<size_t...I>(std::index_sequence<I...>)
+	// 		{
+	// 			return tuple_cat(child_sequence<I, T>()...);
+	// 		}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+	// 	}
+
+	// 	template<typename T, size_t I, typename Tape> requires branched<Tuple>
+	// 	static constexpr decltype(auto) child_process_tape(Tape&& tape)
+	// 	{
+	// 		constexpr size_t offset = []<size_t...J>(std::index_sequence<J...>)
+	// 		{
+	// 			return (0uz + ... + std::tuple_size_v<decltype(child_sequence<J, T>())>); 
+	// 		}(std::make_index_sequence<I>{});
+
+	// 		auto child_tape = sub_tape<offset>(FWD(tape));
+	// 		using child_t = std::tuple_element_t<I, Tuple>;
+	// 		return tree_maker<child_t>{}.process_tape<child_type<T, I>>(move(child_tape));
+	// 	};
+
+	// 	template<typename T, typename Tape>
+	// 	constexpr auto process_tape(Tape&& tape)const
+	// 	{
+	// 		if constexpr(terminal<Tuple>)
+	// 		{
+	// 			return Tuple{ FWD(tape) | child<0uz> };
+	// 		}
+	// 		else return [&]<size_t...I>(std::index_sequence<I...>)
+	// 		{
+	// 			return Tuple{ child_process_tape<T, I>(FWD(tape))... };
+	// 		}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+	// 	}
+	// };
+
+	// template<typename T>
+	// struct terminal_maker : processer<terminal_maker<T>>
+	// {
+		
+	// };
+
+	template<typename Target>
 	struct tree_maker_trait
 	{
 		static consteval auto choose_default_tree_maker() noexcept
 		{
-			if constexpr (requires{ tag_invoke_tree_maker<Target>{}(declvalue<Source>()); })
-			{
-				return tag_invoke_tree_maker<Target>{};
-			}
-			else if constexpr (requires{ std::tuple_size<purified<Target>>::value; })
-			{
-				return tuple_maker<Target>{};
-			}
-			else
-			{
-				return invalid_tree_maker{};
-			}
+			return tuple_maker<Target>{};
+			// if constexpr (requires{ std::tuple_size<purified<Target>>::value; })
+			// {
+			// 	return tuple_maker<Target>{};
+			// }
+			// else if constexpr(terminal<Target>)
+			// {
+
+			// }
+			// else
+			// {
+			// 	static_assert(requires{ std::tuple_size<purified<Target>>::value; });
+			// 	return invalid_tree_maker{};
+			// }
 		}
 
 		using type = decltype(choose_default_tree_maker());
@@ -137,69 +236,69 @@ namespace ruzhouxie
 
 namespace ruzhouxie
 {
-	namespace detail
-	{
-		template<template<typename...> typename Tpl>
-		struct to_tpl_temp_t;
-	}
+	// namespace detail
+	// {
+	// 	template<template<typename...> typename Tpl>
+	// 	struct to_tpl_temp_t;
+	// }
 
-	template<template<typename...> typename Tpl = tuple>
-	RUZHOUXIE_INLINE constexpr auto to()
-	{
-		return pipe_closure<detail::to_tpl_temp_t<Tpl>>{};
-	}
+	// template<template<typename...> typename Tpl = tuple>
+	// RUZHOUXIE_INLINE constexpr auto to()
+	// {
+	// 	return pipe_closure<detail::to_tpl_temp_t<Tpl>>{};
+	// }
 
-	template<typename Tpl>
-	RUZHOUXIE_INLINE constexpr auto to()
-	{
-		return make_tree<Tpl>;
-	}
+	// template<typename Tpl>
+	// RUZHOUXIE_INLINE constexpr auto to()
+	// {
+	// 	return make_tree<Tpl>;
+	// }
 
-	template<template<typename...> typename Tpl = tuple, branched T>
-	RUZHOUXIE_INLINE constexpr decltype(auto) to(T&& t)
-	{
-		return to<Tpl>()(t);
-	}
+	// template<template<typename...> typename Tpl = tuple, branched T>
+	// RUZHOUXIE_INLINE constexpr decltype(auto) to(T&& t)
+	// {
+	// 	return to<Tpl>()(t);
+	// }
 
-	template<template<typename...> typename Tpl>
-	struct detail::to_tpl_temp_t
-	{
-		/*template<id_set Ids, typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t);*/
+	// template<template<typename...> typename Tpl>
+	// struct detail::to_tpl_temp_t
+	// {
+	// 	/*template<id_set Ids, typename T>
+	// 	RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t);*/
 
-		template<id_set Ids, size_t...J, typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) elem(std::index_sequence<J...>, T&& t)
-		{
-			constexpr size_t cur = child_count<T> -sizeof...(J);
-			constexpr auto ids = merge_id_set<Ids, id_tree_to_set<id_tree_get<cur + J>(id_tree<T>())>()...>();
-			return impl<ids>(FWD(t) | child<cur - 1, ids>);
-		}
+	// 	template<id_set Ids, size_t...J, typename T>
+	// 	RUZHOUXIE_INLINE static constexpr decltype(auto) elem(std::index_sequence<J...>, T&& t)
+	// 	{
+	// 		constexpr size_t cur = child_count<T> -sizeof...(J);
+	// 		constexpr auto ids = merge_id_set<Ids, id_tree_to_set<id_tree_get<cur + J>(id_tree<T>())>()...>();
+	// 		return impl<ids>(FWD(t) | child<cur - 1, ids>);
+	// 	}
 
-		template<id_set Ids, typename T>
-		RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t)
-		{
-			if constexpr (terminal<T>)
-			{
-				return FWD(t);
-			}
-			else
-			{
-				constexpr auto foo = []<size_t...I>(std::index_sequence<I...>, T && t)
-				{
-					return Tpl{ elem<Ids>(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... };
-				};
+	// 	template<id_set Ids, typename T>
+	// 	RUZHOUXIE_INLINE static constexpr decltype(auto) impl(T&& t)
+	// 	{
+	// 		if constexpr (terminal<T>)
+	// 		{
+	// 			return FWD(t);
+	// 		}
+	// 		else
+	// 		{
+	// 			constexpr auto foo = []<size_t...I>(std::index_sequence<I...>, T && t)
+	// 			{
+	// 				return Tpl{ elem<Ids>(std::make_index_sequence<child_count<T> -I - 1>{}, FWD(t))... };
+	// 			};
 
-				//RUZHOUXIE_INLINE_CALLS
-				return foo(std::make_index_sequence<child_count<T>>{}, FWD(t));
-			}
-		}
+	// 			//RUZHOUXIE_INLINE_CALLS
+	// 			return foo(std::make_index_sequence<child_count<T>>{}, FWD(t));
+	// 		}
+	// 	}
 
-		template<typename T>
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t) const
-		{
-			return impl<empty_id_set>(FWD(t));
-		}
-	};
+	// 	template<typename T>
+	// 	RUZHOUXIE_INLINE constexpr auto operator()(T&& t) const
+	// 	{
+	// 		return impl<empty_id_set>(FWD(t));
+	// 	}
+	// };
 
 
 }
@@ -207,30 +306,30 @@ namespace ruzhouxie
 //for_each
 namespace ruzhouxie
 {
-	namespace detail 
-	{
-		struct for_each_t 
-		{
-			template<branched Tree>
-			RUZHOUXIE_INLINE constexpr void operator()(auto&& fn, Tree&& tree)const
-				noexcept//todo...
-			{
-				auto each_fn = [&]<size_t...I>(std::index_sequence<I...>)
-				{
-					constexpr size_t cur = child_count<Tree> - sizeof...(I) - 1uz;
-					constexpr auto rest_ids = merge_id_set<id_tree_to_set<id_tree_get<I + cur + 1uz>(id_tree<Tree>())>()...>();
-					fn(FWD(tree) | child<cur, rest_ids>);
-				};
+	// namespace detail 
+	// {
+	// 	struct for_each_t 
+	// 	{
+	// 		template<branched Tree>
+	// 		RUZHOUXIE_INLINE constexpr void operator()(auto&& fn, Tree&& tree)const
+	// 			noexcept//todo...
+	// 		{
+	// 			auto each_fn = [&]<size_t...I>(std::index_sequence<I...>)
+	// 			{
+	// 				constexpr size_t cur = child_count<Tree> - sizeof...(I) - 1uz;
+	// 				constexpr auto rest_ids = merge_id_set<id_tree_to_set<id_tree_get<I + cur + 1uz>(id_tree<Tree>())>()...>();
+	// 				fn(FWD(tree) | child<cur, rest_ids>);
+	// 			};
 
-				[&] <size_t...I>(std::index_sequence<I...>) 
-				{
-					(..., each_fn(std::make_index_sequence<child_count<Tree> - I - 1uz>{}));
-				}(std::make_index_sequence<child_count<Tree>>{});
-			}
-		};
-	}
+	// 			[&] <size_t...I>(std::index_sequence<I...>) 
+	// 			{
+	// 				(..., each_fn(std::make_index_sequence<child_count<Tree> - I - 1uz>{}));
+	// 			}(std::make_index_sequence<child_count<Tree>>{});
+	// 		}
+	// 	};
+	// }
 
-	inline constexpr adaptor_closure<detail::for_each_t> for_each{};
+	// inline constexpr adaptor_closure<detail::for_each_t> for_each{};
 }
 
 #include "macro_undef.h"
