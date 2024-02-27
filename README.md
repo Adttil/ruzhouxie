@@ -1,4 +1,4 @@
-# RuZhouXie
+![cover](docs/assets/cover.jpg)
 `RuZhouXie`是一个通配的异构几何库，同时也是一个`std::ranges`风格的异构运算库。它基于标准`c++23`并且是 `header-only`、无依赖的。它使您可以使用同一套向量、矩阵相关函数操作储存格式各不相同的具体几何类型，同时使您可以像用`std::ranges`库一样方便的操作`tuple`等异构容器。
 
 - [RuZhouXie](#ruzhouxie)
