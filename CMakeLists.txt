@@ -13,7 +13,7 @@ endif()
 
 include_directories("include")
 
-add_executable(result "test/result.cpp")
+add_executable(processer "test/processer.cpp")
 add_executable(adaptors "test/basic_adaptors.cpp")
 add_executable(tensor "test/tensor.cpp")
 
