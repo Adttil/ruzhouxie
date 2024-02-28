@@ -3,6 +3,7 @@
 
 #include "array.h"
 #include "general.h"
+#include "ruzhouxie/array.h"
 #include "tape.h"
 #include "get.h"
 #include "ruzhouxie/macro_define.h"
@@ -62,9 +63,9 @@ namespace ruzhouxie
 		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
 			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I>)
 
-		template<auto Seq, auto Indices, specified<view> Self>
-		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
-			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq, Indices>)
+		template<auto Seq, specified<view> Self>
+		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
+			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq>)
 		// template<specified<view> Self>
 		// RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<id_tree<Self>>)
 		// 	AS_EXPRESSION(id_tree<T>())
@@ -138,7 +139,8 @@ namespace ruzhouxie
 				}
 				else if constexpr(indices<child_type<layout_type, I>>)
 				{
-					return FWD(self, raw_tree) | child<Layout | child<I>>;
+					constexpr auto index_pack = Layout | child<I>;
+					return FWD(self, raw_tree) | child<index_pack>;
 				}
 				else
 				{
@@ -149,13 +151,13 @@ namespace ruzhouxie
 				}
 			}
 
-			template<auto Seq, auto Indices, specified<relayout_view> Self>
-			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
+			template<auto Seq, specified<relayout_view> Self>
+			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			{
 				constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
 				{
-					return tuple{ Layout | child<Seq | child<Indices[I]>> ... };
-				}(std::make_index_sequence<Indices.size()>{});
+					return tuple{ Layout | child<Seq | child<I>> ... };
+				}(std::make_index_sequence<child_count<decltype(Seq)>>{});
 				return FWD(self, raw_tree) | get_tape<transformed_sequence>;
 			}
 		};
@@ -219,15 +221,15 @@ namespace ruzhouxie
 			}(std::make_index_sequence<sizeof...(T)>{});
 		}
 
-		template<auto Seq, auto Indices, specified<zip_transform_view> View>
+		template<auto Seq, specified<zip_transform_view> View>
 		struct tape_type
 		{
 			template<size_t...I>
 			static constexpr auto init_tapes(View&& view, std::index_sequence<I...>)
 			{
-				return tuple<decltype(FWD(view, trees) |  child<I> | get_tape<Seq, Indices>)...>
+				return tuple<decltype(FWD(view, trees) |  child<I> | get_tape<Seq>)...>
 				{
-					FWD(view, trees) |  child<I> | get_tape<Seq, Indices>... 
+					FWD(view, trees) |  child<I> | get_tape<Seq>... 
 				};
 			}
 			
@@ -242,7 +244,7 @@ namespace ruzhouxie
 			template<size_t I, specified<tape_type> Self>
 			friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 			{
-				if constexpr(I >= Indices.size())
+				if constexpr(I >= child_count<decltype(Seq)>)
 				{
 					return;
 				}
@@ -256,11 +258,11 @@ namespace ruzhouxie
 			}
 		};
 
-		template<auto Seq, auto Indices, specified<zip_transform_view> Self>
-		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq, Indices>>, Self&& self)
+		template<auto Seq, specified<zip_transform_view> Self>
+		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			//todo...noexcept
 		{
-			return tape_type<Seq, Indices, Self&&>{ FWD(self) };
+			return tape_type<Seq, Self&&>{ FWD(self) };
 		}
 
 	private:

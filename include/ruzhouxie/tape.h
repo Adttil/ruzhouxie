@@ -19,38 +19,34 @@ namespace ruzhouxie
 
 	namespace detail::get_tape_t_ns
 	{
-		template<auto Sequence, indices auto SubIndices>
+		template<auto Sequence>
 		void tag_invoke();
 
-		template<auto Sequence, indices auto SubIndices>
+		template<auto Sequence>
 		struct get_tape_t;
 	}
 
-	template<auto Sequence, indices auto SubIndices = 
-		[]<size_t...I>(std::index_sequence<I...>)
-		{
-			 return array<size_t, sizeof...(I)>{ I... };
-		}(std::make_index_sequence<child_count<decltype(Sequence)>>{})>
-	constexpr inline pipe_closure<detail::get_tape_t_ns::get_tape_t<Sequence, SubIndices>> get_tape{};
+	template<auto Sequence>
+	constexpr inline pipe_closure<detail::get_tape_t_ns::get_tape_t<Sequence>> get_tape{};
 
-	template<typename T, auto Sequence, indices auto SubIndices>
+	template<typename T, auto Sequence>
 	struct terminal_tape
 	{
 		T value;
 		template<size_t I, specified<terminal_tape> Self>
 		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 		{
-			if constexpr(I >= SubIndices.size())
+			if constexpr(I >= child_count<decltype(Sequence)>)
 			{
 				return;
 			}
-			else if constexpr(SubIndices[I] == child_count<decltype(Sequence)> - 1uz)
+			else if constexpr(I == child_count<decltype(Sequence)> - 1uz)
 			{
 				return FWD(self, value);
 			}
 			else
 			{
-				return (self.value);
+				return as_const(self.value);
 			}
 		}
 	};
@@ -63,42 +59,41 @@ namespace ruzhouxie
 			size_t index = invalid_index;
 		};
 
-		template<size_t I, auto Sequence, indices auto SubIndices, size_t J = 0uz, auto Current = tuple{}>
+		template<size_t I, auto Sequence, size_t J = 0uz, auto Current = tuple{}>
 		constexpr auto child_sequence(auto& map)
 		{
-			if constexpr(J >= SubIndices.size())
+			if constexpr(J >= child_count<decltype(Sequence)>)
 			{
 				return Current;
 			}
 			else
 			{
-				constexpr auto index = SubIndices[J];
-				constexpr auto access = Sequence | child<index>;
-				if constexpr(access.size() == 0uz)
+				constexpr auto index_pack = Sequence | child<I>;
+				if constexpr(index_pack.size() == 0uz)
 				{
-					return child_sequence<I, Sequence, SubIndices, J + 1uz, tuple_cat(Current, tuple{ access })>(map);
+					return child_sequence<I, Sequence, J + 1uz, tuple_cat(Current, tuple{ index_pack })>(map);
 				}
-				else if constexpr(access[0] != I)
+				else if constexpr(index_pack[0] != I)
 				{
-					return child_sequence<I, Sequence, SubIndices, J + 1uz, Current>(map);
+					return child_sequence<I, Sequence, J + 1uz, Current>(map);
 				}
 				else
 				{
 					map[J].child = I;
 					map[J].index = child_count<decltype(Current)>;
-					return child_sequence<I, Sequence, SubIndices, J + 1uz, tuple_cat(Current, tuple{ array_drop<1>(access) })>(map);
+					return child_sequence<I, Sequence, J + 1uz, tuple_cat(Current, tuple{ array_drop<1>(index_pack) })>(map);
 				}
 			}
 		}
 
-		template<auto Sequence, indices auto SubIndices, size_t ChildCount>
+		template<auto Sequence, size_t ChildCount>
 		constexpr auto children_sequnce_and_map()
 		{
-			constexpr size_t n = SubIndices.size();
+			constexpr size_t n = child_count<decltype(Sequence)>;
 			std::array<child_sequence_location, n> map{};
 			auto children_sequence = [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return tuple{ child_sequence<I, Sequence, SubIndices>(map)... };
+				return tuple{ child_sequence<I, Sequence>(map)... };
 			}(std::make_index_sequence<ChildCount>{});
 
 			struct result_t
@@ -111,10 +106,10 @@ namespace ruzhouxie
 		}
 	}
 
-	template<typename T, auto Sequence, indices auto SubIndices>
+	template<typename T, auto Sequence>
 	struct tuple_tape
 	{
-		static constexpr auto children_sequnce_map = detail::children_sequnce_and_map<Sequence, SubIndices, child_count<T>>();
+		static constexpr auto children_sequnce_map = detail::children_sequnce_and_map<Sequence, child_count<T>>();
 		static constexpr const auto& children_sequences = children_sequnce_map.sequences;
 		static constexpr const auto& map = children_sequnce_map.map;
 
@@ -122,7 +117,7 @@ namespace ruzhouxie
 		{
 			return [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return tuple//<decltype(FWD(t) | child<I> | get_tape<children_sequences | child<I>>)...>
+				return tuple<decltype(FWD(t) | child<I> | get_tape<children_sequences | child<I>>)...>
 				{
 					FWD(t) | child<I> | get_tape<children_sequences | child<I>> ... 
 				};
@@ -140,19 +135,19 @@ namespace ruzhouxie
 		template<size_t I, specified<tuple_tape> Self>
 		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 		{
-			if constexpr(I >= SubIndices.size())
+			if constexpr(I >= child_count<decltype(Sequence)>)
 			{
 				return;
 			}
-			else if constexpr((Sequence | child<SubIndices[I]>).size() == 0uz)
+			else if constexpr((Sequence | child<I>).size() == 0uz)
 			{
-				if constexpr(SubIndices[I] == child_count<decltype(Sequence)> - 1uz)
+				if constexpr(I == child_count<decltype(Sequence)> - 1uz)
 				{
 					return FWD(self, tpl);
 				}
 				else
 				{
-					return (self.tpl);
+					return as_const(self.tpl);
 				}
 			}
 			else
@@ -179,23 +174,23 @@ namespace ruzhouxie
 		return sub_tape_t<Offset, Tape&&>{ FWD(tape) };
 	}
 
-	template<auto Sequence, indices auto SubIndices>
+	template<auto Sequence>
 	struct detail::get_tape_t_ns::get_tape_t
 	{
 		template<typename T>
 		constexpr decltype(auto) operator()(T&& t)const
 		{
-			if constexpr (requires{ tag_invoke<Sequence, SubIndices>(get_tape<Sequence, SubIndices>, FWD(t)); })
+			if constexpr (requires{ tag_invoke<Sequence>(get_tape<Sequence>, FWD(t)); })
 			{
-				return tag_invoke<Sequence, SubIndices>(get_tape<Sequence, SubIndices>, FWD(t));
+				return tag_invoke<Sequence>(get_tape<Sequence>, FWD(t));
 			}
 			else if constexpr(terminal<T>)
 			{
-				return terminal_tape<T&&, Sequence, SubIndices>{ FWD(t) };
+				return terminal_tape<T&&, Sequence>{ FWD(t) };
 			}
 			else
 			{
-				return tuple_tape<T&&, Sequence, SubIndices>{ FWD(t) };
+				return tuple_tape<T&&, Sequence>{ FWD(t) };
 			}
 			// else return[&]<size_t...I>(std::index_sequence<I...>)
 			// {

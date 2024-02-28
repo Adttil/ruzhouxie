@@ -1,6 +1,7 @@
 #ifndef RUZHOUXIE_GENERAL_H
 #define RUZHOUXIE_GENERAL_H
 
+#include <system_error>
 #include <type_traits>
 #include <concepts>
 #include <cstdint>
@@ -213,6 +214,18 @@ namespace ruzhouxie
 	inline constexpr auto&& last_arg(auto&&...args)noexcept
 	{
 		return std::get<sizeof...(args) - 1>(std::forward_as_tuple(FWD(args)...));
+	}
+
+	constexpr bool equal(auto&& x, auto&& y)
+	{
+		if constexpr(requires{ FWD(x) == FWD(y);})
+		{
+			return FWD(x) == FWD(y);
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 

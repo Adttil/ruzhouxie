@@ -5,6 +5,7 @@
 #include "general.h"
 #include "macro_define.h"
 #include "ruzhouxie/macro_define.h"
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -129,6 +130,15 @@ namespace ruzhouxie
 	RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
 	{
 		return locate_type<T, Elems...>(fn);
+	}
+
+	template<typename...T, typename V>
+	constexpr auto tuple_contain(const tuple<T...>& tpl, const V& value)
+	{
+		return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return (false || ... || equal(tpl.template get<I>(), value));
+		}(std::index_sequence_for<T...>{});
 	}
 }
 
