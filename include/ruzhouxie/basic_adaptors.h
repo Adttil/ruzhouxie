@@ -98,8 +98,6 @@ namespace ruzhouxie
 	}
 }
 
-
-
 //relayout
 namespace ruzhouxie
 {
@@ -320,9 +318,6 @@ namespace ruzhouxie
 	inline constexpr detail::zip_transform_t zip_transform{};
 	inline constexpr pipe_closure<detail::transform_t, 2> transform{};
 }
-
-
-
 
 #include "macro_undef.h"
 #endif

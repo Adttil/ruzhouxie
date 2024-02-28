@@ -96,21 +96,20 @@ using special_mat = rzx::tuple<
     rzx::vec<4>,
     rzx::tuple<rzx::constant_t<0>, rzx::constant_t<0>, rzx::constant_t<0>, rzx::constant_t<1>>
 >;
-
-special_mat shift34{ 
+//表示位移(3, 4, 0)的齐次矩阵
+special_mat shift340{ 
     { 1.0, 0.0, 0.0, 3.0 },
     { 0.0, 1.0, 0.0, 4.0 },
     { 0.0, 0.0, 1.0, 0.0 },
     {}
  };
-
-special_mat shift68 = +rzx::mat_mul(shift34, shift34);
+//表示位移(6, 8, 0)的齐次矩阵
+special_mat shift680 = +rzx::mat_mul(shift340, shift340);
 ```
-`rzx::constant_t`是一个表示常量的空类，类似于std::integral_constant，但是增加了一些运算相关的重载，使得`rzx::constant_t<0>{} * [任意值] == rzx::constant_t<0>{}`等均合法以方便用同样的方式处理。
-通过这种方法使得矩阵乘法的运算量大大减少，在clang18上编译测试，最后一行采用编译期常量的齐次矩阵乘法比常规方式快62%。
+`rzx::constant_t`是一个表示常量的空类，类似于std::integral_constant，但是增加了一些运算相关的重载，比如使得`rzx::constant_t<0>{} * [能与int相乘的类型的任意对象]`的结果始终为`rzx::constant_t<0>{}`。通过这种方法使得矩阵乘法的运算量大大减少，在clang18上编译测试，最后一行采用编译期常量的齐次矩阵乘法比常规方式快62%。
 
 ## 所有权管理-自动move
-使用try_tagged会试图给对象的每一个“分量”添加一个静态的唯一标识，这使得库可以自动在最后一次使用该分量时采用完美转发。如下代码从一个`tuple<Tr, Tr>`类型的重复两遍的view构造一个`tuple<tuple<Tr, Tr>, tuple<Tr, Tr>`：
+库会自动在最后一次使用某分量时采用完美转发。如下代码从一个`tuple<Tr, Tr>{ e0, e1 }`类型对象的右值引用重布局并构造一个`tuple<Tr, Tr, Tr, Tr, Tr>{ e0, e1, e0, e1, e1 }`, 两个分量均在最后一次被使用时被移动。
 
 ```cpp
 namespace rzx = ruzhouxie;
@@ -127,7 +126,7 @@ struct Tr
 
 int main()
 {
-    constexpr auto layout = std::array//把[e0, e1]看作[e0, e0, e1, e0, e1]的布局
+    constexpr auto layout = std::array//把[e0, e1]看作[e0, e1, e0, e0, e1]的布局
     {
         std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
     };
@@ -135,12 +134,12 @@ int main()
     std::array vector{ Tr{}, Tr{} };
 
     std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::relayout<layout>);
     std::puts("==================");
 }
 ```
 
-`rzx::as_ref`的作用是将右值引用仍然按引用储存，因为默认情况下为了防止悬垂对右值引用都是按值存储的。
+其中`rzx::as_ref`的作用是将右值引用仍然按引用储存，默认情况下对于右值引用都是按值存储以防止悬垂。
 这里两个Tr对象都在最后一次使用时进行了完美转发，从而减少了复制构造的次数。程序输出如下：
 
 ![](docs/assets/auto-move-output.png)
