@@ -163,6 +163,74 @@ namespace ruzhouxie
 		};
 	}
 
+	template<auto Layout, typename T>
+	constexpr relayout_view<T&&, Layout> fwd_relayout_view(T&& t)noexcept
+	{
+		return relayout_view<T&&, Layout>{ {}, FWD(t) };
+	}
+
+	template<typename Data, auto Layouts>
+	struct tape_t
+	{
+		using data_type = Data;
+		static constexpr auto layouts = Layouts;
+		//Here, it is necessary to ensure that each child of data is independent.
+		//Each child of data is also necessary to meet the above requirements.
+		Data data;
+
+		template<size_t I, specified<tape_t> Self>
+		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+		{
+			if constexpr(I >= child_count<decltype(Layouts)>)
+			{
+				return;
+			}
+			else
+			{
+				constexpr auto layout = Layouts | child<I>;
+				constexpr auto relation_to_rest = []<size_t...J>(std::index_sequence<J...>)
+				{
+					//for some compiler.
+					constexpr auto layout = Layouts | child<I>;
+					return (layout_relation::independent | ... | layout_relation_to(layout, Layouts | child<J + I + 1uz>));
+				}(std::make_index_sequence<child_count<decltype(Layouts)> - I - 1uz>{});
+
+				if constexpr(indices<decltype(layout)>)
+				{
+					if constexpr(relation_to_rest == layout_relation::independent)
+					{
+						return FWD(self, data) | child<layout>;
+					}
+					else
+					{
+						return std::as_const(self.data) | child<layout>;
+					}
+				}
+				else if constexpr(relation_to_rest == layout_relation::independent)
+				{
+					return relayout_view<decltype(FWD(self, data)), layout>
+					{
+						FWD(self, data)
+					};
+				}
+				// else if constexpr(relation_to_rest == layout_relation::included)
+				// {
+				// 	return relayout_view<decltype(as_const(self.data)), layout>
+				// 	{
+				// 		as_const(self.data)
+				// 	};
+				// }
+				else
+				{
+					return relayout_view<decltype(as_const(self.data)), layout>
+					{
+						as_const(self.data)
+					};
+				}
+			}
+		}
+	};
+
 	namespace detail
 	{
 		template<auto layout>
@@ -197,11 +265,11 @@ namespace ruzhouxie
 {
 	namespace detail
 	{
-		template<typename Fn, branched...T>
+		template<typename Fn, typename...T>
 		struct zip_transform_view;
 	}
 
-	template<typename Fn, branched...T>
+	template<typename Fn, typename...T>
 	struct detail::zip_transform_view : view_base<zip_transform_view<Fn, T...>>
 	{
 		RUZHOUXIE_MAYBE_EMPTY Fn fn;
@@ -262,7 +330,37 @@ namespace ruzhouxie
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			//todo...noexcept
 		{
-			return tape_type<Seq, Self&&>{ FWD(self) };
+			constexpr auto sequence = []<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple{ array{ I }... };
+			}(std::make_index_sequence<child_count<Self>>{});
+
+			auto args_tape = [&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple<decltype(FWD(self, trees) | child<I> | get_tape<sequence>)...>
+				{
+					FWD(self, trees) | child<I> | get_tape<sequence> ... 
+				};
+			}(std::index_sequence_for<T...>{});
+
+			auto data_get = [&]<size_t I, size_t...J>(std::index_sequence<J...>)
+			{
+				return FWD(self, fn)(FWD(args_tape) | child<J, I>...);
+			};
+
+			auto data = [&]<size_t...I>(std::index_sequence<I...>)
+			{
+				constexpr auto s = std::index_sequence_for<T...>{};
+				return tuple<decltype(data_get.template operator()<I>(s))...>
+				{
+					data_get.template operator()<I>(s)... 
+				};
+			};
+
+			return tape_t<decltype(data(std::make_index_sequence<child_count<Self>>{})), Seq>
+			{
+				data(std::make_index_sequence<child_count<Self>>{}) 
+			};
 		}
 
 	private:

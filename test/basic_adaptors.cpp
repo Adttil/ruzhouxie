@@ -35,7 +35,7 @@ int main()
     std::tuple trs{ Tr{}, Tr{} };
 	constexpr auto layout1 = std::array//把[x, y]看作[x, x, y, x, y]的布局
     {
-        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
+        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
     };
 
 	std::puts("==================");

@@ -5,6 +5,7 @@
 #include "general.h"
 #include "macro_define.h"
 #include "ruzhouxie/macro_define.h"
+#include <functional>
 #include <utility>
 
 namespace ruzhouxie
@@ -139,6 +140,15 @@ namespace ruzhouxie
 		{
 			return (false || ... || equal(tpl.template get<I>(), value));
 		}(std::index_sequence_for<T...>{});
+	}
+
+	template<size_t N, typename...Elems>
+	constexpr auto tuple_drop(const tuple<Elems...>& tpl)
+	{
+		return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return tuple{ tpl.template get<I + N>()... };
+		}(std::make_index_sequence<sizeof...(Elems) - N>{});
 	}
 }
 
