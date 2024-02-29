@@ -16,8 +16,8 @@ void fooo()
         vec<2>{ 3.0, 4.0 }
     };
 
-    mat<2, 2> mm = +mat_mul(m, m);
-    std::cout << (mm | child<0uz, 0uz>);
+    //mat<2, 2> mm = +mat_mul(m, m);
+    //std::cout << (mm | child<0uz, 0uz>);
     //mat<2, 2> _2m = +(m + m);
     //MAGIC_CHECK((_2m | child<0, 0>), 2.0);
 
@@ -35,63 +35,34 @@ struct Tr
     ~Tr()noexcept { std::puts("~Tr();"); }
 };
 
-struct test_t : std::array<Tr, 5>
-{
-
-};
-
 int main()
 {
-    fooo();
-
-    struct vec2{ float x; float y; };
-    auto v = rzx::view{ vec2{ 1.0f, 2.0f } };
-    float foo = v.x + v.y;
-
-    constexpr auto layout = std::array//把[x, y]看作[x, x, y, x, y]的布局
-    {
-        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
-    };
-
-    std::array vector{ Tr{}, Tr{} };
-
-    std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
-    std::puts("==================");
-
-    MAGIC_SHOW_TYPE(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
-
-    /*{
-        using vec = std::array<int, 2>;
-        using mat = std::array<vec, 2>;
-
-        MAGIC_CHECK(rzx::child_count<vec>, 2);
-        MAGIC_CHECK(rzx::child_count<mat>, 2);
-        MAGIC_CHECK((rzx::child_count<ruzhouxie::child_type<mat, 0>>), 2);
-
-        MAGIC_CHECK(rzx::tensor_rank<vec>, 1);
-        MAGIC_CHECK(rzx::tensor_rank<mat>, 2);
-        constexpr auto layout = rzx::default_tensor_layout<mat>;
-    }*/
-    //MAGIC_SHOW_TYPE(foo<layout>{});
+    //fooo();
+    
 
     //auto mat = std::array{ X{ 1, 2.0 }, X{ 3, 4.0 } };
-    auto mat0 = rzx::array{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
-    auto mat = rzx::mat<2, 2>{ rzx::vec<2>{ 1.0, 2.0 }, rzx::vec<2>{ 3.0, 4.0 } };
+    auto mat = rzx::array{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
+    using mat_t = decltype(mat);
         // rzx::mat<2, 2>{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
-    auto vec = X{ 1, 2.0 };
+    auto vec = rzx::array{ 1.0, 2.0 };
+    using vec_t = decltype(vec);    
+
     auto exp = rzx::mat_mul(mat, mat);
     //auto exp0 = rzx::mat_mul(mat0, mat0);
     //auto exp = rzx::dot(vec, vec);
+    //std::cout << exp << "  gagaga\n";
     //auto exp = rzx::mat_mul_vec(mat, vec);
     //auto exp = mat | rzx::transpose<>;
     //auto exp = rzx::vec_mul_mat(vec, mat);
-    auto r = rzx::to<rzx::tuple>()(exp);
+    //auto r = exp | rzx::make_tree<vec_t>;
+    auto r = exp | rzx::make_tree<mat_t>;
     //MAGIC_CHECK((mat | rzx::child<0, 0>), 1.0);
     //MAGIC_SHOW_TYPE(exp0);
     MAGIC_SHOW_TYPE(exp);
     MAGIC_SHOW_TYPE(r);
-    std::cout << 3;
+    
+    std::cout << r[0][0] << ", " << r[0][1] << '\n';
+    std::cout << r[1][0] << ", " << r[1][1] << '\n';
     //std::array<std::array<double, 2>, 2> e{};
     //rzx::mat_mul(r, mat) >> e;
 

@@ -4,6 +4,9 @@
 
 #include "general.h"
 #include "macro_define.h"
+#include "ruzhouxie/macro_define.h"
+#include <functional>
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -99,6 +102,12 @@ namespace ruzhouxie
 		return { FWD(args)... };
 	}
 
+	template<typename Tpl>
+	constexpr auto tuple_cat(Tpl&& tpl)
+	{
+		return FWD(tpl);
+	}
+
 	template<typename Tpl1, typename Tpl2>
 	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
 		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
@@ -111,11 +120,35 @@ namespace ruzhouxie
 		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
 	}
 
+	template<typename Tpl1, typename Tpl2, typename...Rest>
+	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
+		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
+	{
+		return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
+	}
 
 	template<typename T, typename...Elems>
 	RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
 	{
 		return locate_type<T, Elems...>(fn);
+	}
+
+	template<typename...T, typename V>
+	constexpr auto tuple_contain(const tuple<T...>& tpl, const V& value)
+	{
+		return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return (false || ... || equal(tpl.template get<I>(), value));
+		}(std::index_sequence_for<T...>{});
+	}
+
+	template<size_t N, typename...Elems>
+	constexpr auto tuple_drop(const tuple<Elems...>& tpl)
+	{
+		return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return tuple{ tpl.template get<I + N>()... };
+		}(std::make_index_sequence<sizeof...(Elems) - N>{});
 	}
 }
 

@@ -2,6 +2,8 @@
 #define RUZHOUXIE_ARRAY_H
 
 #include "general.h"
+#include <concepts>
+#include <tuple>
 
 #if __STDC_HOSTED__
 
@@ -256,6 +258,21 @@ namespace ruzhouxie
 			return concat_2_array(arr, concat_array(rest...));
 		}
 	}
+
+	template<size_t Len, typename T, size_t N>
+	constexpr auto array_drop(const array<T, N>& arr)noexcept
+	{
+		std::array<T, N - Len> result{};
+		for(size_t i = 0; i < N - Len; ++i)
+		{
+			result[i] = arr[i + Len];
+		}
+		return result;
+	}
+
+	template<typename T>
+	concept indices = std::same_as<purified<T>, array<typename  purified<T>::value_type, std::tuple_size_v<purified<T>>>>
+		&& std::integral<typename  purified<T>::value_type>;
 }
 
 #endif

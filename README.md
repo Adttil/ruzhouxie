@@ -1,11 +1,11 @@
-# RuZhouXie
+![cover](docs/assets/cover.jpg)
 `RuZhouXie`是一个通配的异构几何库，同时也是一个`std::ranges`风格的异构运算库。它基于标准`c++23`并且是 `header-only`、无依赖的。它使您可以使用同一套向量、矩阵相关函数操作储存格式各不相同的具体几何类型，同时使您可以像用`std::ranges`库一样方便的操作`tuple`等异构容器。
 
 - [RuZhouXie](#ruzhouxie)
   - [基本几何库](#基本几何库)
   - [异构的“范围库”](#异构的范围库)
   - [通配的异构几何库](#通配的异构几何库)
-  - [所有权管理-自动move](#所有权管理-自动move)
+  - [编译期表达式重整优化](#编译期表达式重整优化)
   - [第三方库](#第三方库)
 
 ## 基本几何库
@@ -21,7 +21,7 @@ rzx::vec<2> vector{ 1.0, 2.0 };
 
 rzx::vec<2> result = +rzx::mat_mul_vec(matrix, vector);
 ```
-由于本库的函数大多为惰性运算，前面写+可隐式转换为任意可以匹配的类型，这里等价于：
+由于本库的函数大多为惰性运算，前面写+可隐式转换为任意结构相匹配的类型，这里等价于：
 ```cpp
 rzx::vec<2, double> result = rzx::mat_mul_vec(matrix, vector) | rzx::to<ruzhouxie::vec<2>>();
 ```
@@ -50,7 +50,7 @@ special_vec3 vector1{ 3.0f, 4.0f, 0 };
 std::tuple vector2{ 1.0, 2, 3.0f };
 
 rzx::tuple<double, double, double> result1 = +rzx::add(vector1, vector2);
-//如果使用运算符，则至少有一个操作数要套上rzx::view
+//如果要使用库定义的运算符重载，则至少有一个操作数要套上rzx::view
 auto result2 = rzx::view{ vector1 } - vector2 | rzx::to<rzx::tuple>();
 
 std::tuple matrix{ 
@@ -60,7 +60,7 @@ std::tuple matrix{
  };
  std::array<double, 3> = +rzx::mat_mul_vec(matrix, special_vec3);
 ```
-否则，你可以提供用如下方式定制行为：
+否则，你可以通过tag-invoke的方式定制行为：
 ```cpp
 namespace rzx = ruzhouxie;
 
@@ -96,54 +96,70 @@ using special_mat = rzx::tuple<
     rzx::vec<4>,
     rzx::tuple<rzx::constant_t<0>, rzx::constant_t<0>, rzx::constant_t<0>, rzx::constant_t<1>>
 >;
-
-special_mat shift34{ 
+//表示位移(3, 4, 0)的齐次矩阵
+special_mat shift340{ 
     { 1.0, 0.0, 0.0, 3.0 },
     { 0.0, 1.0, 0.0, 4.0 },
     { 0.0, 0.0, 1.0, 0.0 },
     {}
  };
-
-special_mat shift68 = +rzx::mat_mul(shift34, shift34);
+//表示位移(6, 8, 0)的齐次矩阵
+special_mat shift680 = +rzx::mat_mul(shift340, shift340);
 ```
-`rzx::constant_t`是一个表示常量的空类，类似于std::integral_constant，但是增加了一些运算相关的重载，使得`rzx::constant_t<0>{} * [任意值] == rzx::constant_t<0>{}`等均合法以方便用同样的方式处理。
-通过这种方法使得矩阵乘法的运算量大大减少，在clang18上编译测试，最后一行采用编译期常量的齐次矩阵乘法比常规方式快62%。
+`rzx::constant_t`是一个表示常量的空类，类似于std::integral_constant，但是增加了一些运算相关的重载，比如使得`rzx::constant_t<0>{} * [能与int相乘的类型的任意对象]`的结果始终为`rzx::constant_t<0>{}`。通过这种方法使得矩阵乘法的运算量大大减少，在clang18上编译测试，最后一行采用编译期常量的齐次矩阵乘法比常规方式快62%。
 
-## 所有权管理-自动move
-使用try_tagged会试图给对象的每一个“分量”添加一个静态的唯一标识，这使得库可以自动在最后一次使用该分量时采用完美转发。如下代码从一个`tuple<Tr, Tr>`类型的重复两遍的view构造一个`tuple<tuple<Tr, Tr>, tuple<Tr, Tr>`：
+## 编译期表达式重整优化
+库中的惰性表达式再最终执行前会进行重组，以提高效率，这包括：对象在最后一次使用时进行完美转发、去除重复运算、去除无用运算等等。
+
+例如下面的代码从一个`tuple<trace, trace>{ e0, e1 }`类型对象的右值引用重布局并构造一个`tuple<trace, trace, trace, trace, trace>{ e0, e1, e0, e1, e1 }`, 两个分量均在最后一次被使用时被移动。
 
 ```cpp
 namespace rzx = ruzhouxie;
 
-struct Tr
+struct trace
 {
-    Tr() { std::puts("Tr();"); };
-    Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
-    Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
-    Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
-    Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
-    ~Tr()noexcept { std::puts("~Tr();"); }
+    trace() { std::puts("trace();"); };
+    trace(const trace&) { std::puts("trace(const trace&);"); }
+    trace(trace&&) { std::puts("trace(trace&&);"); }
+    trace& operator=(const trace&) { std::puts("trace& operator=(const trace&);"); return *this; }
+    trace& operator=(trace&&) { std::puts("trace& operator=(trace&&);"); return *this; }
+    ~trace() { std::puts("~trace();"); }
 };
 
 int main()
 {
-    constexpr auto layout = std::array//把[e0, e1]看作[e0, e0, e1, e0, e1]的布局
+    constexpr auto layout = std::array//把[e0, e1]看作[e0, e1, e0, e1, e1]的布局
     {
-        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
+        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
     };
 
-    std::array vector{ Tr{}, Tr{} };
+    std::array vector{ trace{}, trace{} };
 
     std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    rzx::vec<5, trace> result = +(std::move(vector) | rzx::as_ref | rzx::relayout<layout>);
     std::puts("==================");
 }
 ```
 
-`rzx::as_ref`的作用是将右值引用仍然按引用储存，因为默认情况下为了防止悬垂对右值引用都是按值存储的。
+其中`rzx::as_ref`的作用是将右值引用仍然按引用储存，默认情况下对于右值引用都是按值存储以防止悬垂。
 这里两个Tr对象都在最后一次使用时进行了完美转发，从而减少了复制构造的次数。程序输出如下：
-
-![](docs/assets/auto-move-output.png)
+```
+trace();
+==================
+trace(const trace&);
+trace(const trace&);
+trace(trace&&);
+trace(const trace&);
+trace(trace&&);
+==================
+~trace();
+~trace();
+~trace();
+~trace();
+~trace();
+~trace();
+~trace();
+```
 
 ## 第三方库
 test文件夹下的测试使用了magic-cpp库来进行类型可视化：https://github.com/16bit-ykiko/magic-cpp

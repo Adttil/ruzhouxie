@@ -1,6 +1,7 @@
 #ifndef RUZHOUXIE_GENERAL_H
 #define RUZHOUXIE_GENERAL_H
 
+#include <system_error>
 #include <type_traits>
 #include <concepts>
 #include <cstdint>
@@ -10,18 +11,24 @@
 #include <compare>
 #include <functional>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif
+
 #include "macro_define.h"
+
+#if !defined(__cpp_size_t_suffix) || __cpp_size_t_suffix <= 202006L
+constexpr size_t operator""uz(unsigned long long x)
+{
+	return x;
+}
+#endif
 
 namespace ruzhouxie
 {
 	inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
-#if !defined(__cpp_size_t_suffix) || __cpp_size_t_suffix <= 202006L
-	constexpr size_t operator""uz(unsigned long long x)
-	{
-		return x;
-	}
-#endif
+
 
 	//type without cvref.
 	template<typename T>
@@ -207,6 +214,18 @@ namespace ruzhouxie
 	inline constexpr auto&& last_arg(auto&&...args)noexcept
 	{
 		return std::get<sizeof...(args) - 1>(std::forward_as_tuple(FWD(args)...));
+	}
+
+	constexpr bool equal(auto&& x, auto&& y)
+	{
+		if constexpr(requires{ FWD(x) == FWD(y);})
+		{
+			return FWD(x) == FWD(y);
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 
