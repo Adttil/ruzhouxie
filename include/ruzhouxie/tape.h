@@ -15,11 +15,11 @@
 
 namespace ruzhouxie
 {
-	template<typename T, auto Layout>
-	struct relayout_view;
-
-	template<auto Layout, typename T>
-	constexpr relayout_view<T&&, Layout> fwd_relayout_view(T&& t)noexcept;
+	namespace detail
+	{
+		template<typename T, auto Layout>
+		struct relayout_view;
+	}
 
 	template<typename T, auto...ReservedLayouts>
 	struct reserved_view;
@@ -115,7 +115,66 @@ namespace ruzhouxie
 	}
 
 	template<typename Data, auto Layouts>
-	struct tape_t;
+	struct tape_t
+	{
+		using data_type = Data;
+		static constexpr auto layouts = Layouts;
+		//Here, it is necessary to ensure that each child of data is independent.
+		//Each child of data is also necessary to meet the above requirements.
+		Data data;
+
+		template<size_t I, specified<tape_t> Self>
+		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+		{
+			if constexpr(I >= child_count<decltype(Layouts)>)
+			{
+				return;
+			}
+			else
+			{
+				constexpr auto layout = Layouts | child<I>;
+				constexpr auto relation_to_rest = []<size_t...J>(std::index_sequence<J...>)
+				{
+					//for some compiler.
+					constexpr auto layout = Layouts | child<I>;
+					return (layout_relation::independent | ... | layout_relation_to(layout, Layouts | child<J + I + 1uz>));
+				}(std::make_index_sequence<child_count<decltype(Layouts)> - I - 1uz>{});
+
+				if constexpr(indices<decltype(layout)>)
+				{
+					if constexpr(relation_to_rest == layout_relation::independent)
+					{
+						return FWD(self, data) | child<layout>;
+					}
+					else
+					{
+						return std::as_const(self.data) | child<layout>;
+					}
+				}
+				else if constexpr(relation_to_rest == layout_relation::independent)
+				{
+					return detail::relayout_view<decltype(FWD(self, data)), layout>
+					{
+						{}, FWD(self, data)
+					};
+				}
+				// else if constexpr(relation_to_rest == layout_relation::included)
+				// {
+				// 	return relayout_view<decltype(as_const(self.data)), layout>
+				// 	{
+				// 		as_const(self.data)
+				// 	};
+				// }
+				else
+				{
+					return detail::relayout_view<decltype(as_const(self.data)), layout>
+					{
+						{}, as_const(self.data)
+					};
+				}
+			}
+		}
+	};
 
 	namespace detail::get_tape_t_ns
 	{
