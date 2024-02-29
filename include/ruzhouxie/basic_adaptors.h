@@ -32,13 +32,6 @@ namespace ruzhouxie
 			{
 				return FWD(self, raw_view) | make_tree<U>;
 			}
-
-			template<typename U>
-			constexpr operator view<U>(this auto&& self)
-				requires requires{ FWD(self, raw_view) | make_tree<U>; }
-			{
-				return view<U>{ FWD(self, raw_view) | make_tree<U> };
-			}
 		};
 
 		template<typename View>
@@ -73,6 +66,36 @@ namespace ruzhouxie
 
 	template<typename T>
 	view(T&&) -> view<T>;
+
+	template<typename T>
+	struct tree_maker_trait<view<T>>
+	{
+		struct type1// : processer<type1>
+		{
+			static constexpr tree_maker<T> maker{};
+
+			template<typename U>
+			static consteval auto get_sequence()
+			{
+				return maker.template get_sequence<U>();
+			}
+
+			template<typename U, typename Tape>
+			constexpr auto process_tape(Tape&& tape)const
+			{
+				return view<T>{ maker.template process_tape<U>(FWD(tape)) };
+			}
+
+			template<typename Tree>
+			RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
+			{
+				return process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>);
+			}
+			//AS_EXPRESSION(process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
+		};
+
+		using type = type1;
+	};
 
 	namespace detail
 	{

@@ -26,7 +26,9 @@ int main()
 
 	constexpr std::array index = std::array{ 0uz };
 
+	constexpr auto seq = rzx::to<rzx::tuple>().get_sequence<decltype(std::move(tpl))>();
+
 	std::puts("==================");
-	auto copy = std::move(tpl) | rzx::make_tree<rzx::tuple<Tr, Tr>>;
+	auto copy = std::move(tpl) | rzx::to<rzx::tuple>();
 	std::puts("==================");
 }

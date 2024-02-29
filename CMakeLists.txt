@@ -13,12 +13,13 @@ endif()
 
 include_directories("include")
 
-add_executable(processer "test/processer.cpp")
-add_executable(adaptors "test/basic_adaptors.cpp")
-add_executable(tensor "test/tensor.cpp")
+#add_executable(processer "test/processer.cpp")
+#add_executable(adaptors "test/basic_adaptors.cpp")
+#add_executable(tensor "test/tensor.cpp")
+#add_executable(auto-move "test/auto-move.cpp")
 
 file(GLOB_RECURSE native_srcs RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "test/*.cpp")
 foreach(srcfile IN LISTS native_srcs)
     get_filename_component(elfname ${srcfile} NAME_WE)
-    #add_executable(${elfname} ${srcfile})
+    add_executable(${elfname} ${srcfile})
 endforeach()

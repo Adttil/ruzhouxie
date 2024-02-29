@@ -1,6 +1,5 @@
 #include "test_tool.h"
 #include <array>
-#include <ruzhouxie\result.h>
 #include <ruzhouxie\tensor.h>
 #include <utility>
 
@@ -18,14 +17,14 @@ struct Tr
 
 int main()
 {
-    constexpr auto layout = std::array//把[x, y]看作[x, x, y, x, y]的布局
+    constexpr auto layout = std::array//把[e0, e1]看作[e0, e1, e0, e1, e1]的布局
     {
-        std::array{0}, std::array{1}, std::array{0}, std::array{1}, std::array{1}
+        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
     };
 
     std::array vector{ Tr{}, Tr{} };
 
     std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::try_tagged | rzx::relayout<layout>);
+    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::relayout<layout>);
     std::puts("==================");
 }
