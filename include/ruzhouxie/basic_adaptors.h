@@ -299,21 +299,8 @@ namespace ruzhouxie
 
 			using input_tapes_type = decltype(input_tapes);
 
-			constexpr auto input_tape_layouts_zip = []<size_t...I>(std::index_sequence<I...>)
-			{
-				constexpr auto input_tape_layouts_zip_at = []<size_t J, size_t...K>(std::index_sequence<K...>)
-				{
-					return tuple<purified<decltype(purified<child_type<input_tapes_type, K>>::layouts | child<J>)>...>
-					{
-						purified<child_type<input_tapes_type, K>>::layouts | child<J> ... 
-					};
-				};
-				constexpr auto s = std::index_sequence_for<T...>{};
-				return tuple<decltype(input_tape_layouts_zip_at.template operator()<I>(s))...>
-				{
-					input_tape_layouts_zip_at.template operator()<I>(s)...
-				};
-			}(std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
+			constexpr auto input_tape_layouts_zip = get_input_tape_layouts_zip<input_tapes_type>(
+				std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
 
 			constexpr auto unique_input_indices_map = get_unique_input_indices_and_map<input_tape_layouts_zip>();
 
@@ -331,42 +318,8 @@ namespace ruzhouxie
 				};
 			};
 
-			constexpr auto result_layouts = []<size_t...I>(std::index_sequence<I...>)
-			{
-				constexpr auto result_layouts_at = []<size_t J>()
-				{
-					constexpr auto input_seq_map = zip_transform_view<Fn, T...>::get_input_seq_and_map<Seq>();
-
-					constexpr auto input_tape_layouts_zip = []<size_t...I_>(std::index_sequence<I_...>)
-					{
-						constexpr auto input_tape_layouts_zip_at = []<size_t J_, size_t...K>(std::index_sequence<K...>)
-						{
-							return tuple<purified<decltype(purified<child_type<input_tapes_type, K>>::layouts | child<J_>)>...>
-							{
-								purified<child_type<input_tapes_type, K>>::layouts | child<J_> ... 
-							};
-						};
-						constexpr auto s = std::index_sequence_for<T...>{};
-						return tuple<decltype(input_tape_layouts_zip_at.template operator()<I_>(s))...>
-						{
-							input_tape_layouts_zip_at.template operator()<I_>(s)...
-						};
-					}(std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
-
-					constexpr auto unique_input_indices_map = get_unique_input_indices_and_map<input_tape_layouts_zip>();
-					auto indices = Seq | child<J>;
-					if constexpr(indices.size() == 0)
-					{
-						return indices;
-					}
-					else
-					{
-						indices[0] = unique_input_indices_map.map[input_seq_map.map[indices[0]]];
-					}
-					return indices;
-				};
-				return tuple{ result_layouts_at.template operator()<I>()... };
-			}(std::make_index_sequence<child_count<decltype(Seq)>>{});
+			constexpr auto result_layouts = get_result_layouts<Seq, input_seq_map.map, unique_input_indices_map.map>
+				(std::make_index_sequence<child_count<decltype(Seq)>>{});
 
 			return tape_t<
 					decltype(result_data(std::make_index_sequence<child_count<decltype(unique_input_indices_map.indices)>>{})),
@@ -375,7 +328,9 @@ namespace ruzhouxie
 				{
 					result_data(std::make_index_sequence<child_count<decltype(unique_input_indices_map.indices)>>{})
 				};
-//...........................................................................................................
+			
+			//...........................................................................................................
+			
 			// constexpr auto sequence = []<size_t...I>(std::index_sequence<I...>)
 			// {
 			// 	return tuple{ array{ I }... };
@@ -488,6 +443,42 @@ namespace ruzhouxie
 			};
 			return result_t{ indices, map };
 		}
+
+		template<typename TInputTapes, size_t...I>
+		static constexpr auto get_input_tape_layouts_zip(std::index_sequence<I...>)
+		{
+			constexpr auto input_tape_layouts_zip_at = []<size_t J, size_t...K>(std::index_sequence<K...>)
+			{
+				return tuple<purified<decltype(purified<child_type<TInputTapes, K>>::layouts | child<J>)>...>
+				{
+					purified<child_type<TInputTapes, K>>::layouts | child<J> ... 
+				};
+			};
+			constexpr auto s = std::index_sequence_for<T...>{};
+			return tuple<decltype(input_tape_layouts_zip_at.template operator()<I>(s))...>
+			{
+				input_tape_layouts_zip_at.template operator()<I>(s)...
+			};
+		}//(std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
+
+		template<auto Seq, auto InputMap, auto UniqueInputMap, size_t...I>
+		static consteval auto get_result_layouts(std::index_sequence<I...>)
+		{
+			constexpr auto result_layouts_at = []<size_t J>()
+			{
+				auto indices = Seq | child<J>;
+				if constexpr(indices.size() == 0)
+				{
+					return indices;
+				}
+				else
+				{
+					indices[0] = UniqueInputMap[InputMap[indices[0]]];
+				}
+				return indices;
+			};
+			return tuple{ result_layouts_at.template operator()<I>()... };
+		}//(std::make_index_sequence<child_count<decltype(Seq)>>{});
 	};
 
 	namespace detail
