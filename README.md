@@ -111,7 +111,8 @@ special_mat shift680 = +rzx::mat_mul(shift340, shift340);
 ## 编译期表达式重整优化
 库中的惰性表达式再最终执行前会进行重组，以提高效率，这包括：对象在最后一次使用时进行完美转发、去除重复运算、去除无用运算等等。
 
-例如下面的代码从一个`tuple<trace, trace>{ e0, e1 }`类型对象的右值引用重布局并构造一个`tuple<trace, trace, trace, trace, trace>{ e0, e1, e0, e1, e1 }`, 两个分量均在最后一次被使用时被移动。
+### 最后一次使用进行完美转发
+如下代码从一个`tuple<trace, trace>{ e0, e1 }`类型对象的右值引用重布局并构造一个`tuple<trace, trace, trace, trace, trace>{ e0, e1, e0, e1, e1 }`, 两个分量均在最后一次被使用时被移动。
 
 ```cpp
 namespace rzx = ruzhouxie;
@@ -128,7 +129,7 @@ struct trace
 
 int main()
 {
-    constexpr auto layout = std::array//把[e0, e1]看作[e0, e1, e0, e1, e1]的布局
+    constexpr auto layout = std::array//把{ e0, e1 }看作{ e0, e1, e0, e1, e1 }的布局
     {
         std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
     };
@@ -160,6 +161,41 @@ trace(trace&&);
 ~trace();
 ~trace();
 ```
+
+### 去除重复运算
+如下代码相当于把一个{ 233 }:  
+1. 通过`rzx::relayout<layout1>`看作{ 233, 233 };  
+2. 然后通过`rzx::transform(neg)`变换为{ neg(233), neg(233) };
+3. 最后再通过`rzx::relayout<layout2>`看作{ neg(233), neg(233), neg(233), neg(233) }。  
+
+但是经过编译期分析重整表达式后，neg(233)实际上只会被调用一次。
+```cpp
+constexpr auto layout1 = std::array//把{ x }看做{ x, x }的layout
+{
+    std::array{0uz}, std::array{0uz}
+};
+constexpr auto layout2 = std::array//把{ x, y }看做{ x, y, x, y }的layout
+{
+    std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}
+};
+auto input = std::array{ 233 };
+auto neg = [](const auto& x)
+{
+    std::puts("neg");
+    return -x;
+};
+std::array<int, 4> result = +(input | rzx::relayout<layout1> | rzx::transform(neg) | rzx::relayout<layout2>);
+for(int x : result) 
+{
+    std::cout << x << ' ';
+}
+```
+程序运行结果如下，
+```
+neg
+-233 -233 -233 -233 
+```
+可以看到只调用了一次neg就产生了{ neg(233), neg(233), neg(233), neg(233) }的结果，这也意味着transform中如果不使用纯函数，将无法保证特定的结果。
 
 ## 第三方库
 test文件夹下的测试使用了magic-cpp库来进行类型可视化：https://github.com/16bit-ykiko/magic-cpp
