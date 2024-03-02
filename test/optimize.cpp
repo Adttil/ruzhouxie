@@ -1,11 +1,8 @@
 #include "ruzhouxie/basic_adaptors.h"
-#include "test_tool.h"
 #include <array>
 #include <cstdio>
 #include <functional>
 #include <ruzhouxie\tensor.h>
-#include <type_traits>
-#include <utility>
 
 namespace rzx = ruzhouxie;
 

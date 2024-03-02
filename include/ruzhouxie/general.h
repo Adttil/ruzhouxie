@@ -218,7 +218,7 @@ namespace ruzhouxie
 
 	constexpr bool equal(auto&& x, auto&& y)
 	{
-		if constexpr(requires{ FWD(x) == FWD(y);})
+		if constexpr(requires{ FWD(x) == FWD(y); })
 		{
 			return FWD(x) == FWD(y);
 		}

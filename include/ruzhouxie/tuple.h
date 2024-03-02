@@ -116,7 +116,10 @@ namespace ruzhouxie
 		constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
 		return[&]<size_t...i, size_t...j>(std::index_sequence<i...>, std::index_sequence<j...>)
 		{
-			return tuple{ FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()... };
+			return tuple<purified<decltype(FWD(tpl1).template get<i>())>..., purified<decltype(FWD(tpl2).template get<j>())>...>
+			{
+				FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()...
+			};
 		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
 	}
 
@@ -134,7 +137,7 @@ namespace ruzhouxie
 	}
 
 	template<typename...T, typename V>
-	constexpr auto tuple_contain(const tuple<T...>& tpl, const V& value)
+	constexpr bool tuple_contain(const tuple<T...>& tpl, const V& value)
 	{
 		return [&]<size_t...I>(std::index_sequence<I...>)
 		{

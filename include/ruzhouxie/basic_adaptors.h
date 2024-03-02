@@ -12,6 +12,7 @@
 #include "macro_define.h"
 #include <array>
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 #include <utility>
 
@@ -409,6 +410,23 @@ namespace ruzhouxie
 			return result_t{ seq, map };
 		}
 
+		template<typename TInputTapes, size_t...I>
+		static constexpr auto get_input_tape_layouts_zip(std::index_sequence<I...>)
+		{
+			constexpr auto input_tape_layouts_zip_at = []<size_t J, size_t...K>(std::index_sequence<K...>)
+			{
+				return tuple<purified<decltype(purified<child_type<TInputTapes, K>>::layouts | child<J>)>...>
+				{
+					purified<child_type<TInputTapes, K>>::layouts | child<J> ... 
+				};
+			};
+			constexpr auto s = std::index_sequence_for<T...>{};
+			return tuple<decltype(input_tape_layouts_zip_at.template operator()<I>(s))...>
+			{
+				input_tape_layouts_zip_at.template operator()<I>(s)...
+			};
+		}//(std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
+
 		template<auto InputLayoutsZip, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
 		static constexpr auto get_unique_input_indices_and_map_impl(auto& map)noexcept
 		{
@@ -444,22 +462,7 @@ namespace ruzhouxie
 			return result_t{ indices, map };
 		}
 
-		template<typename TInputTapes, size_t...I>
-		static constexpr auto get_input_tape_layouts_zip(std::index_sequence<I...>)
-		{
-			constexpr auto input_tape_layouts_zip_at = []<size_t J, size_t...K>(std::index_sequence<K...>)
-			{
-				return tuple<purified<decltype(purified<child_type<TInputTapes, K>>::layouts | child<J>)>...>
-				{
-					purified<child_type<TInputTapes, K>>::layouts | child<J> ... 
-				};
-			};
-			constexpr auto s = std::index_sequence_for<T...>{};
-			return tuple<decltype(input_tape_layouts_zip_at.template operator()<I>(s))...>
-			{
-				input_tape_layouts_zip_at.template operator()<I>(s)...
-			};
-		}//(std::make_index_sequence<child_count<decltype(input_seq_map.seq)>>{});
+		
 
 		template<auto Seq, auto InputMap, auto UniqueInputMap, size_t...I>
 		static consteval auto get_result_layouts(std::index_sequence<I...>)
