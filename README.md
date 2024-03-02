@@ -163,12 +163,12 @@ trace(trace&&);
 ```
 
 ### 去除重复运算
-如下代码相当于把一个{ 233 }:  
-1. 通过`rzx::relayout<layout1>`看作{ 233, 233 };  
-2. 然后通过`rzx::transform(neg)`变换为{ neg(233), neg(233) };
-3. 最后再通过`rzx::relayout<layout2>`看作{ neg(233), neg(233), neg(233), neg(233) }。  
+如下代码相当于把一个`{ 233 }`:  
+1. 通过`rzx::relayout<layout1>`看作`{ 233, 233 }`;  
+2. 然后通过`rzx::transform(neg)`变换为`{ neg(233), neg(233) }`;
+3. 最后再通过`rzx::relayout<layout2>`看作`{ neg(233), neg(233), neg(233), neg(233) }`。  
 
-但是经过编译期分析重整表达式后，neg(233)实际上只会被调用一次。
+但是经过编译期分析重整表达式后，`neg(233)`实际上只会被调用一次。
 ```cpp
 constexpr auto layout1 = std::array//把{ x }看做{ x, x }的layout
 {
@@ -195,7 +195,7 @@ for(int x : result)
 neg
 -233 -233 -233 -233 
 ```
-可以看到只调用了一次neg就产生了{ neg(233), neg(233), neg(233), neg(233) }的结果，这也意味着transform中如果不使用纯函数，将无法保证特定的结果。
+可以看到只调用了一次`neg`就产生了`{ neg(233), neg(233), neg(233), neg(233) }`的结果，这也意味着`transform`中如果不使用纯函数，将无法保证特定的结果。
 
 ## 第三方库
 test文件夹下的测试使用了magic-cpp库来进行类型可视化：https://github.com/16bit-ykiko/magic-cpp
