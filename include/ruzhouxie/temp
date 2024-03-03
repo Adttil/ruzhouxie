@@ -1,0 +1,14 @@
+#ifndef RUZHOUXIE_TEMP_H
+#define RUZHOUXIE_TEMP_H
+
+#include "general.h"
+
+#include "macro_define.h"
+
+namespace ruzhouxie
+{
+
+}
+
+#include "macro_undef.h"
+#endif

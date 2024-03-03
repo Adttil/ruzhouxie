@@ -1,11 +1,7 @@
 #ifndef RUZHOUXIE_TENSOR_H
 #define RUZHOUXIE_TENSOR_H
 
-#include "basic_adaptors.h"
-#include "array.h"
-#include "get.h"
-#include "pipe_closure.h"
-#include "tuple.h"
+#include "transform.h"
 
 #include "macro_define.h"
 
@@ -46,8 +42,6 @@ namespace ruzhouxie
 	};
 }
 
-
-
 namespace ruzhouxie
 {
 	template<size_t I, size_t Axis = 0uz, typename T = void>
@@ -86,39 +80,39 @@ namespace ruzhouxie
 	}
 }
 
-////component
-//namespace ruzhouxie
-//{
-//	namespace detail
-//	{
-//		template<size_t I, size_t Axis>
-//		struct component_t
-//		{
-//			template<typename T>
-//			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-//			{
-//				if constexpr (Axis == 0)
-//				{
-//					return t | child<I>;
-//				}
-//				else
-//				{
-//					constexpr auto tensor_layout = default_tensor_layout<T>;
-//					return relayout_view<T, component_copy<I, Axis>(tensor_layout)>
-//					{
-//						{}, FWD(t)
-//					};
-//				}
-//			}
-//		};
-//	};
-//
-//	inline namespace functors
-//	{
-//		template<size_t J, size_t Axis>
-//		inline constexpr pipe_closure<detail::component_t<J, Axis>> component{};
-//	}
-//}
+//component
+namespace ruzhouxie
+{
+	namespace detail
+	{
+		template<size_t I, size_t Axis>
+		struct component_t
+		{
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				if constexpr (Axis == 0)
+				{
+					return t | child<I>;
+				}
+				else
+				{
+					constexpr auto tensor_layout = default_tensor_layout<T>;
+					return relayout_view<T, component_copy<I, Axis>(tensor_layout)>
+					{
+						{}, FWD(t)
+					};
+				}
+			}
+		};
+	};
+
+	inline namespace functors
+	{
+		template<size_t J, size_t Axis>
+		inline constexpr pipe_closure<detail::component_t<J, Axis>> component{};
+	}
+}
 
 //transpose
 namespace ruzhouxie
@@ -179,7 +173,7 @@ namespace ruzhouxie
 	{
 		if constexpr (requires{ fn(FWD(args)...); })
 		{
-			return fwd_as_tuple(FWD(args)...) | apply(FWD(fn));
+			return fn(FWD(args)...);;
 		}
 		else
 		{

@@ -9,7 +9,7 @@ namespace ruzhouxie
 {
     RUZHOUXIE_INLINE constexpr auto quat_to_mat3(auto&& q)
 	{
-		
+		//auto _2_xx_yy_zz = ;
 	}
 }
 
