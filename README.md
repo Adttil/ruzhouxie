@@ -112,82 +112,72 @@ special_mat shift680 = +rzx::mat_mul(shift340, shift340);
 库中的惰性表达式再最终执行前会进行重组，以提高效率，这包括：对象在最后一次使用时进行完美转发、去除重复运算、去除无用运算等等。
 
 ### 最后一次使用进行完美转发
-如下代码从一个`tuple<trace, trace>{ e0, e1 }`类型对象的右值引用重布局并构造一个`tuple<trace, trace, trace, trace, trace>{ e0, e1, e0, e1, e1 }`, 两个分量均在最后一次被使用时被移动。
+如下代码从把一个`trace_t`对象`x`看作`{ x, x, x }`用以构造一个`std::array<trace_t, 3>`。
 
 ```cpp
 namespace rzx = ruzhouxie;
 
-struct trace
+struct trace_t
 {
-    trace() { std::puts("trace();"); };
-    trace(const trace&) { std::puts("trace(const trace&);"); }
-    trace(trace&&) { std::puts("trace(trace&&);"); }
-    trace& operator=(const trace&) { std::puts("trace& operator=(const trace&);"); return *this; }
-    trace& operator=(trace&&) { std::puts("trace& operator=(trace&&);"); return *this; }
-    ~trace() { std::puts("~trace();"); }
+    trace_t() { std::puts("trace_t();"); };
+    trace_t(const trace_t&) { std::puts("trace_t(const trace_t&);"); }
+    trace_t(trace_t&&) { std::puts("trace_t(trace_t&&);"); }
+    trace_t& operator=(const trace_t&) { std::puts("trace_t& operator=(const trace_t&);"); return *this; }
+    trace_t& operator=(trace_t&&) { std::puts("trace_t& operator=(trace_t&&);"); return *this; }
+    ~trace_t() { std::puts("~trace_t();"); }
 };
 
 int main()
 {
-    constexpr auto layout = std::array//把{ e0, e1 }看作{ e0, e1, e0, e1, e1 }的布局
-    {
-        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
-    };
-
-    std::array vector{ trace{}, trace{} };
+    trace_t x{};
 
     std::puts("==================");
-    rzx::vec<5, trace> result = +(std::move(vector) | rzx::as_ref | rzx::relayout<layout>);
+    std::array<trace_t, 3> result = +(std::move(x) | rzx::as_ref | rzx::repeat<3>);
     std::puts("==================");
 }
 ```
 
-其中`rzx::as_ref`的作用是将右值引用仍然按引用储存，默认情况下对于右值引用都是按值存储以防止悬垂。
-这里两个Tr对象都在最后一次使用时进行了完美转发，从而减少了复制构造的次数。程序输出如下：
+其中`rzx::as_ref`的作用是将右值引用仍然按引用储存在视图里，默认情况下对于右值引用都是按值存储以防止悬垂。
+而`rzx::repeat<3>`的作用是产生一个将原始视图重复3遍的视图。
+程序输出如下：
 ```
-trace();
+trace_t();
 ==================
-trace(const trace&);
-trace(const trace&);
-trace(trace&&);
-trace(const trace&);
-trace(trace&&);
+trace_t(const trace_t&);
+trace_t(const trace_t&);
+trace_t(trace_t&&);
 ==================
-~trace();
-~trace();
-~trace();
-~trace();
-~trace();
-~trace();
-~trace();
+~trace_t();
+~trace_t();
+~trace_t();
+~trace_t();
 ```
+可以看出对象都在最后一次使用时进行了完美转发，从而减少了复制构造的次数。
 
 ### 去除重复运算
-如下代码相当于把一个`{ 233 }`:  
-1. 通过`rzx::relayout<layout1>`看作`{ 233, 233 }`;  
+如下代码相当于把`233`:  
+1. 通过`rzx::repeat<2>`看作`{ 233, 233 }`;  
 2. 然后通过`rzx::transform(neg)`变换为`{ neg(233), neg(233) }`;
-3. 最后再通过`rzx::relayout<layout2>`看作`{ neg(233), neg(233), neg(233), neg(233) }`。  
+3. 最后再通过`rzx::repeat<2>`看作`{ { neg(233), neg(233) }, { neg(233), neg(233) } }`。  
 
 但是经过编译期分析重整表达式后，`neg(233)`实际上只会被调用一次。
 ```cpp
-constexpr auto layout1 = std::array//把{ x }看做{ x, x }的layout
-{
-    std::array{0uz}, std::array{0uz}
-};
-constexpr auto layout2 = std::array//把{ x, y }看做{ x, y, x, y }的layout
-{
-    std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}
-};
-auto neg = [](const auto& x)
+namespace rzx = ruzhouxie;
+
+int neg(int x)
 {
     std::puts("neg");
     return -x;
 };
 
-std::array<int, 4> result = +(std::array{ 233 } | rzx::relayout<layout1> | rzx::transform(neg) | rzx::relayout<layout2>);
-for(int x : result) 
+int main()
 {
-    std::cout << x << ' ';
+    std::array<std::array<int, 2>, 2> result = +(233 | rzx::repeat<2> | rzx::transform(neg) |  rzx::repeat<2>);
+    
+    for(const auto& arr : result) 
+    {
+        for(int v : arr) std::cout << v << ' ';
+    }
 }
 ```
 程序运行结果如下，
@@ -195,7 +185,7 @@ for(int x : result)
 neg
 -233 -233 -233 -233 
 ```
-可以看到只调用了一次`neg`就产生了`{ neg(233), neg(233), neg(233), neg(233) }`的结果，这也意味着`transform`中如果不使用纯函数，将无法保证特定的结果。
+可以看到只调用了一次`neg`就产生了`{ { neg(233), neg(233) }, { neg(233), neg(233) } }`的结果，这也意味着`transform`中如果不使用纯函数，将无法保证特定的结果。
 
 ## 第三方库
 test文件夹下的测试使用了magic-cpp库来进行类型可视化：https://github.com/16bit-ykiko/magic-cpp

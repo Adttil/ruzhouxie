@@ -1,3 +1,4 @@
+#include "ruzhouxie/basic_adaptors.h"
 #include "test_tool.h"
 #include <array>
 #include <ruzhouxie\tensor.h>
@@ -5,26 +6,21 @@
 
 namespace rzx = ruzhouxie;
 
-struct Tr
+struct trace_t
 {
-    Tr() { std::puts("Tr();"); };
-    Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
-    Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
-    Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
-    Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
-    ~Tr()noexcept { std::puts("~Tr();"); }
+    trace_t() { std::puts("trace_t();"); };
+    trace_t(const trace_t&) { std::puts("trace_t(const trace_t&);"); }
+    trace_t(trace_t&&) { std::puts("trace_t(trace_t&&);"); }
+    trace_t& operator=(const trace_t&) { std::puts("trace_t& operator=(const trace_t&);"); return *this; }
+    trace_t& operator=(trace_t&&) { std::puts("trace_t& operator=(trace_t&&);"); return *this; }
+    ~trace_t() { std::puts("~trace_t();"); }
 };
 
 int main()
 {
-    constexpr auto layout = std::array//把[e0, e1]看作[e0, e1, e0, e1, e1]的布局
-    {
-        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
-    };
-
-    std::array vector{ Tr{}, Tr{} };
+    trace_t trace{};
 
     std::puts("==================");
-    rzx::vec<5, Tr> result = +(std::move(vector) | rzx::as_ref | rzx::relayout<layout>);
+    std::array<trace_t, 3> result = +(std::move(trace) | rzx::as_ref | rzx::repeat<3>);
     std::puts("==================");
 }
