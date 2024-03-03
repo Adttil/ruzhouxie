@@ -226,17 +226,39 @@ namespace ruzhouxie
 
 	namespace detail
 	{
-		template<auto layout>
+		template<auto Layout>
 		struct relayout_t
 		{
-			using layout_type = purified<decltype(layout)>;
+			using layout_type = purified<decltype(Layout)>;
 
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
 			{
 				if constexpr (indices<layout_type>)
 				{
-					return FWD(t) | child<layout>;
+					return FWD(t) | child<Layout>;
+				}
+				else
+				{
+					return relayout_view<T, Layout>{ {}, FWD(t) };
+				}
+			}
+		};
+
+		template<size_t N>
+		struct repeat_t
+		{
+			static constexpr auto layout = []<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple{ array<size_t, I - I>{}... };
+			}(std::make_index_sequence<N>{});
+
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				if constexpr (N == 1)
+				{
+					return T{ FWD(t) };
 				}
 				else
 				{
@@ -248,8 +270,11 @@ namespace ruzhouxie
 
 	inline namespace functors
 	{
-		template<auto layout>
-		inline constexpr pipe_closure<detail::relayout_t<layout>> relayout{};
+		template<auto Layout>
+		inline constexpr pipe_closure<detail::relayout_t<Layout>> relayout{};
+
+		template<size_t N>
+		inline constexpr pipe_closure<detail::repeat_t<N>> repeat{};
 	}
 }
 

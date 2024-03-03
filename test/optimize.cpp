@@ -9,19 +9,6 @@ namespace rzx = ruzhouxie;
 
 int main()
 {
-    constexpr auto layout0 = std::array//把[x]看做[x, x]的layout
-    {
-        std::array<size_t, 0>{}, std::array<size_t, 0>{}
-    };
-    constexpr auto layout1 = std::array//把[x]看做[x, x]的layout
-    {
-        std::array{0uz}, std::array{0uz}
-    };
-    constexpr auto layout2 = std::array//把[x, y]看做[x, y, x, y]的layout
-    {
-        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}
-    };
-
     auto input = std::array{ 233 };
     auto neg = [](const auto& x)
     {
@@ -29,9 +16,9 @@ int main()
         return -x;
     };
 
-    auto result = (233 | rzx::relayout<layout0> | rzx::transform(neg) |  rzx::relayout<layout0> | rzx::to<rzx::tuple>());
-    // for(int x : result) 
-    // {
-    //     std::cout << x << ' ';
-    // }
+    std::array<std::array<int, 2>, 2> result = +(233 | rzx::repeat<2> | rzx::transform(neg) |  rzx::repeat<2>);
+    for(const auto& arr : result) 
+    {
+        for(int v : arr) std::cout << v << ' ';
+    }
 }
