@@ -3,11 +3,16 @@
 #include <cstdio>
 #include <functional>
 #include <ruzhouxie\tensor.h>
+#include <ranges>
 
 namespace rzx = ruzhouxie;
 
 int main()
 {
+    constexpr auto layout0 = std::array//把[x]看做[x, x]的layout
+    {
+        std::array<size_t, 0>{}, std::array<size_t, 0>{}
+    };
     constexpr auto layout1 = std::array//把[x]看做[x, x]的layout
     {
         std::array{0uz}, std::array{0uz}
@@ -24,9 +29,9 @@ int main()
         return -x;
     };
 
-    std::array<int, 4> result = +(input | rzx::relayout<layout1> | rzx::transform(neg) |  rzx::relayout<layout2>);
-    for(int x : result) 
-    {
-        std::cout << x << ' ';
-    }
+    auto result = (233 | rzx::relayout<layout0> | rzx::transform(neg) |  rzx::relayout<layout0> | rzx::to<rzx::tuple>());
+    // for(int x : result) 
+    // {
+    //     std::cout << x << ' ';
+    // }
 }

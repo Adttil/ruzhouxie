@@ -114,11 +114,11 @@ namespace ruzhouxie
 		}(std::make_index_sequence<child_count<decltype(layout)>>{});
 	}
 
-	template<typename Data, auto Layouts>
+	template<typename Data, auto Sequence>
 	struct tape_t
 	{
 		using data_type = Data;
-		static constexpr auto layouts = Layouts;
+		static constexpr auto sequence = Sequence;
 		//Here, it is necessary to ensure that each child of data is independent.
 		//Each child of data is also necessary to meet the above requirements.
 		Data data;
@@ -126,19 +126,19 @@ namespace ruzhouxie
 		template<size_t I, specified<tape_t> Self>
 		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 		{
-			if constexpr(I >= child_count<decltype(Layouts)>)
+			if constexpr(I >= child_count<decltype(Sequence)>)
 			{
 				return;
 			}
 			else
 			{
-				constexpr auto layout = Layouts | child<I>;
+				constexpr auto layout = Sequence | child<I>;
 				constexpr auto relation_to_rest = []<size_t...J>(std::index_sequence<J...>)
 				{
 					//for some compiler.
-					constexpr auto layout = Layouts | child<I>;
-					return (layout_relation::independent | ... | layout_relation_to(layout, Layouts | child<J + I + 1uz>));
-				}(std::make_index_sequence<child_count<decltype(Layouts)> - I - 1uz>{});
+					constexpr auto layout = Sequence | child<I>;
+					return (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J + I + 1uz>));
+				}(std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
 
 				if constexpr(indices<decltype(layout)>)
 				{
@@ -188,151 +188,12 @@ namespace ruzhouxie
 	template<auto Sequence>
 	constexpr inline pipe_closure<detail::get_tape_t_ns::get_tape_t<Sequence>> get_tape{};
 
-	template<typename T, auto Sequence>
-	struct terminal_tape
-	{
-		T value;
-		template<size_t I, specified<terminal_tape> Self>
-		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-		{
-			if constexpr(I >= child_count<decltype(Sequence)>)
-			{
-				return;
-			}
-			else if constexpr(I == child_count<decltype(Sequence)> - 1uz)
-			{
-				return FWD(self, value);
-			}
-			else
-			{
-				return as_const(self.value);
-			}
-		}
-	};
-
-	namespace detail
-	{
-		struct child_sequence_location
-		{
-			size_t child = invalid_index;
-			size_t index = invalid_index;
-		};
-
-		template<size_t I, auto Sequence, size_t J = 0uz, auto Current = tuple{}>
-		constexpr auto child_sequence(auto& map)
-		{
-			if constexpr(J >= child_count<decltype(Sequence)>)
-			{
-				return Current;
-			}
-			else
-			{
-				constexpr auto index_pack = Sequence | child<I>;
-				if constexpr(index_pack.size() == 0uz)
-				{
-					return child_sequence<I, Sequence, J + 1uz, tuple_cat(Current, tuple{ index_pack })>(map);
-				}
-				else if constexpr(index_pack[0] != I)
-				{
-					return child_sequence<I, Sequence, J + 1uz, Current>(map);
-				}
-				else
-				{
-					map[J].child = I;
-					map[J].index = child_count<decltype(Current)>;
-					return child_sequence<I, Sequence, J + 1uz, tuple_cat(Current, tuple{ array_drop<1>(index_pack) })>(map);
-				}
-			}
-		}
-
-		template<auto Sequence, size_t ChildCount>
-		constexpr auto children_sequnce_and_map()
-		{
-			constexpr size_t n = child_count<decltype(Sequence)>;
-			std::array<child_sequence_location, n> map{};
-			auto children_sequence = [&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return tuple{ child_sequence<I, Sequence>(map)... };
-			}(std::make_index_sequence<ChildCount>{});
-
-			struct result_t
-			{
-				 decltype(children_sequence) sequences;
-				 std::array<child_sequence_location, n> map;
-			};
-
-			return result_t{ children_sequence, map };
-		}
-	}
-
-	template<typename T, auto Sequence>
-	struct tuple_tape
-	{
-		static constexpr auto children_sequnce_map = detail::children_sequnce_and_map<Sequence, child_count<T>>();
-		static constexpr const auto& children_sequences = children_sequnce_map.sequences;
-		static constexpr const auto& map = children_sequnce_map.map;
-
-		static constexpr auto init_children_tape(T&& t)
-		{
-			return [&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return tuple<decltype(FWD(t) | child<I> | get_tape<children_sequences | child<I>>)...>
-				{
-					FWD(t) | child<I> | get_tape<children_sequences | child<I>> ... 
-				};
-			}(std::make_index_sequence<child_count<T>>{});
-		}
-        
-		T tpl;
-		decltype(init_children_tape(declval<T&&>())) children_tapes;
-
-		constexpr tuple_tape(T&& tpl)
-			: tpl(FWD(tpl))
-			, children_tapes(init_children_tape(FWD(tpl)))
-		{}
-
-		template<size_t I, specified<tuple_tape> Self>
-		friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-		{
-			if constexpr(I >= child_count<decltype(Sequence)>)
-			{
-				return;
-			}
-			else if constexpr((Sequence | child<I>).size() == 0uz)
-			{
-				if constexpr(I == child_count<decltype(Sequence)> - 1uz)
-				{
-					return FWD(self, tpl);
-				}
-				else
-				{
-					return as_const(self.tpl);
-				}
-			}
-			else
-			{
-				decltype(auto) child_tape = FWD(self, children_tapes) | child<map[I].child>;
-				return FWD(child_tape) | child<map[I].index>;//
-			}
-		}
-	};
-
-	template<size_t Offset, typename Tape>
-	struct sub_tape_t
-	{
-        Tape tape;
-
-		template<size_t I, specified<sub_tape_t> Self>
-		friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-			AS_EXPRESSION(FWD(self, tape) | child<I + Offset>)
-	};
-
 	template<size_t N, typename Tape>
 	constexpr auto tape_drop(Tape&& tape) noexcept
 	{
 		using tape_type = purified<Tape>;
-		constexpr auto layouts = tuple_drop<N>(tape_type::layouts);
-		return tape_t<decltype(FWD(tape, data)), layouts>{ FWD(tape, data) };
+		constexpr auto sequence = tuple_drop<N>(tape_type::sequence);
+		return tape_t<decltype(FWD(tape, data)), sequence>{ FWD(tape, data) };
 	}
 
 	template<auto Sequence>

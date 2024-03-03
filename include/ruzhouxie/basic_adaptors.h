@@ -177,13 +177,48 @@ namespace ruzhouxie
 				}
 			}
 
+			template<auto Indices, typename TLayout>
+			static constexpr auto mapped_indices(const TLayout& layout)
+			{
+				if constexpr(indices<TLayout>)
+				{
+					return concat_array(layout, Indices);
+				}
+				else if constexpr(Indices.size() == 0uz)
+				{
+					return layout;
+				}
+				else
+				{
+					return mapped_indices<array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
+				}
+			}
+
+			template<auto Layout, typename Trans>
+			static constexpr auto mapped_layout(const Trans& trans)
+			{
+				if constexpr(indices<decltype(Layout)>)
+				{
+					return mapped_indices<Layout>(trans);
+				}
+				else return[&]<size_t...I>(std::index_sequence<I...>)
+				{
+					return tuple<decltype(mapped_layout<Layout | child<I>>(trans))...>
+					{
+						mapped_layout<Layout | child<I>>(trans)...
+					};
+				}(std::make_index_sequence<child_count<decltype(Layout)>>{});
+			}
+
 			template<auto Seq, specified<relayout_view> Self>
 			RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			{
-				constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
-				{
-					return tuple{ Layout | child<Seq | child<I>> ... };
-				}(std::make_index_sequence<child_count<decltype(Seq)>>{});
+				// constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
+				// {
+				// 	return tuple{ Layout | child<Seq | child<I>> ... };
+				// }(std::make_index_sequence<child_count<decltype(Seq)>>{});
+
+				constexpr auto transformed_sequence = mapped_layout<Seq>(Layout);
 				return FWD(self, raw_tree) | get_tape<transformed_sequence>;
 			}
 		};
@@ -227,35 +262,40 @@ namespace ruzhouxie
 		struct zip_transform_view;
 	}
 
-	template<typename Fn, typename...T>
-	struct detail::zip_transform_view : view_base<zip_transform_view<Fn, T...>>
+	template<typename Fn, typename...Views>
+	struct detail::zip_transform_view : view_base<zip_transform_view<Fn, Views...>>
 	{
 		RUZHOUXIE_MAYBE_EMPTY Fn fn;
-		RUZHOUXIE_MAYBE_EMPTY tuple<T...> trees;
+		RUZHOUXIE_MAYBE_EMPTY tuple<Views...> views;
+
+		static constexpr size_t view_count = sizeof...(Views);
+		static constexpr size_t size = std::min({ child_count<Views>... });
 
 		template<size_t I, specified<zip_transform_view> Self>
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
 			//todo...noexcept
 		{
-			if constexpr ((... || (I >= child_count<T>)))
+			if constexpr (I >= size)
 			{
 				return;
 			}
 			else return[&]<size_t...J>(std::index_sequence<J...>) -> decltype(auto)
 			{
-				return FWD(self, fn)(FWD(self, trees) | child<J, I>...);
-			}(std::make_index_sequence<sizeof...(T)>{});
+				return FWD(self, fn)(FWD(self, views) | child<J, I>...);
+			}(std::make_index_sequence<sizeof...(Views)>{});
 		}
 
 		template<auto Seq, specified<zip_transform_view> Self>
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			//todo...noexcept
 		{
-			constexpr auto input_seq_map = get_input_seq_and_map<Seq>();
+			//constexpr auto input_seq_map = get_input_seq_and_map<Seq>();
+			constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
+
 			auto input_tapes = [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return tuple{ FWD(self, trees) | child<I> | get_tape<input_seq_map.seq>... };
-			}(std::index_sequence_for<T...>{});
+				return tuple{ FWD(self, views) | child<I> | get_tape<input_seq_map.seq>... };
+			}(std::index_sequence_for<Views...>{});
 			using input_tapes_type = decltype(input_tapes);
 			
 			constexpr auto input_tape_layouts_zip = get_input_tape_layouts_zip<input_tapes_type>(
@@ -269,7 +309,7 @@ namespace ruzhouxie
 			};
 			const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				constexpr auto s = std::index_sequence_for<T...>{};
+				constexpr auto s = std::index_sequence_for<Views...>{};
 				return tuple<decltype(result_data_at.template operator()<I>(s))...>
 				{
 					result_data_at.template operator()<I>(s)...
@@ -285,6 +325,64 @@ namespace ruzhouxie
 		}
 
 	private:
+		struct view_seq_and_map_info
+		{
+			size_t n_seq = 0uz;
+			array<size_t, size> seq_buff{};
+			array<size_t, size> map = []<size_t...I>(std::index_sequence<I...>)
+			{
+				return array<size_t, size>{ (invalid_index + (I - I))... };
+			}(std::make_index_sequence<size>{});
+
+			template<auto IndexTree>
+			constexpr view_seq_and_map_info& set()
+			{
+				if constexpr(indices<decltype(IndexTree)>)
+				{
+					if constexpr(IndexTree.size() == 0uz)
+					{
+						for(size_t i = 0uz; i < size; ++i)
+						{
+							seq_buff[i] = i;
+							map[i] = i;
+						}
+						n_seq = size;
+					}
+					else if(map[IndexTree[0]] == invalid_index)
+					{
+						map[IndexTree[0]] = n_seq;
+						seq_buff[n_seq++] = IndexTree[0];
+					}
+				}
+				else
+				{
+					[&]<size_t...I>(std::index_sequence<I...>)
+					{
+						(..., set<IndexTree | child<I>>());
+					}(std::make_index_sequence<child_count<decltype(IndexTree)>>{});
+				}
+				return *this;
+			}
+		};
+
+		template<auto Seq>
+		static consteval auto get_view_seq_and_map()
+		{
+			constexpr auto info = view_seq_and_map_info().template set<Seq>();
+
+			auto seq = [&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple{ array{ info.seq_buff[I] }... };
+			}(std::make_index_sequence<info.n_seq>{});
+
+			struct result_t
+			{
+				decltype(seq) seq;
+				array<size_t, size> map;
+			};
+			return result_t{ seq, info.map };
+		}
+
 		template<auto Seq, size_t I = 0uz, auto Cur = tuple{}>
 		static constexpr auto get_input_seq_and_map_impl(auto& map)noexcept
 		{
@@ -334,12 +432,12 @@ namespace ruzhouxie
 		{
 			constexpr auto input_tape_layouts_zip_at = []<size_t J, size_t...K>(std::index_sequence<K...>)
 			{
-				return tuple<purified<decltype(purified<child_type<TInputTapes, K>>::layouts | child<J>)>...>
+				return tuple<purified<decltype(purified<child_type<TInputTapes, K>>::sequence | child<J>)>...>
 				{
-					purified<child_type<TInputTapes, K>>::layouts | child<J> ... 
+					purified<child_type<TInputTapes, K>>::sequence | child<J> ... 
 				};
 			};
-			constexpr auto s = std::index_sequence_for<T...>{};
+			constexpr auto s = std::index_sequence_for<Views...>{};
 			return tuple<decltype(input_tape_layouts_zip_at.template operator()<I>(s))...>
 			{
 				input_tape_layouts_zip_at.template operator()<I>(s)...
@@ -381,23 +479,44 @@ namespace ruzhouxie
 			return result_t{ indices, map };
 		}
 
+		static constexpr auto set_result_seq(auto& seq, const auto& view_map, const auto& unique_view_tape_map)noexcept
+		{
+			if constexpr(indices<decltype(seq)>)
+			{
+				if (seq.size() != 0uz)
+				{
+					seq[0] = unique_view_tape_map[view_map[seq[0]]];
+				}
+			}
+			else
+			{
+				[&]<size_t...I>(std::index_sequence<I...>)
+				{
+					(... , set_result_seq(seq | child<I>, view_map, unique_view_tape_map));
+				}(std::make_index_sequence<child_count<decltype(seq)>>{});
+			}
+		}
+
 		template<auto Seq, auto InputMap, auto UniqueInputMap, size_t...I>
 		static consteval auto get_result_layouts(std::index_sequence<I...>)
 		{
-			constexpr auto result_layouts_at = []<size_t J>()
-			{
-				auto indices = Seq | child<J>;
-				if constexpr(indices.size() == 0)
-				{
-					return indices;
-				}
-				else
-				{
-					indices[0] = UniqueInputMap[InputMap[indices[0]]];
-				}
-				return indices;
-			};
-			return tuple{ result_layouts_at.template operator()<I>()... };
+			auto seq = Seq;
+			set_result_seq(seq, InputMap, UniqueInputMap);
+			return seq;
+			// constexpr auto result_layouts_at = []<size_t J>()
+			// {
+			// 	auto indices = Seq | child<J>;
+			// 	if constexpr(indices.size() == 0)
+			// 	{
+			// 		return indices;
+			// 	}
+			// 	else
+			// 	{
+			// 		indices[0] = UniqueInputMap[InputMap[indices[0]]];
+			// 	}
+			// 	return indices;
+			// };
+			// return tuple{ result_layouts_at.template operator()<I>()... };
 		}//(std::make_index_sequence<child_count<decltype(Seq)>>{});
 	};
 
