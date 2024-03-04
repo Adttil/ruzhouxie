@@ -2,9 +2,12 @@
 #define RUZHOUXIE_RELAYOUT_H
 
 #include "general.h"
+#include "get.h"
 #include "tree_view.h"
+#include "constant.h"
 
 #include "macro_define.h"
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -156,6 +159,196 @@ namespace ruzhouxie
 		template<size_t N>
 		inline constexpr pipe_closure<detail::repeat_t<N>> repeat{};
 	}
+}
+
+namespace ruzhouxie
+{
+	namespace detail
+	{
+		template<size_t M, size_t N>
+		constexpr auto tensor_layout_add_prefix(const array<size_t, M>& layout, const array<size_t, N>& prefix)
+		{
+			return concat_array(prefix, layout);
+		}
+
+		template<typename T, size_t N> requires (tensor_rank<T> >= 2uz)
+			constexpr auto tensor_layout_add_prefix(const T& layout, const array<size_t, N>& prefix)
+		{
+			return[&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return array{ tensor_layout_add_prefix(layout | child<I>, prefix)... };
+			}(std::make_index_sequence<child_count<T>>{});
+		}
+	}
+
+	template<typename T>
+	constexpr auto default_tensor_layout
+	{
+		[]()
+		{
+			if constexpr (terminal<T>)
+			{
+				return array<size_t, 0uz>{};
+			}
+			else return[]<size_t...I>(std::index_sequence<I...>)
+			{
+				return array{ detail::tensor_layout_add_prefix(default_tensor_layout<child_type<T, I>>, array{I})... };
+			}(std::make_index_sequence<child_count<T>>{});
+		}()
+	};
+}
+
+namespace ruzhouxie
+{
+	template<size_t I, size_t Axis = 0uz, typename T = void>
+	constexpr auto component_copy(const T& t)
+	{
+		if constexpr (Axis == 0uz)
+		{
+			static_assert(I < child_count<T>, "Component index out of range.");
+			return t | child<I>;
+		}
+		else
+		{
+			static_assert(branched<T>, "Axis index out of range.");
+			return[&]<size_t...J>(std::index_sequence<J...>)
+			{
+				return tuple{ component_copy<I, Axis - 1uz>(t | child<J>)... };
+			}(std::make_index_sequence<child_count<T>>{});
+		}
+	}
+
+	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz, typename T = void>
+	constexpr auto transpose_copy(const T& t)
+	{
+		if constexpr (Axis1 == 0uz)
+		{
+			constexpr size_t N = tensor_shape<T>[Axis2];
+			return[&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return tuple{ component_copy<I, Axis2>(t)... };
+			}(std::make_index_sequence<N>{});
+		}
+		else return[&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return tuple{ transpose_copy<Axis1 - 1uz, Axis2 - 1uz>(t | child<I>)... };
+		}(std::make_index_sequence<child_count<T>>{});
+	}
+
+    
+}
+
+//component
+namespace ruzhouxie
+{
+	namespace detail
+	{
+		template<size_t I, size_t Axis>
+		struct component_t
+		{
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				if constexpr (Axis == 0)
+				{
+					return t | child<I>;
+				}
+				else
+				{
+					constexpr auto tensor_layout = default_tensor_layout<T>;
+					return relayout_view<T, component_copy<I, Axis>(tensor_layout)>
+					{
+						{}, FWD(t)
+					};
+				}
+			}
+		};
+	};
+
+	inline namespace functors
+	{
+		template<size_t J, size_t Axis>
+		inline constexpr pipe_closure<detail::component_t<J, Axis>> component{};
+	}
+}
+
+//transpose
+namespace ruzhouxie
+{
+	namespace detail
+	{
+		template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
+		struct transpose_t
+		{
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				constexpr auto tensor_layout = default_tensor_layout<T>;
+				return relayout_view<T, transpose_copy<Axis1, Axis2>(tensor_layout)>
+				{
+					{}, FWD(t)
+				};
+			}
+		};
+	};
+
+	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
+	inline constexpr pipe_closure<detail::transpose_t<Axis1, Axis2>> transpose{};
+}
+
+//transpose
+namespace ruzhouxie
+{
+    constexpr size_t mod(size_t I, size_t N)
+    {
+        return I % N;
+    }
+
+    //todo...add Aixs
+    template<size_t Begin, size_t Count/*, size_t Axis = 0uz*/, typename T = void>
+    constexpr auto range_copy(const T& t)
+    {
+        return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return tuple<purified<decltype(t | child<mod(Begin + I, child_count<T>)>)>...>
+            {
+                t | child<mod(Begin + I, child_count<T>)>...
+            };
+        }(std::make_index_sequence<Count>{});
+    }
+
+	namespace detail
+	{
+		template<size_t Begin, size_t Count>
+		struct range_t
+		{
+			template<typename T>
+			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			{
+				constexpr auto tensor_layout = default_tensor_layout<T>;
+				return relayout_view<T, range_copy<Begin, Count>(tensor_layout)>
+				{
+					{}, FWD(t)
+				};
+			}
+
+            template<size_t I, specified<range_t> Self>
+		    friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+		    {
+			    if constexpr(I >= Count)
+			    {
+			    	return;
+			    }
+                else
+                {
+                    return constant_t<Begin + I>{};
+                }
+            }
+		};
+	};
+
+	template<size_t Begin, size_t Count>
+	inline constexpr pipe_closure<detail::range_t<Begin, Count>> range{};
 }
 
 #include "macro_undef.h"

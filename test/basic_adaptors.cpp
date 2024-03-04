@@ -40,14 +40,4 @@ int main()
 	std::puts("==================");
     auto result = std::move(trs) | rzx::as_ref | rzx::relayout<layout1> | rzx::make_tree<std::array<Tr, 5>>;
     std::puts("==================");
-
-	// auto r = zip_transform(std::plus<>{}, X{ 1, 3.04 }, std::array{ 232.0, 0.1 }) | make_tree<std::tuple<double, double>>;
-	// auto&& [a, b] = r;
-	// MAGIC_CHECK(a, 233.0);
-	// MAGIC_CHECK(b, 3.14);
-
-	// auto t = zip_transform(std::plus<>{}, X{ 1, 3.04 }, std::array{ 232.0, 0.1 });
-	// MAGIC_SHOW_TYPE(t);
-	// MAGIC_SHOW_TYPE(t | child<0>);
-	// MAGIC_SHOW_TYPE(t | child<1>);
 }

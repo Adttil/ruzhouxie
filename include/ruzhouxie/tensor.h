@@ -7,139 +7,6 @@
 
 namespace ruzhouxie
 {
-	namespace detail
-	{
-		template<size_t M, size_t N>
-		constexpr auto tensor_layout_add_prefix(const array<size_t, M>& layout, const array<size_t, N>& prefix)
-		{
-			return concat_array(prefix, layout);
-		}
-
-		template<typename T, size_t N> requires (tensor_rank<T> >= 2uz)
-			constexpr auto tensor_layout_add_prefix(const T& layout, const array<size_t, N>& prefix)
-		{
-			return[&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return array{ tensor_layout_add_prefix(layout | child<I>, prefix)... };
-			}(std::make_index_sequence<child_count<T>>{});
-		}
-	}
-
-	template<typename T>
-	constexpr auto default_tensor_layout
-	{
-		[]()
-		{
-			if constexpr (terminal<T>)
-			{
-				return array<size_t, 0uz>{};
-			}
-			else return[]<size_t...I>(std::index_sequence<I...>)
-			{
-				return array{ detail::tensor_layout_add_prefix(default_tensor_layout<child_type<T, I>>, array{I})... };
-			}(std::make_index_sequence<child_count<T>>{});
-		}()
-	};
-}
-
-namespace ruzhouxie
-{
-	template<size_t I, size_t Axis = 0uz, typename T = void>
-	constexpr auto component_copy(const T& t)
-	{
-		if constexpr (Axis == 0uz)
-		{
-			static_assert(I < child_count<T>, "Component index out of range.");
-			return t | child<I>;
-		}
-		else
-		{
-			static_assert(branched<T>, "Axis index out of range.");
-			return[&]<size_t...J>(std::index_sequence<J...>)
-			{
-				return tuple{ component_copy<I, Axis - 1uz>(t | child<J>)... };
-			}(std::make_index_sequence<child_count<T>>{});
-		}
-	}
-
-	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz, typename T = void>
-	constexpr auto transpose_copy(const T& t)
-	{
-		if constexpr (Axis1 == 0uz)
-		{
-			constexpr size_t N = tensor_shape<T>[Axis2];
-			return[&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return tuple{ component_copy<I, Axis2>(t)... };
-			}(std::make_index_sequence<N>{});
-		}
-		else return[&]<size_t...I>(std::index_sequence<I...>)
-		{
-			return tuple{ transpose_copy<Axis1 - 1uz, Axis2 - 1uz>(t | child<I>)... };
-		}(std::make_index_sequence<child_count<T>>{});
-	}
-}
-
-//component
-namespace ruzhouxie
-{
-	namespace detail
-	{
-		template<size_t I, size_t Axis>
-		struct component_t
-		{
-			template<typename T>
-			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-			{
-				if constexpr (Axis == 0)
-				{
-					return t | child<I>;
-				}
-				else
-				{
-					constexpr auto tensor_layout = default_tensor_layout<T>;
-					return relayout_view<T, component_copy<I, Axis>(tensor_layout)>
-					{
-						{}, FWD(t)
-					};
-				}
-			}
-		};
-	};
-
-	inline namespace functors
-	{
-		template<size_t J, size_t Axis>
-		inline constexpr pipe_closure<detail::component_t<J, Axis>> component{};
-	}
-}
-
-//transpose
-namespace ruzhouxie
-{
-	namespace detail
-	{
-		template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-		struct transpose_t
-		{
-			template<typename T>
-			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-			{
-				constexpr auto tensor_layout = default_tensor_layout<T>;
-				return relayout_view<T, transpose_copy<Axis1, Axis2>(tensor_layout)>
-				{
-					{}, FWD(t)
-				};
-			}
-		};
-	};
-
-	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-	inline constexpr pipe_closure<detail::transpose_t<Axis1, Axis2>> transpose{};
-}
-
-namespace ruzhouxie
-{
 	using defalut_value_t = double;
 
 	template<size_t Dim, typename T = defalut_value_t>
@@ -183,22 +50,22 @@ namespace ruzhouxie
 
 	RUZHOUXIE_INLINE constexpr decltype(auto) add(auto&& l, auto&& r)noexcept
 	{
-		return tree_invoke(std::plus<>{}, l, r);
+		return tree_invoke(std::plus<>{}, FWD(l), FWD(r));
 	}
 
 	RUZHOUXIE_INLINE constexpr decltype(auto) sub(auto&& l, auto&& r)noexcept
 	{
-		return tree_invoke(std::minus<>{}, l, r);
+		return tree_invoke(std::minus<>{}, FWD(l), FWD(r));
 	}
 
 	RUZHOUXIE_INLINE constexpr decltype(auto) mul(auto&& l, auto&& r)noexcept
 	{
-		return tree_invoke(std::multiplies<>{}, l, r);
+		return tree_invoke(std::multiplies<>{}, FWD(l), FWD(r));
 	}
 
 	RUZHOUXIE_INLINE constexpr decltype(auto) div(auto&& l, auto&& r)noexcept
 	{
-		return tree_invoke(std::divides<>{}, l, r);
+		return tree_invoke(std::divides<>{}, FWD(l), FWD(r));
 	}
 
 

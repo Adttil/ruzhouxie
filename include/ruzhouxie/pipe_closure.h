@@ -32,12 +32,13 @@ namespace ruzhouxie
 
 
 		template<typename T, specified<pipe_closure> Self>
+		requires (not requires{ requires std::same_as<pipe_closure<typename purified<T>::fn_type, purified<T>::n_args_min>, purified<T>>; })
 		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self) 
 			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(t)))
 
 		template<typename Pipe, specified<pipe_closure> Self>
 		RUZHOUXIE_INLINE friend constexpr auto operator|(Pipe&& t, Self&& self)
-			requires std::same_as<pipe_closure<typename Pipe::fn_type, Pipe::n_args_min>, Pipe>
+			requires std::same_as<pipe_closure<typename purified<Pipe>::fn_type, purified<Pipe>::n_args_min>, purified<Pipe>>
 		{
 			return pipe_closure_ns::pipe_closure
 			{
