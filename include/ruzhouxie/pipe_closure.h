@@ -72,9 +72,22 @@ namespace ruzhouxie
 	{
 		using Fn::operator();
 
-		template<typename View, typename...Args>
-		RUZHOUXIE_INLINE constexpr auto operator()(this auto&& self, View&& view, Args&&...args)
-			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(args)...)(FWD(view)))
+		template<typename Self, typename...Args>
+		RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, Args&&...args) noexcept
+			requires (not requires{ as_base<Fn>(FWD(self))(FWD(args)...); })
+		{
+			return tree_adaptor_closure
+			{
+				[fn = as_base<Fn>(FWD(self)), ...args_ = FWD(args)](this auto&& self, auto&& view)
+					//noexcept(noexcept(declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
+					->decltype(auto)
+					requires requires{ declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
+				{
+					return fn(FWD(view), FWDLIKE(self, args_)...);
+				}
+					//AS_EXPRESSION(Fn{}(FWD(view), FWDLIKE(self, args)...))
+			};
+		}
 	};
 }
 

@@ -309,18 +309,12 @@ namespace ruzhouxie
 
 		struct transform_t
 		{
-			template<typename Fn>
-			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn)const
+			template<typename View, typename Fn>
+			RUZHOUXIE_INLINE constexpr auto operator()(View&& view, Fn&& fn)const
 			{
-				return tree_adaptor_closure
+				return zip_transform_view<std::decay_t<Fn>, View>
 				{
-					[fn = FWD(fn)]<typename View>(this auto&& self, View&& view)
-					{
-						return zip_transform_view<std::decay_t<Fn>, View>
-						{
-							{}, FWDLIKE(self, fn), tuple<View>{ FWD(view) }
-						};
-					}
+					{}, FWD(fn), tuple<View>{ FWD(view) }
 				};
 			}
 		};
