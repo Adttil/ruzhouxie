@@ -186,7 +186,7 @@ namespace ruzhouxie
 	}
 
 	template<auto Sequence>
-	constexpr inline pipe_closure<detail::get_tape_t_ns::get_tape_t<Sequence>> get_tape{};
+	constexpr inline detail::get_tape_t_ns::get_tape_t<Sequence> get_tape{};
 
 	template<size_t N, typename Tape>
 	constexpr auto tape_drop(Tape&& tape) noexcept
@@ -197,7 +197,7 @@ namespace ruzhouxie
 	}
 
 	template<auto Sequence>
-	struct detail::get_tape_t_ns::get_tape_t
+	struct detail::get_tape_t_ns::get_tape_t : pipe_closure<get_tape_t<Sequence>>
 	{
 		template<typename T>
 		constexpr decltype(auto) operator()(T&& t)const

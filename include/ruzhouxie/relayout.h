@@ -3,6 +3,7 @@
 
 #include "general.h"
 #include "get.h"
+#include "pipe_closure.h"
 #include "tree_view.h"
 #include "constant.h"
 
@@ -110,7 +111,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<auto Layout>
-		struct relayout_t
+		struct relayout_t : pipe_closure<relayout_t<Layout>>
 		{
 			using layout_type = purified<decltype(Layout)>;
 
@@ -129,7 +130,7 @@ namespace ruzhouxie
 		};
 
 		template<size_t N>
-		struct repeat_t
+		struct repeat_t : pipe_closure<repeat_t<N>>
 		{
 			static constexpr auto layout = []<size_t...I>(std::index_sequence<I...>)
 			{
@@ -154,10 +155,10 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<auto Layout>
-		inline constexpr pipe_closure<detail::relayout_t<Layout>> relayout{};
+		inline constexpr detail::relayout_t<Layout> relayout{};
 
 		template<size_t N>
-		inline constexpr pipe_closure<detail::repeat_t<N>> repeat{};
+		inline constexpr detail::repeat_t<N> repeat{};
 	}
 }
 
@@ -244,7 +245,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t I, size_t Axis>
-		struct component_t
+		struct component_t : pipe_closure<component_t<I, Axis>>
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -268,7 +269,7 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<size_t J, size_t Axis>
-		inline constexpr pipe_closure<detail::component_t<J, Axis>> component{};
+		inline constexpr detail::component_t<J, Axis> component{};
 	}
 }
 
@@ -278,7 +279,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-		struct transpose_t
+		struct transpose_t : pipe_closure<transpose_t<Axis1, Axis2>>
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -293,7 +294,7 @@ namespace ruzhouxie
 	};
 
 	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-	inline constexpr pipe_closure<detail::transpose_t<Axis1, Axis2>> transpose{};
+	inline constexpr detail::transpose_t<Axis1, Axis2> transpose{};
 }
 
 //transpose
@@ -320,7 +321,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Begin, size_t Count>
-		struct range_t
+		struct range_t : pipe_closure<range_t<Begin, Count>>
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -332,23 +333,20 @@ namespace ruzhouxie
 				};
 			}
 
-            template<size_t I, specified<range_t> Self>
-		    friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-		    {
-			    if constexpr(I >= Count)
-			    {
-			    	return;
-			    }
-                else
-                {
-                    return constant_t<Begin + I>{};
-                }
+            template<size_t I, specified<range_t> T> requires(I < Count)
+	        friend constexpr auto tag_invoke(tag_t<child<I>>, T&&)noexcept
+	        {
+                return constant_t<Begin + I>{};
             }
 		};
+
+        
 	};
 
 	template<size_t Begin, size_t Count>
-	inline constexpr pipe_closure<detail::range_t<Begin, Count>> range{};
+	inline constexpr detail::range_t<Begin, Count> range{};
+    
+    
 }
 
 #include "macro_undef.h"

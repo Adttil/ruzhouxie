@@ -2,6 +2,8 @@
 #define RUZHOUXIE_TRANSFORM_H
 
 #include "general.h"
+#include "pipe_closure.h"
+#include "ruzhouxie/tuple.h"
 #include "tree_view.h"
 #include "relayout.h"
 
@@ -287,8 +289,27 @@ namespace ruzhouxie
 			}
 		};
 
-		struct transform_t
+        struct zip_t
 		{
+            static constexpr auto zip_fn = [](auto&&...args)
+            {
+                return fwd_as_tuple(FWD(args)...);
+            };
+
+			template<typename...T>
+			RUZHOUXIE_INLINE constexpr auto operator()(T&&...trees)const
+			{
+				return detail::zip_transform_view<tag_t<zip_fn>, T...>
+				{
+					{}, zip_fn, tuple<T...>{ FWD(trees)... }
+				};
+			}
+		};
+
+		struct transform_t : pipe_closure<transform_t, 2uz>
+		{
+			using pipe_closure<transform_t, 2uz>::operator();
+
 			template<typename Fn, typename T>
 			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&& tree)const
 			{
@@ -301,7 +322,8 @@ namespace ruzhouxie
 	}
 
 	inline constexpr detail::zip_transform_t zip_transform{};
-	inline constexpr pipe_closure<detail::transform_t, 2> transform{};
+    inline constexpr detail::zip_t zip{};
+	inline constexpr detail::transform_t transform{};
 }
 
 #include "macro_undef.h"
