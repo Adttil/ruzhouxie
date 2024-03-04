@@ -111,7 +111,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<auto Layout>
-		struct relayout_t : pipe_closure<relayout_t<Layout>>
+		struct relayout_t
 		{
 			using layout_type = purified<decltype(Layout)>;
 
@@ -130,7 +130,7 @@ namespace ruzhouxie
 		};
 
 		template<size_t N>
-		struct repeat_t : pipe_closure<repeat_t<N>>
+		struct repeat_t
 		{
 			static constexpr auto layout = []<size_t...I>(std::index_sequence<I...>)
 			{
@@ -155,10 +155,10 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<auto Layout>
-		inline constexpr detail::relayout_t<Layout> relayout{};
+		inline constexpr tree_adaptor_closure<detail::relayout_t<Layout>> relayout{};
 
 		template<size_t N>
-		inline constexpr detail::repeat_t<N> repeat{};
+		inline constexpr tree_adaptor_closure<detail::repeat_t<N>> repeat{};
 	}
 }
 
@@ -245,7 +245,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t I, size_t Axis>
-		struct component_t : pipe_closure<component_t<I, Axis>>
+		struct component_t
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -269,7 +269,7 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<size_t J, size_t Axis>
-		inline constexpr detail::component_t<J, Axis> component{};
+		inline constexpr tree_adaptor_closure<detail::component_t<J, Axis>> component{};
 	}
 }
 
@@ -279,7 +279,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-		struct transpose_t : pipe_closure<transpose_t<Axis1, Axis2>>
+		struct transpose_t
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -294,7 +294,7 @@ namespace ruzhouxie
 	};
 
 	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-	inline constexpr detail::transpose_t<Axis1, Axis2> transpose{};
+	inline constexpr tree_adaptor_closure<detail::transpose_t<Axis1, Axis2>> transpose{};
 }
 
 //transpose
@@ -321,7 +321,7 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Begin, size_t Count>
-		struct range_t : pipe_closure<range_t<Begin, Count>>
+		struct range_t
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -344,7 +344,7 @@ namespace ruzhouxie
 	};
 
 	template<size_t Begin, size_t Count>
-	inline constexpr detail::range_t<Begin, Count> range{};
+	inline constexpr tree_adaptor_closure<detail::range_t<Begin, Count>> range{};
     
     
 }

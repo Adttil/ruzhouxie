@@ -3,76 +3,79 @@
 
 #include "general.h"
 #include "macro_define.h"
-#include <concepts>
+#include "ruzhouxie/general.h"
+#include "ruzhouxie/macro_define.h"
 
 namespace ruzhouxie
 {
-	namespace detail::pipe_closure_ns
+	namespace detail::tree_adaptor_closure_ns
 	{
-		template<typename Fn, size_t NArgsMin = 1uz> struct pipe_closure;
-
-		
-
-		
+		template<typename Fn> struct tree_adaptor_closure;
+		template<typename Fn> tree_adaptor_closure(Fn) -> tree_adaptor_closure<std::decay_t<Fn>>;
 	}
-	using detail::pipe_closure_ns::pipe_closure;
-	
-	template<typename Fn, size_t NArgsMin = 1uz>
-	struct pipe_wrapper : Fn, pipe_closure<pipe_wrapper<Fn, NArgsMin>>
-	{
-		using Fn::operator();
-	};
-	
-	template<typename Fn> pipe_wrapper(Fn) -> pipe_wrapper<std::decay_t<Fn>>;
-	
-	// template<size_t NArgsMin = 1uz>
-	// RUZHOUXIE_INLINE constexpr auto make_pipe_closure(auto&& fn)
-	// {
-	// 	return pipe_closure<purified<decltype(fn)>, NArgsMin>{ FWD(fn) };
-	// }
+	using detail::tree_adaptor_closure_ns::tree_adaptor_closure;
 
-	template<typename Fn, size_t NArgsMin>
-	struct detail::pipe_closure_ns::pipe_closure
+	template<typename Fn>
+	struct detail::tree_adaptor_closure_ns::tree_adaptor_closure : Fn
 	{
 		using fn_type = Fn;
-		static constexpr size_t n_args_min = NArgsMin;
-		//using Fn::operator();
+		using Fn::operator();
 
-		/*template<taggedable T, specified<pipe_closure> Self>
+		/*template<taggedable T, specified<tree_adaptor_closure> Self>
 		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self)
 			AS_EXPRESSION(as_base<Fn>(FWD(self))(view{  FWD(t) })*/
 
-		template<typename T, specified<Fn> Self>
-		requires (not requires{ requires std::derived_from<purified<T>, pipe_closure<purified<T>>>; })
+
+		template<typename T, specified<tree_adaptor_closure> Self>
+		requires (not requires{ requires std::same_as<tree_adaptor_closure<typename purified<T>::fn_type>, purified<T>>; })
 		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self) 
-			AS_EXPRESSION(FWD(self)(FWD(t)))
+			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(t)))
 
-		template<typename Pipe, specified<Fn> Self>
-		RUZHOUXIE_INLINE friend constexpr auto operator|(Pipe&& t, Self&& self)
-			requires std::derived_from<purified<Pipe>, pipe_closure<purified<Pipe>>>
+		template<typename Pipe, specified<tree_adaptor_closure> Self>
+		RUZHOUXIE_INLINE friend constexpr auto operator|(Pipe&& t, Self&& self) noexcept
+			requires std::same_as<tree_adaptor_closure<typename purified<Pipe>::fn_type>, purified<Pipe>>
 		{
-			return pipe_wrapper
+			return tree_adaptor_closure_ns::tree_adaptor_closure
 			{
-				[&](auto&& arg) AS_EXPRESSION(FWD(self)(FWD(arg) | FWD(t)))
+				[&](auto&& arg) AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(arg) | FWD(t)))
 			};
 		}
 
-		RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this specified<Fn> auto&& self, auto&&...args)noexcept
-			requires //(not requires{ FWD(self)(FWD(args)...); }) && 
-			(NArgsMin > sizeof...(args))
+		RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this auto&& self)noexcept
 		{
-			return pipe_wrapper
-			{
-				[&] (auto&&...appended_args)
-					AS_EXPRESSION(FWD(self)(FWD(args)..., FWD(appended_args)...))
-				/*[&] (this auto&& new_fn, auto&&...appended_args)
-					AS_EXPRESSION(FWDLIKE(new_fn, self)(FWDLIKE(new_fn, args)..., FWD(appended_args)...))*/
-			};
+			return FWD(self);
 		}
+
+		// RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this auto&& self, auto&&...args)noexcept
+		// 	requires (not requires{ as_base<Fn>(FWD(self))(FWD(args)...); }) && (NArgsMin > sizeof...(args))
+		// {
+		// 	return tree_adaptor_closure_ns::tree_adaptor_closure
+		// 	{
+		// 		[&] (auto&&...appended_args)
+		// 			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(args)..., FWD(appended_args)...))
+		// 		/*[&] (this auto&& new_fn, auto&&...appended_args)
+		// 			AS_EXPRESSION(as_base<Fn>(FWDLIKE(new_fn, self))(FWDLIKE(new_fn, args)..., FWD(appended_args)...))*/
+		// 	};
+		// }
 	};
+
+
 
 	template<auto fn>
 	using tag_t = purified<decltype(fn)>;
+}
+
+namespace ruzhouxie
+{
+	template<typename Fn>
+	struct tree_adaptor : Fn
+	{
+		using Fn::operator();
+
+		template<typename View, typename...Args>
+		RUZHOUXIE_INLINE constexpr auto operator()(this auto&& self, View&& view, Args&&...args)
+			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(args)...)(FWD(view)))
+	};
 }
 
 #include "macro_undef.h"

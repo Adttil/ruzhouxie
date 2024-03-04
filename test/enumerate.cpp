@@ -1,15 +1,18 @@
 #include "ruzhouxie/enumerate.h"
 #include "ruzhouxie/get.h"
 #include "test_tool.h"
+#include <algorithm>
 #include <print>
+#include <ranges>
 
 using namespace ruzhouxie;
 
 int main()
 {
-    constexpr auto r =  tag_invoke_getter{}.get<0>(range<0, 2>);
-    //constexpr auto r = range<0, 2> | child<0>;
-    MAGIC_SHOW_TYPE(r);
+    //std::views::transform())
+    //constexpr auto r =  tag_invoke_getter{}.get<0uz>(range<0, 2>);
+    //constexpr auto r = range<0, 2> | child<0uz>;
+    //MAGIC_SHOW_TYPE(r);
     // auto r = zip(std::tuple{ 1, 3.14 }, range<0, 2>) 
     //     //| enumerate 
     //     | transform([](auto&& i_v)

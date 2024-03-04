@@ -23,7 +23,7 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<typename T>
-		inline constexpr detail::make_tree_t<T> make_tree{};
+		inline constexpr tree_adaptor_closure<detail::make_tree_t<T>> make_tree{};
 	}
 
 	template<typename Target>
@@ -33,7 +33,7 @@ namespace ruzhouxie
 	using tree_maker = tree_maker_trait<Target>::type;
 
 	template<typename Target>
-	struct detail::make_tree_t : pipe_closure<make_tree_t<Target>>
+	struct detail::make_tree_t
 	{
 		template<typename T>
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
@@ -245,7 +245,7 @@ namespace ruzhouxie
 	template<template<typename...> typename Tpl = tuple>
 	RUZHOUXIE_INLINE constexpr auto to()
 	{
-		return detail::to_tpl_temp_t<Tpl>{};
+		return tree_adaptor_closure<detail::to_tpl_temp_t<Tpl>>{};
 	}
 
 	template<typename Tpl>
@@ -261,7 +261,7 @@ namespace ruzhouxie
 	}
 
 	template<template<typename...> typename Tpl>
-	struct detail::to_tpl_temp_t : processer<detail::to_tpl_temp_t<Tpl>>, pipe_closure<to_tpl_temp_t<Tpl>>
+	struct detail::to_tpl_temp_t : processer<detail::to_tpl_temp_t<Tpl>>
 	{
 		//using processer<tuple_maker<Tuple>>::operator();
 		

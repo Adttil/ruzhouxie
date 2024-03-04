@@ -93,7 +93,7 @@ namespace ruzhouxie
 
 	namespace detail
 	{
-		struct as_ref_t : pipe_closure<as_ref_t>
+		struct as_ref_t
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
@@ -112,7 +112,7 @@ namespace ruzhouxie
 
 	inline namespace functors
 	{
-		inline constexpr detail::as_ref_t as_ref{};
+		inline constexpr tree_adaptor_closure<detail::as_ref_t> as_ref{};
 	}
 }
 

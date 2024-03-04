@@ -7,9 +7,11 @@ using namespace ruzhouxie;
 
 int main()
 {
-    MAGIC_CHECK(3 | pipe_wrapper{std::negate<>{}}, -3);
-    MAGIC_CHECK(3 | pipe_wrapper{std::negate<>{}} | pipe_wrapper{std::negate<>{}}, 3);
-    MAGIC_CHECK(3 | (pipe_wrapper{std::negate<>{}} | pipe_wrapper{std::negate<>{}}), 3);
+    auto neg = tree_adaptor_closure{std::negate<>{}};
+
+    MAGIC_CHECK(3 | neg, -3);
+    MAGIC_CHECK(3 | neg | neg, 3);
+    MAGIC_CHECK(3 | (neg | neg), 3);
     //MAGIC_CHECK(3 | transform(std::negate<>{}) | transform(std::negate<>{}), 3);
     //MAGIC_CHECK(3 | (transform(std::negate<>{}) | transform(std::negate<>{})), 3);
 }

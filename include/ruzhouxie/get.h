@@ -161,7 +161,7 @@ namespace ruzhouxie
 	inline namespace functors
 	{
 		template<auto...I>
-		inline constexpr detail::child_t<I...> child{};
+		inline constexpr tree_adaptor_closure<detail::child_t<I...>> child{};
 	}
 
 	template<typename T>
@@ -184,7 +184,7 @@ namespace ruzhouxie
 	using getter = getter_trait<T>::type;
 
 	template<>
-	struct detail::child_t<> : pipe_closure<child_t<>>
+	struct detail::child_t<>
 	{
 		template<typename T>
 		RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
@@ -195,10 +195,8 @@ namespace ruzhouxie
 
 	//must has this for child return a pure-rvalue.
 	template<auto I>
-	struct detail::child_t<I> : pipe_closure<child_t<I>>
+	struct detail::child_t<I>
 	{
-		using pipe_closure<child_t>::operator();
-
 		static constexpr bool is_index = indices<purified<decltype(I)>>;
 
 		template<typename T>// requires (not is_index)
@@ -221,7 +219,7 @@ namespace ruzhouxie
 	};
 
 	template<auto I, auto...Rest> //requires (sizeof...(Rest) > 0uz)
-	struct detail::child_t<I, Rest...> : pipe_closure<child_t<I, Rest...>>
+	struct detail::child_t<I, Rest...>
 	{
 		template<typename T> 
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const

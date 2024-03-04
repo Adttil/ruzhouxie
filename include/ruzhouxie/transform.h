@@ -3,6 +3,7 @@
 
 #include "general.h"
 #include "pipe_closure.h"
+#include "ruzhouxie/macro_define.h"
 #include "ruzhouxie/tuple.h"
 #include "tree_view.h"
 #include "relayout.h"
@@ -306,16 +307,20 @@ namespace ruzhouxie
 			}
 		};
 
-		struct transform_t : pipe_closure<transform_t, 2uz>
+		struct transform_t
 		{
-			using pipe_closure<transform_t, 2uz>::operator();
-
-			template<typename Fn, typename T>
-			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&& tree)const
+			template<typename Fn>
+			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn)const
 			{
-				return zip_transform_view<std::decay_t<Fn>, T>
+				return tree_adaptor_closure
 				{
-					{}, FWD(fn), tuple<T>{ FWD(tree) }
+					[fn = FWD(fn)]<typename View>(this auto&& self, View&& view)
+					{
+						return zip_transform_view<std::decay_t<Fn>, View>
+						{
+							{}, FWDLIKE(self, fn), tuple<View>{ FWD(view) }
+						};
+					}
 				};
 			}
 		};
@@ -323,7 +328,7 @@ namespace ruzhouxie
 
 	inline constexpr detail::zip_transform_t zip_transform{};
     inline constexpr detail::zip_t zip{};
-	inline constexpr detail::transform_t transform{};
+	inline constexpr tree_adaptor<detail::transform_t> transform{};
 }
 
 #include "macro_undef.h"

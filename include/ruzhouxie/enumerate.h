@@ -3,6 +3,7 @@
 
 #include "general.h"
 #include "get.h"
+#include "pipe_closure.h"
 #include "relayout.h"
 #include "transform.h"
 
@@ -22,7 +23,7 @@ namespace ruzhouxie
         };
     }
 
-    inline constexpr pipe_closure<detail::enumerate_t> enumerate{};
+    inline constexpr tree_adaptor_closure<detail::enumerate_t> enumerate{};
 }
 
 #include "macro_undef.h"
