@@ -28,8 +28,6 @@ namespace ruzhouxie
 {
 	inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
-
-
 	//type without cvref.
 	template<typename T>
 	concept pure = std::same_as<T, std::remove_cvref_t<T>>;
@@ -37,6 +35,9 @@ namespace ruzhouxie
 	template<typename T>
 	using purified = std::remove_cvref_t<T>;
 
+	template<auto fn>
+	using tag_t = purified<decltype(fn)>;
+	
 	//completiable type.
 	template<typename T>
 	concept concrete = !std::same_as<T, void> && !std::is_abstract_v<T> && !std::is_unbounded_array_v<T>;

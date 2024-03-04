@@ -58,11 +58,6 @@ namespace ruzhouxie
 		// 	};
 		// }
 	};
-
-
-
-	template<auto fn>
-	using tag_t = purified<decltype(fn)>;
 }
 
 namespace ruzhouxie
