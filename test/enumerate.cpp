@@ -18,7 +18,7 @@ int main()
         | transform([](auto&& i_v)
             {
                 auto&& [i, v] = i_v;
-                std::println("{}, {}\n", i, v);
+                std::println("{}, {}\n", i.value, v);
                 return i_v;
             })
         | to<tuple>()    

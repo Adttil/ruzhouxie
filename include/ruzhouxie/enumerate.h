@@ -25,7 +25,7 @@ namespace ruzhouxie
                 }
                 else
                 {
-                    return Start + Stride * I;
+                    return constant_t<Start + Stride * I>{};
                 }
             };
         };
