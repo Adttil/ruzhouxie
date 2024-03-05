@@ -6,6 +6,7 @@
 #include "macro_define.h"
 #include "ruzhouxie/macro_define.h"
 #include <functional>
+#include <type_traits>
 #include <utility>
 
 namespace ruzhouxie
@@ -95,6 +96,10 @@ namespace ruzhouxie
 
 	template<typename...T>
 	tuple(T...) -> tuple<std::decay_t<T>...>;
+
+	template<typename...Args>
+	RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
+		AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... })
 
 	template<typename...Args>
 	RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept

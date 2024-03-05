@@ -292,9 +292,9 @@ namespace ruzhouxie
 
         struct zip_t
 		{
-            static constexpr auto zip_fn = [](auto&&...args)
+            static constexpr auto zip_fn = []<typename...Args>(Args&&...args)
             {
-                return fwd_as_tuple(FWD(args)...);
+                return tuple<Args...>{ FWD(args)... };
             };
 
 			template<typename...T>

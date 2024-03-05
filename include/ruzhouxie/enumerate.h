@@ -13,6 +13,32 @@ namespace ruzhouxie
 {
     namespace detail
     {
+        template<size_t Start, size_t Size, size_t Stride>
+        struct range_view
+        {
+            template<size_t I, specified<range_view> Self>
+		    friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)noexcept
+		    {
+                if constexpr(I >= Size)
+                {
+                    return;
+                }
+                else
+                {
+                    return Start + Stride * I;
+                }
+            };
+        };
+    }
+
+    template<size_t Start, size_t Size, size_t Stride = 1uz>
+    inline constexpr detail::range_view<Start, Size, Stride> range{};
+}
+
+namespace ruzhouxie
+{
+    namespace detail
+    {
         struct enumerate_t
         {
             template<typename View>

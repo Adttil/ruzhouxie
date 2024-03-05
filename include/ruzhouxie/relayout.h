@@ -4,8 +4,12 @@
 #include "general.h"
 #include "get.h"
 #include "pipe_closure.h"
+#include "ruzhouxie/array.h"
+#include "ruzhouxie/general.h"
+#include "ruzhouxie/tuple.h"
 #include "tree_view.h"
 #include "constant.h"
+#include "math.h"
 
 #include "macro_define.h"
 #include <utility>
@@ -166,77 +170,46 @@ namespace ruzhouxie
 {
 	namespace detail
 	{
-		template<size_t M, size_t N>
-		constexpr auto tensor_layout_add_prefix(const array<size_t, M>& layout, const array<size_t, N>& prefix)
+		template<typename TLayout, size_t N>
+			constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
 		{
-			return concat_array(prefix, layout);
-		}
-
-		template<typename T, size_t N> requires (tensor_rank<T> >= 2uz)
-			constexpr auto tensor_layout_add_prefix(const T& layout, const array<size_t, N>& prefix)
-		{
-			return[&]<size_t...I>(std::index_sequence<I...>)
+			if constexpr(indices<TLayout>)
 			{
-				return array{ tensor_layout_add_prefix(layout | child<I>, prefix)... };
-			}(std::make_index_sequence<child_count<T>>{});
+				return concat_array(prefix, layout);
+			}
+			else return[&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return make_tuple(layout_add_prefix(layout | child<I>, prefix)...);
+			}(std::make_index_sequence<child_count<TLayout>>{});
 		}
 	}
 
 	template<typename T>
-	constexpr auto default_tensor_layout
+	constexpr auto default_layout = []()
 	{
-		[]()
+		if constexpr (terminal<T>)
 		{
-			if constexpr (terminal<T>)
+			return array<size_t, 0uz>{};
+		}
+		else return[]<size_t...I>(std::index_sequence<I...>)
+		{
+			return make_tuple(detail::layout_add_prefix(default_layout<child_type<T, I>>, array{I})...);
+		}(std::make_index_sequence<child_count<T>>{});	
+	}();
+
+	template<typename Impl>
+	struct relayouter
+	{
+		template<typename View, specified<Impl> Self>
+		RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, View&& view)
+		{
+			constexpr auto layout = self.relayout(default_layout<View>);
+			return detail::relayout_view<View, layout>
 			{
-				return array<size_t, 0uz>{};
-			}
-			else return[]<size_t...I>(std::index_sequence<I...>)
-			{
-				return array{ detail::tensor_layout_add_prefix(default_tensor_layout<child_type<T, I>>, array{I})... };
-			}(std::make_index_sequence<child_count<T>>{});
-		}()
+				{}, FWD(view)
+			};
+		}
 	};
-}
-
-namespace ruzhouxie
-{
-	template<size_t I, size_t Axis = 0uz, typename T = void>
-	constexpr auto component_copy(const T& t)
-	{
-		if constexpr (Axis == 0uz)
-		{
-			static_assert(I < child_count<T>, "Component index out of range.");
-			return t | child<I>;
-		}
-		else
-		{
-			static_assert(branched<T>, "Axis index out of range.");
-			return[&]<size_t...J>(std::index_sequence<J...>)
-			{
-				return tuple{ component_copy<I, Axis - 1uz>(t | child<J>)... };
-			}(std::make_index_sequence<child_count<T>>{});
-		}
-	}
-
-	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz, typename T = void>
-	constexpr auto transpose_copy(const T& t)
-	{
-		if constexpr (Axis1 == 0uz)
-		{
-			constexpr size_t N = tensor_shape<T>[Axis2];
-			return[&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return tuple{ component_copy<I, Axis2>(t)... };
-			}(std::make_index_sequence<N>{});
-		}
-		else return[&]<size_t...I>(std::index_sequence<I...>)
-		{
-			return tuple{ transpose_copy<Axis1 - 1uz, Axis2 - 1uz>(t | child<I>)... };
-		}(std::make_index_sequence<child_count<T>>{});
-	}
-
-    
 }
 
 //component
@@ -245,32 +218,48 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t I, size_t Axis>
-		struct component_t
-		{
-			template<typename T>
-			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-			{
-				if constexpr (Axis == 0)
-				{
-					return t | child<I>;
-				}
-				else
-				{
-					constexpr auto tensor_layout = default_tensor_layout<T>;
-					return relayout_view<T, component_copy<I, Axis>(tensor_layout)>
-					{
-						{}, FWD(t)
-					};
-				}
-			}
-		};
-	};
-
-	inline namespace functors
-	{
-		template<size_t J, size_t Axis>
-		inline constexpr tree_adaptor_closure<detail::component_t<J, Axis>> component{};
+		struct component_t;
 	}
+
+	template<size_t J, size_t Axis = 0uz>
+	inline constexpr tree_adaptor_closure<detail::component_t<J, Axis>> component{};
+
+	template<size_t I, size_t Axis>
+	struct detail::component_t : relayouter<component_t<I, Axis>>
+	{
+		template<typename TLayout>
+		static consteval auto relayout(const TLayout& layout)
+		{
+			if constexpr (Axis == 0uz)
+			{
+				static_assert(I < child_count<TLayout>, "Component index out of range.");
+				return layout | child<I>;
+			}
+			else
+			{
+				static_assert(branched<TLayout>, "Axis index out of range.");
+				return[&]<size_t...J>(std::index_sequence<J...>)
+				{
+					return make_tuple(component<I, Axis - 1uz>.relayout(layout | child<J>)...);
+				}(std::make_index_sequence<child_count<TLayout>>{});
+			}
+		}
+			// RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+			// {
+			// 	if constexpr (Axis == 0)
+			// 	{
+			// 		return t | child<I>;
+			// 	}
+			// 	else
+			// 	{
+			// 		constexpr auto tensor_layout = default_layout<T>;
+			// 		return relayout_view<T, layouts::component_copy<I, Axis>(tensor_layout)>
+			// 		{
+			// 			{}, FWD(t)
+			// 		};
+			// 	}
+			// }
+	};
 }
 
 //transpose
@@ -279,41 +268,46 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
-		struct transpose_t
-		{
-			template<typename T>
-			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-			{
-				constexpr auto tensor_layout = default_tensor_layout<T>;
-				return relayout_view<T, transpose_copy<Axis1, Axis2>(tensor_layout)>
-				{
-					{}, FWD(t)
-				};
-			}
-		};
-	};
+		struct transpose_t;
+	}
 
 	template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
 	inline constexpr tree_adaptor_closure<detail::transpose_t<Axis1, Axis2>> transpose{};
+	
+	template<size_t Axis1, size_t Axis2>
+	struct detail::transpose_t : relayouter<transpose_t<Axis1, Axis2>>
+	{
+		template<typename TLayout>
+		static consteval auto relayout(const TLayout& layout)
+		{
+			if constexpr (Axis1 == 0uz)
+			{
+				constexpr size_t N = tensor_shape<TLayout>[Axis2];
+				return[&]<size_t...I>(std::index_sequence<I...>)
+				{
+					return make_tuple(component<I, Axis2>.relayout(layout)...);
+				}(std::make_index_sequence<N>{});
+			}
+			else return[&]<size_t...I>(std::index_sequence<I...>)
+			{
+				return make_tuple(transpose<Axis1 - 1uz, Axis2 - 1uz>.relayout(layout | child<I>)...);
+			}(std::make_index_sequence<child_count<TLayout>>{});
+		}
+	};
 }
 
 //transpose
 namespace ruzhouxie
 {
-    constexpr size_t mod(size_t I, size_t N)
-    {
-        return I % N;
-    }
-
     //todo...add Aixs
     template<size_t Begin, size_t Count/*, size_t Axis = 0uz*/, typename T = void>
     constexpr auto range_copy(const T& t)
     {
         return [&]<size_t...I>(std::index_sequence<I...>)
         {
-            return tuple<purified<decltype(t | child<mod(Begin + I, child_count<T>)>)>...>
+            return tuple<purified<decltype(t | child<modulo(Begin + I, child_count<T>)>)>...>
             {
-                t | child<mod(Begin + I, child_count<T>)>...
+                t | child<modulo(Begin + I, child_count<T>)>...
             };
         }(std::make_index_sequence<Count>{});
     }
@@ -321,19 +315,19 @@ namespace ruzhouxie
 	namespace detail
 	{
 		template<size_t Begin, size_t Count>
-		struct range_t
+		struct span_t
 		{
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
 			{
-				constexpr auto tensor_layout = default_tensor_layout<T>;
+				constexpr auto tensor_layout = default_layout<T>;
 				return relayout_view<T, range_copy<Begin, Count>(tensor_layout)>
 				{
 					{}, FWD(t)
 				};
 			}
 
-            template<size_t I, specified<range_t> T> requires(I < Count)
+            template<size_t I, specified<span_t> T> requires(I < Count)
 	        friend constexpr auto tag_invoke(tag_t<child<I>>, T&&)noexcept
 	        {
                 return constant_t<Begin + I>{};
@@ -344,7 +338,7 @@ namespace ruzhouxie
 	};
 
 	template<size_t Begin, size_t Count>
-	inline constexpr tree_adaptor_closure<detail::range_t<Begin, Count>> range{};
+	inline constexpr tree_adaptor_closure<detail::span_t<Begin, Count>> span{};
     
     
 }

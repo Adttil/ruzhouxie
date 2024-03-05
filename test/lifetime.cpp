@@ -19,10 +19,10 @@ int main()
 	//constexpr
     auto r = 233
         | rzx::repeat<3>
-        | rzx::range<1, 4>
+        | rzx::span<1, 4>
         | rzx::transform(neg)
         | rzx::repeat<3>
-        | rzx::range<3, 2>
+        | rzx::span<3, 2>
         | rzx::transpose<>
         | rzx::to<rzx::tuple>();
 
