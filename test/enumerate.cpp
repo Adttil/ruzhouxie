@@ -21,6 +21,7 @@ int main()
                 std::println("{}, {}\n", i.value, v);
                 return i_v;
             })
-        | to<tuple>()    
+           
         ;
+    MAGIC_SHOW_TYPE(r);
 }

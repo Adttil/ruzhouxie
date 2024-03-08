@@ -73,9 +73,8 @@
 #define FWDLIKE(_0, ...) FWDLIKE_IMPL(_0 __VA_OPT__(,) __VA_ARGS__)
 #define FWDLIKE_IMPL(...) ::ruzhouxie::fwd<FOREACH(decltype, __VA_ARGS__)>(GET_LAST(__VA_ARGS__))
 
-#define AS_EXPRESSION(...) noexcept(noexcept(__VA_ARGS__))\
--> decltype(auto)\
-requires requires{ __VA_ARGS__; }\
+#define AS_EXPRESSION(...) noexcept(noexcept(__VA_ARGS__)) -> decltype(auto)\
+	requires requires{ __VA_ARGS__; }\
 {\
 	return __VA_ARGS__;\
 }
