@@ -24,6 +24,13 @@ namespace ruzhouxie
 	template<typename T, auto...ReservedLayouts>
 	struct reserved_view;
 
+	enum class access_mode
+	{
+		unknown,
+		pass,
+		once
+	};
+
 	enum class layout_relation
 	{
 		independent,
@@ -174,6 +181,125 @@ namespace ruzhouxie
 				}
 			}
 		}
+
+		template<size_t I, specified<tape_t> Self>
+		friend constexpr decltype(auto) access_once(Self&& self)
+		{
+			if constexpr(I >= child_count<decltype(Sequence)>)
+			{
+				return;
+			}
+			else
+			{
+				constexpr auto layout = Sequence | child<I>;
+				constexpr auto relation_to_rest = []<size_t...J>(std::index_sequence<J...>)
+				{
+					//for some compiler.
+					constexpr auto layout = Sequence | child<I>;
+					return (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J + I + 1uz>));
+				}(std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
+
+				if constexpr(indices<decltype(layout)>)
+				{
+					if constexpr(relation_to_rest == layout_relation::independent)
+					{
+						return FWD(self, data) | child<layout>;
+					}
+					else
+					{
+						return std::as_const(self.data) | child<layout>;
+					}
+				}
+				else if constexpr(relation_to_rest == layout_relation::independent)
+				{
+					return detail::relayout_view<decltype(FWD(self, data)), layout>
+					{
+						{}, FWD(self, data)
+					};
+				}
+				// else if constexpr(relation_to_rest == layout_relation::included)
+				// {
+				// 	return relayout_view<decltype(as_const(self.data)), layout>
+				// 	{
+				// 		as_const(self.data)
+				// 	};
+				// }
+				else
+				{
+					return detail::relayout_view<decltype(as_const(self.data)), layout>
+					{
+						{}, as_const(self.data)
+					};
+				}
+			}
+		}
+
+		template<size_t I, specified<tape_t> Self>
+		friend constexpr decltype(auto) access_pass(Self&& self)
+		{
+			if constexpr(I >= child_count<decltype(Sequence)>)
+			{
+				return;
+			}
+			else
+			{
+				constexpr auto layout = Sequence | child<I>;
+				constexpr auto relation_to_rest = []<size_t...J, size_t...K>(std::index_sequence<J...>, std::index_sequence<K...>)
+				{
+					//for some compiler.
+					constexpr auto layout = Sequence | child<I>;
+					constexpr auto front = (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J>));
+					constexpr auto behind = (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<K + I + 1uz>));
+					return front | behind;
+				}(std::make_index_sequence<I>{}, std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
+
+				if constexpr(indices<decltype(layout)>)
+				{
+					if constexpr(relation_to_rest == layout_relation::independent)
+					{
+						return FWD(self, data) | child<layout>;
+					}
+					else
+					{
+						return std::as_const(self.data) | child<layout>;
+					}
+				}
+				else if constexpr(relation_to_rest == layout_relation::independent)
+				{
+					return detail::relayout_view<decltype(FWD(self, data)), layout>
+					{
+						{}, FWD(self, data)
+					};
+				}
+				// else if constexpr(relation_to_rest == layout_relation::included)
+				// {
+				// 	return relayout_view<decltype(as_const(self.data)), layout>
+				// 	{
+				// 		as_const(self.data)
+				// 	};
+				// }
+				else
+				{
+					return detail::relayout_view<decltype(as_const(self.data)), layout>
+					{
+						{}, as_const(self.data)
+					};
+				}
+			}
+		}
+
+		template<size_t I, access_mode Mode = access_mode::unknown, specified<tape_t> Self = void>
+		friend constexpr decltype(auto) access(Self&& self)
+		{
+			if constexpr(Mode == access_mode::once)
+			{
+				return access_once<I>(FWD(self));
+			}
+			else
+			{
+				return access_pass<I>(FWD(self));
+			}
+		}
 	};
 
 	namespace detail::get_tape_t_ns
@@ -188,13 +314,6 @@ namespace ruzhouxie
 	template<auto Sequence>
 	constexpr inline tree_adaptor_closure<detail::get_tape_t_ns::get_tape_t<Sequence>> get_tape{};
 
-	template<size_t N, typename Tape>
-	constexpr auto tape_drop(Tape&& tape) noexcept
-	{
-		using tape_type = purified<Tape>;
-		constexpr auto sequence = tuple_drop<N>(tape_type::sequence);
-		return tape_t<decltype(FWD(tape, data)), sequence>{ FWD(tape, data) };
-	}
 
 	template<auto Sequence>
 	struct detail::get_tape_t_ns::get_tape_t

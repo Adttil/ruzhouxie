@@ -4,6 +4,7 @@
 #include "array.h"
 #include "general.h"
 #include "pipe_closure.h"
+#include "ruzhouxie/macro_define.h"
 #include "tape.h"
 #include "get.h"
 #include "macro_define.h"
@@ -70,7 +71,7 @@ namespace ruzhouxie
 		// {
 		// 	return self.template process_tape<Tree&&>(get_tape<self.template get_sequence<Tree&&>()>(FWD(tree)));
 		// }
-			AS_EXPRESSION(self.template process_tape<Tree&&>(FWD(tree) | get_tape<self.template get_sequence<Tree&&>()>))
+			AS_EXPRESSION(self.template process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<self.template get_sequence<Tree&&>()>))
 	};
 
     namespace detail
@@ -119,36 +120,36 @@ namespace ruzhouxie
 			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 		}
 
-		template<typename T, size_t I, typename Tape> requires branched<Tuple>
+		template<typename T, size_t Offset, size_t I, typename Tape> requires branched<Tuple>
 		static constexpr auto child_process_tape(Tape&& tape)
 		{
 			constexpr size_t offset = []<size_t...J>(std::index_sequence<J...>)
 			{
-				return (0uz + ... + std::tuple_size_v<decltype(child_sequence<J, T>())>); 
+				return (Offset + ... + std::tuple_size_v<decltype(child_sequence<J, T>())>); 
 			}(std::make_index_sequence<I>{});
 
-			auto child_tape = tape_drop<offset>(FWD(tape));
+			//auto child_tape = tape_drop<offset>(FWD(tape));
 			using child_t = std::tuple_element_t<I, Tuple>;
-			return tree_maker<child_t>{}.process_tape<child_type<T, I>>(move(child_tape));
+			return tree_maker<child_t>{}.process_tape<child_type<T, I>, offset>(FWD(tape));
 		};
 
-		template<typename T, typename Tape>
+		template<typename T, size_t Offset, typename Tape>
 		constexpr auto process_tape(Tape&& tape)const
 		{
 			if constexpr(terminal<Tuple>)
 			{
-				return static_cast<Tuple>( FWD(tape) | child<0uz> );
+				return static_cast<Tuple>( FWD(tape) | child<Offset> );
 			}
 			else return [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return Tuple{ child_process_tape<T, I>(FWD(tape))... };
+				return Tuple{ child_process_tape<T, Offset, I>(FWD(tape))... };
 			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 		}
 
 #ifdef __clang__
 		template<typename Tree>
 		RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
-			AS_EXPRESSION(process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
+			AS_EXPRESSION(process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
 #endif
 	};
 
@@ -285,36 +286,34 @@ namespace ruzhouxie
 			}(std::make_index_sequence<child_count<T>>{});
 		}
 
-		template<typename T, size_t I, typename Tape>
+		template<typename T, size_t Offset, size_t I, typename Tape>
 		constexpr auto child_process_tape(Tape&& tape)const
 		{
 			constexpr size_t offset = []<size_t...J>(std::index_sequence<J...>)
 			{
-				return (0uz + ... + std::tuple_size_v<decltype(get_sequence<child_type<T, J>>())>); 
+				return (Offset + ... + std::tuple_size_v<decltype(get_sequence<child_type<T, J>>())>); 
 			}(std::make_index_sequence<I>{});
 
-			auto child_tape = tape_drop<offset>(FWD(tape));
-
-			return process_tape<child_type<T, I>>(move(child_tape));
+			return process_tape<child_type<T, I>, offset>(FWD(tape));
 		};
 
-		template<typename T, typename Tape>
+		template<typename T, size_t Offset, typename Tape>
 		constexpr auto process_tape(Tape&& tape)const
 		{
 			if constexpr(terminal<T>)
 			{
-				return FWD(tape) | child<0uz>;
+				return FWD(tape) | child<Offset>;
 			}
 			else return [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return Tpl{ child_process_tape<T, I>(FWD(tape))... };
+				return Tpl{ child_process_tape<T, Offset, I>(FWD(tape))... };
 			}(std::make_index_sequence<child_count<T>>{});
 		}
 
 #ifdef __clang__
 		template<typename Tree>
 		RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
-			AS_EXPRESSION(process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
+			AS_EXPRESSION(process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
 #endif
 	};
 

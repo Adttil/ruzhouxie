@@ -45,12 +45,9 @@ namespace ruzhouxie
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			//todo...noexcept
 		{
-			//constexpr auto input_seq_map = get_input_seq_and_map<Seq>();
 			constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
 
 			auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
-
-			using input_tapes_type = decltype(input_tape);
 			
 			constexpr auto input_tape_seq = input_tape.sequence;
 
