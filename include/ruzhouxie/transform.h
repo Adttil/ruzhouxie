@@ -49,26 +49,26 @@ namespace ruzhouxie
 
 			auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
 			
-			constexpr auto input_tape_seq = input_tape.sequence;
-
-			constexpr auto unique_input_indices_map = get_unique_input_indices_and_map<input_tape.sequence>();
-
-			constexpr size_t n_unique_input_indices = child_count<decltype(unique_input_indices_map.indices)>;
+			constexpr auto unique_input_tape_seq_and_map = input_tape.get_unique_seq_and_map();
+	
+			auto uinque_input_tape = make_tape<unique_input_tape_seq_and_map.sequence>(FWD(input_tape, data));
+			constexpr auto uinque_input_map = unique_input_tape_seq_and_map.map;
 
 			const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return tuple<decltype(FWD(self, fn)(FWD(input_tape) | child<I>))...>
+				return tuple<decltype(FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape))))...>
 				{
-					FWD(self, fn)(FWD(input_tape) | child<I>)...
+					FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape)))...
 				};
 			};
 
-			constexpr auto result_layouts = get_result_layouts<Seq, input_seq_map.map, unique_input_indices_map.map>(
+			constexpr auto result_layouts = get_result_layouts<Seq, input_seq_map.map, uinque_input_map>(
 				std::make_index_sequence<child_count<decltype(Seq)>>{});
 
-			return tape_t<decltype(result_data(std::make_index_sequence<n_unique_input_indices>{})), result_layouts>
+			constexpr auto s = std::make_index_sequence<child_count<decltype(unique_input_tape_seq_and_map.sequence)>>{};
+			return tape_t<decltype(result_data(s)), result_layouts>
 			{
-				result_data(std::make_index_sequence<n_unique_input_indices>{})
+				result_data(s)
 			};
 		}
 
@@ -173,41 +173,6 @@ namespace ruzhouxie
 				array<size_t, child_count<V>> map;
 			};
 			return result_t{ seq, map };
-		}
-
-		template<auto InputLayoutsZip, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
-		static constexpr auto get_unique_input_indices_and_map_impl(auto& map)noexcept
-		{
-			if constexpr(I >= child_count<decltype(InputLayoutsZip)>)
-			{
-				return Cur;
-			}
-			else if constexpr(tuple_contain(CurLayouts, InputLayoutsZip | child<I>))
-			{
-				return get_unique_input_indices_and_map_impl<InputLayoutsZip, I + 1uz, Cur, CurLayouts>(map);
-			}
-			else
-			{
-				map[I] = child_count<decltype(Cur)>;
-				return get_unique_input_indices_and_map_impl<
-					InputLayoutsZip, I + 1uz,
-					tuple_cat(Cur, tuple{ I }),
-					tuple_cat(CurLayouts, tuple<purified<decltype(InputLayoutsZip | child<I>)>>{ InputLayoutsZip | child<I> })
-				>(map);
-			}
-		}
-
-		template<auto InputLayoutsZip>
-		static consteval auto get_unique_input_indices_and_map()
-		{
-			array<size_t, child_count<decltype(InputLayoutsZip)>> map{};
-			auto indices = get_unique_input_indices_and_map_impl<InputLayoutsZip>(map);
-			struct result_t
-			{
-				decltype(indices) indices;
-				array<size_t, child_count<decltype(InputLayoutsZip)>> map;
-			};
-			return result_t{ indices, map };
 		}
 
 		static constexpr auto set_result_seq(auto& seq, const auto& view_map, const auto& unique_view_tape_map)noexcept

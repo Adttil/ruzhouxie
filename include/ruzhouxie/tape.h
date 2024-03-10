@@ -4,6 +4,7 @@
 #include "general.h"
 #include "pipe_closure.h"
 #include "ruzhouxie/array.h"
+#include "ruzhouxie/general.h"
 #include "ruzhouxie/macro_define.h"
 #include "tuple.h"
 #include "array.h"
@@ -300,7 +301,47 @@ namespace ruzhouxie
 				return access_pass<I>(FWD(self));
 			}
 		}
+
+		template<auto InputLayoutsZip, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
+		static constexpr auto get_unique_tape_seq_and_set_map(auto& map)noexcept
+		{
+			if constexpr(I >= child_count<decltype(InputLayoutsZip)>)
+			{
+				return CurLayouts;
+			}
+			else if constexpr(tuple_contain(CurLayouts, InputLayoutsZip | child<I>))
+			{
+				return get_unique_tape_seq_and_set_map<InputLayoutsZip, I + 1uz, Cur, CurLayouts>(map);
+			}
+			else
+			{
+				map[I] = child_count<decltype(Cur)>;
+				return get_unique_tape_seq_and_set_map<
+					InputLayoutsZip, I + 1uz,
+					tuple_cat(Cur, tuple{ I }),
+					tuple_cat(CurLayouts, tuple<purified<decltype(InputLayoutsZip | child<I>)>>{ InputLayoutsZip | child<I> })
+				>(map);
+			}
+		}
+
+		static consteval auto get_unique_seq_and_map()
+		{
+			array<size_t, child_count<decltype(Sequence)>> map{};
+			auto seq = get_unique_tape_seq_and_set_map<Sequence>(map);
+			struct result_t
+			{
+				decltype(seq) sequence;
+				array<size_t, child_count<decltype(Sequence)>> map;
+			};
+			return result_t{ seq, map };
+		}
 	};
+
+	template<auto Seq>
+	RUZHOUXIE_INLINE constexpr auto make_tape(auto&& data)noexcept
+	{
+		return tape_t<decltype(data), Seq>{ FWD(data) };
+	}
 
 	namespace detail::get_tape_t_ns
 	{
@@ -338,6 +379,12 @@ namespace ruzhouxie
 			// }(std::make_index_sequence<child_count<decltype(Sequence)>>{});
 		}
 	};
+
+	template<typename Tape>
+	constexpr auto get_unique_tape_and_map(Tape&& tape)
+	{
+
+	}
 }
 
 #include "macro_undef.h"
