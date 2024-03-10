@@ -10,6 +10,7 @@
 #include "relayout.h"
 
 #include "macro_define.h"
+#include <utility>
 
 namespace ruzhouxie
 {
@@ -485,32 +486,21 @@ namespace ruzhouxie
 
 	namespace detail
 	{
-		struct zip_transform_t
-		{
-			template<typename Fn, typename...T>
-			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&&...trees)const
-			{
-				return detail::zip_transform_view<std::decay_t<Fn>, T...>
-				{
-					{}, FWD(fn), tuple<T...>{ FWD(trees)... }
-				};
-			}
-		};
-
         struct zip_t
 		{
-            static constexpr auto zip_fn = []<typename...Args>(Args&&...args)
-            {
-                return tuple<Args...>{ FWD(args)... };
-            };
+            // static constexpr auto zip_fn = []<typename...Args>(Args&&...args)
+            // {
+            //     return tuple<Args...>{ FWD(args)... };
+            // };
 
 			template<typename...T>
 			RUZHOUXIE_INLINE constexpr auto operator()(T&&...trees)const
 			{
-				return detail::zip_transform_view<tag_t<zip_fn>, T...>
-				{
-					{}, zip_fn, tuple<T...>{ FWD(trees)... }
-				};
+				return tuple<T...>{ FWD(trees)...} | transpose<>;
+				// return detail::zip_transform_view<tag_t<zip_fn>, T...>
+				// {
+				// 	{}, zip_fn, tuple<T...>{ FWD(trees)... }
+				// };
 			}
 		};
 
@@ -527,9 +517,35 @@ namespace ruzhouxie
 		};
 	}
 
-	inline constexpr detail::zip_transform_t zip_transform{};
     inline constexpr detail::zip_t zip{};
 	inline constexpr tree_adaptor<detail::transform_t> transform{};
+
+	namespace detail
+	{
+		struct zip_transform_t
+		{
+			template<typename Fn, typename...T>
+			RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&&...trees)const
+			{
+				return zip(FWD(trees)...) | transform(
+					[=](auto&& zip_args)->decltype(auto)
+					{
+						return [&]<size_t...I>(std::index_sequence<I...>)->decltype(auto)
+						{
+							return fn(FWD(zip_args) | child<I> ...);
+						}(std::index_sequence_for<T...>{});
+					}
+				);
+
+				// return detail::zip_transform_view<std::decay_t<Fn>, T...>
+				// {
+				// 	{}, FWD(fn), tuple<T...>{ FWD(trees)... }
+				// };
+			}
+		};
+	}
+	
+	inline constexpr detail::zip_transform_t zip_transform{};
 }
 
 #include "macro_undef.h"

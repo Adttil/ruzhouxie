@@ -17,11 +17,12 @@ int main()
         | enumerate 
         | transform([](auto&& i_v)
             {
-                auto&& [i, v] = i_v;
+                auto&& i = i_v | child<0>;
+                auto&& v = i_v | child<1>;
                 std::println("{}, {}\n", i.value, v);
                 return i_v;
             })
-           
+        | to<tuple>()  
         ;
     MAGIC_SHOW_TYPE(r);
 }
