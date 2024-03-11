@@ -6,6 +6,7 @@
 #include "pipe_closure.h"
 #include "ruzhouxie/macro_define.h"
 #include "ruzhouxie/tuple.h"
+#include "tape.h"
 #include "tree_view.h"
 #include "relayout.h"
 
@@ -42,35 +43,75 @@ namespace ruzhouxie
 			}
 		}
 
+		template<typename T>
+		struct data_type
+		{
+			//constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
+			static constexpr auto unique_base_tape_seq_and_map = T::get_unique_seq_and_map();
+			
+			RUZHOUXIE_INLINE static constexpr auto get_data(T&& base_tape, F& fn)
+			{
+				auto uinque_base_tape = make_tape<unique_base_tape_seq_and_map.sequence>(FWD(base_tape, data));
+				return [&]<size_t...I>(std::index_sequence<I...>)
+				{
+					return tuple<decltype(fn(access_pass<I>(FWD(uinque_base_tape))))...>
+					{
+						fn(access_pass<I>(FWD(uinque_base_tape)))...
+					};
+				}(std::make_index_sequence<child_count<decltype(unique_base_tape_seq_and_map.sequence)>>{});
+			}
+
+			T base_tape;
+			decltype(get_data(declval<T>(), declval<F&>())) data;
+
+			RUZHOUXIE_INLINE constexpr data_type(auto&& base, auto&& get_tape_fn, F& fn)
+				: base_tape(FWD(base) | get_tape_fn)
+				, data(get_data(move(base_tape), fn))
+			{}
+
+			template<size_t I, specified<data_type> Self>
+			RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
+				AS_EXPRESSION(FWD(self, data) | child<I>)
+
+			
+		};
+
 		template<auto Seq, specified<transform_view> Self>
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
 			//todo...noexcept
 		{
 			constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
 
-			auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
+			using base_tape_type = decltype(FWD(self, base) | get_tape<input_seq_map.seq>);
+
+			//auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
 			
-			constexpr auto unique_input_tape_seq_and_map = input_tape.get_unique_seq_and_map();
+			constexpr auto unique_input_tape_seq_and_map = base_tape_type::get_unique_seq_and_map();
 	
-			auto uinque_input_tape = make_tape<unique_input_tape_seq_and_map.sequence>(FWD(input_tape, data));
+			//auto uinque_input_tape = make_tape<unique_input_tape_seq_and_map.sequence>(FWD(input_tape, data));
 			constexpr auto uinque_input_map = unique_input_tape_seq_and_map.map;
 
-			const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
-			{
-				return tuple<decltype(FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape))))...>
-				{
-					FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape)))...
-				};
-			};
+			// const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
+			// {
+			// 	return tuple<decltype(FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape))))...>
+			// 	{
+			// 		FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape)))...
+			// 	};
+			// };
 
 			constexpr auto result_layouts = get_result_layouts<Seq, input_seq_map.map, uinque_input_map>(
 				std::make_index_sequence<child_count<decltype(Seq)>>{});
 
-			constexpr auto s = std::make_index_sequence<child_count<decltype(unique_input_tape_seq_and_map.sequence)>>{};
-			return tape_t<decltype(result_data(s)), result_layouts>
+			return tape_t<data_type<base_tape_type>, result_layouts>
 			{
-				result_data(s)
+				data_type<base_tape_type>{ FWD(self, base), get_tape<input_seq_map.seq>, self.fn }
 			};
+			
+			// constexpr auto s = std::make_index_sequence<child_count<decltype(unique_input_tape_seq_and_map.sequence)>>{};
+			// return tape_t<decltype(result_data(s)), result_layouts>
+			// {
+			// 	result_data(s)
+			// };
 		}
 
 	private:
