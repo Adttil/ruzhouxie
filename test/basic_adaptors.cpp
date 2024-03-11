@@ -38,6 +38,19 @@ int main()
     };
 
 	std::puts("==================");
-    auto result = std::move(trs) | rzx::as_ref | rzx::relayout<layout1> | rzx::make_tree<std::array<Tr, 5>>;
+	auto exp = std::move(trs) | rzx::as_ref | rzx::relayout<layout1>;
+    std::array<Tr, 5> result = +(std::move(trs) | rzx::as_ref | rzx::relayout<layout1>);
     std::puts("==================");
+
+	constexpr auto seq = rzx::tuple
+    {
+        std::array{0uz}, std::array{1uz}, std::array{2uz}, std::array{3uz}, std::array{4uz}
+    };
+	auto tape = std::move(exp) | rzx::get_tape<seq>;
+	auto [a,b,c,d,e] = tape.sequence;
+
+	MAGIC_SHOW_TYPE(tape.data);
+
+	std::println("{}, {}, {}, {}, {}", a[0], b[0], c[0], d[0], e[0]);
+	
 }

@@ -1,3 +1,4 @@
+#include "ruzhouxie/tuple.h"
 #include <array>
 #include <cstdio>
 #include <functional>
@@ -15,10 +16,10 @@ constexpr int neg(int x)
 
 int main()
 {
-    constexpr auto mat = rzx::mat<2, 2>
+    constexpr auto mat = std::array
     {
-        rzx::vec<2>{1, 2},
-        rzx::vec<2>{1, 2}
+        std::array{1, 2},
+        std::array{1, 2}
     };
     constexpr auto m = rzx::mat_mul(mat, mat) | rzx::to();
 

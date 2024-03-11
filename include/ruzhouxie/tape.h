@@ -352,7 +352,8 @@ namespace ruzhouxie
 		template<size_t I>
 		RUZHOUXIE_INLINE constexpr auto&& get(this auto&& self)noexcept
 		{
-			return FWD(self, tapes).template get<I>().data;
+			auto&& tape = FWD(self, tapes).template get<I>();
+			return FWD(tape, data);
 		}
 	};
 
@@ -423,8 +424,8 @@ namespace ruzhouxie
 			{
 				if constexpr(Seq.size() == 0uz)
 				{
-					map.child = I;
-					map.index = count++; 
+					//map.child = I;
+					//map.index = count++; 
 					return make_tuple(Seq);
 				}
 				else if constexpr(Seq[0] == I)
@@ -440,6 +441,7 @@ namespace ruzhouxie
 			}
 			else return[&]<size_t...J>(std::index_sequence<J...>)
 			{
+				static_assert(sizeof...(J) > 0, "invalid sequence.");
 				//To ensure the order of evaluation.
 				auto args = tuple<purified<decltype(child_sequence<I, Seq | child<J>>(count, map | child<J>))>...>
 				{
@@ -450,7 +452,7 @@ namespace ruzhouxie
 		}
 
 		template<auto Seq, size_t ChildCount>
-		static consteval auto children_sequnce()
+		static constexpr auto children_sequnce()
 		{
 			constexpr size_t n = child_count<decltype(Seq)>;
 			auto map = init_children_tape_map<purified<decltype(Seq)>>();
@@ -528,7 +530,7 @@ namespace ruzhouxie
 				}
 				else
 				{
-					return concat_array(array{ Seq[0] }, ChildTapeSeqs | child<Seq[0], Map.index>); 
+					return concat_array(array{ Map.child }, ChildTapeSeqs | child<Map.child, Map.index>); 
 				}
 			}
 			else return[]<size_t...I>(std::index_sequence<I...>)

@@ -144,14 +144,7 @@ namespace ruzhouxie
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
 			{
-				if constexpr (N == 1)
-				{
-					return T{ FWD(t) };
-				}
-				else
-				{
-					return relayout_view<T, layout>{ {}, FWD(t) };
-				}
+				return relayout_view<T, layout>{ {}, FWD(t) };
 			}
 		};
 	};
@@ -228,7 +221,7 @@ namespace ruzhouxie
 	struct detail::component_t : relayouter<component_t<I, Axis>>
 	{
 		template<typename TLayout>
-		static consteval auto relayout(const TLayout& layout)
+		static constexpr auto relayout(const TLayout& layout)
 		{
 			if constexpr (Axis == 0uz)
 			{

@@ -190,7 +190,7 @@ namespace ruzhouxie
 				{
 					map = array{ I... };
 					return tuple{ array{I}... };
-				}(std::make_index_sequence<child_count<zip_transform_view>>{});
+				}(std::make_index_sequence<size>{});
 			}
 			else if constexpr(tuple_contain(Cur, array{ (Seq | child<I>)[0] } ))
 			{
