@@ -30,11 +30,11 @@ namespace ruzhouxie
 	}
 
 	template<typename T>
-	inline constexpr size_t child_count = []<size_t N = 0uz>(this auto && self)
+	inline constexpr size_t child_count = []<size_t N = 0uz>(this auto&& self)
 	{
-		if constexpr (requires{ { std::declval<T&&>() | child<N> } -> concrete; })
+		if constexpr (requires{ { std::declval<T>() | child<N> } -> concrete; })
 		{
-			return self.template operator() < N + 1uz > ();
+			return self.template operator()<N + 1uz>();
 		}
 		else
 		{
@@ -58,40 +58,39 @@ namespace ruzhouxie
 		}
 	};
 
-	//must has this for child return a pure-rvalue.
-	template<auto I>
+	template<auto I> requires std::integral<decltype(I)> || indicesoid<decltype(I)>
 	struct detail::child_t<I>
 	{
 		static constexpr bool is_index = indicesoid<purified<decltype(I)>>;
 
-		template<typename T>// requires (not is_index)
+		template<typename T>
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
 			AS_EXPRESSION(getter<purified<T>>{}.template get<static_cast<size_t>(I)>(FWD(t)))
-
-		template<typename T, size_t...J>
-		RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) 
-			AS_EXPRESSION(FWD(t) | child<static_cast<size_t>(I[J]) ...>)
-
-		template<typename T> requires is_index && (I.size() > 0uz)
-		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-			AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
-
+		
 		template<typename T> requires is_index && (I.size() == 0uz)
 		RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
 		{
 			return FWD(t);
 		}
+
+	private:
+		template<typename T, size_t...J>
+		RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) 
+			AS_EXPRESSION(FWD(t) | child<static_cast<size_t>(I[J]) ...>)
+
+	public:	
+		template<typename T> requires is_index && (I.size() > 0uz)
+		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
+			AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
 	};
 
-	template<auto I, auto...Rest> //requires (sizeof...(Rest) > 0uz)
+	template<std::integral auto I, std::integral auto...Rest>
 	struct detail::child_t<I, Rest...>
 	{
 		template<typename T> 
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
 			AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)) | child<Rest...>)
 	};
-
-	
 
 	template<typename T, auto...I>
 	using child_type = decltype(std::declval<T>() | child<I...>);
@@ -113,7 +112,7 @@ namespace ruzhouxie
 			{
 				return[]<size_t...I>(std::index_sequence<I...>)
 				{
-					return (0uz + ... + leaf_count<decltype(std::declval<T&&>() | child<I>())>);
+					return (0uz + ... + leaf_count<decltype(std::declval<T>() | child<I>())>);
 				}(std::make_index_sequence<child_count<T>>{});
 			}
 		}();
@@ -127,7 +126,7 @@ namespace ruzhouxie
 			}
 			else return[]<size_t...I>(std::index_sequence<I...>)
 			{
-				return detail::concat_array < array{ '{' }, tree_shape<decltype(child<I>(std::declval<T>()))>..., array{ '}' } > ();
+				return detail::concat_array<array{ '{' }, tree_shape<decltype(child<I>(std::declval<T>()))>..., array{ '}' }>();
 			}(std::make_index_sequence<child_count<T>>{});
 		}();
 
@@ -187,7 +186,7 @@ namespace ruzhouxie
 
 namespace ruzhouxie
 {
-	struct invalid_getter {	};
+	struct invalid_getter {};
 
 	namespace detail::tag_invoke_getter_ns
 	{
@@ -231,7 +230,7 @@ namespace ruzhouxie
 		};
 
 		template<size_t I, typename T>
-		static constexpr choice_t<strategy_t> choose()
+		static consteval choice_t<strategy_t> choose()
 		{
 			using std::get;//for some std::get wich can not find by adl.
 			if constexpr (not requires{ requires (I < size_t{ std::tuple_size<purified<T>>::value }); })
@@ -274,23 +273,16 @@ namespace ruzhouxie
 	{
 		struct universal_type
 		{
-			/*template<typename T>
-				requires std::is_copy_constructible_v<T>
-			operator T& ();
+			//Can not use "requires" in clang here.
+			//https://github.com/llvm/llvm-project/issues/76415
+			template <typename T, typename = std::enable_if_t<std::is_copy_constructible_v<T>>>
+        	operator T&();
 
-			template<typename T>
-				requires std::is_move_constructible_v<T>
-			operator T && ();
+        	template <typename T, typename = std::enable_if_t<std::is_move_constructible_v<T>>>
+        	operator T&&();
 
-			template<typename T>
-				requires(!std::is_copy_constructible_v<T> && !std::is_move_constructible_v<T>)
-			operator T();*/
-
-			template<typename T>
-			operator T& ();
-
-			template<typename T>
-			operator T && ();
+        	template <typename T, typename = std::enable_if_t<!std::is_copy_constructible_v<T> && !std::is_move_constructible_v<T>>>
+        	operator T();
 		};
 
 		static constexpr size_t aggregate_supported_to_get_max_size = 64uz;
@@ -304,9 +296,8 @@ namespace ruzhouxie
 				return 0uz;
 			}
 			else if constexpr (requires{ type{ universal_type{ args }...,  {universal_type{}} }; })
-				//else if constexpr (requires{ type{ {universal_type{ args }}...,  {universal_type{}} }; })
 			{
-				return self.template operator() < true > (args..., universal_type{});
+				return self.template operator() < true > (universal_type{ args }..., universal_type{});
 			}
 			else if constexpr (had_success)
 			{
@@ -314,12 +305,11 @@ namespace ruzhouxie
 			}
 			else
 			{
-				return self.template operator() < false > (args..., universal_type{});
+				return self.template operator() < false > (universal_type{ args }..., universal_type{});
 			}
 		}();
 
-		template<size_t I, aggregated T>
-			requires (I < aggregate_member_count<T>)
+		template<size_t I, aggregated T> requires (I < aggregate_member_count<T>)
 		constexpr decltype(auto) get(T&& t)const noexcept
 		{
 			constexpr size_t n = aggregate_member_count<T>;
@@ -328,8 +318,6 @@ namespace ruzhouxie
 
 		};
 	};
-
-
 
 	template<typename T>
 	struct getter_trait

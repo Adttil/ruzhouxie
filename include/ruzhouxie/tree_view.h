@@ -48,11 +48,11 @@ namespace ruzhouxie
 	{
 		template<size_t I, specified<view> Self>
 		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | child<I>)
+			AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | child<I>)
 
 		template<auto Seq, specified<view> Self>
 		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-			AS_EXPRESSION(as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq>)
+			AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq>)
 		// template<specified<view> Self>
 		// RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<id_tree<Self>>)
 		// 	AS_EXPRESSION(id_tree<T>())

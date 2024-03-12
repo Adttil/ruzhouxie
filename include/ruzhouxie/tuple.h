@@ -146,7 +146,7 @@ namespace ruzhouxie
 	{
 		return [&]<size_t...I>(std::index_sequence<I...>)
 		{
-			return (false || ... || equal(tpl.template get<I>(), value));
+			return (false || ... || rzx::equal(tpl.template get<I>(), value));
 		}(std::index_sequence_for<T...>{});
 	}
 

@@ -104,7 +104,7 @@ namespace ruzhouxie
 		static consteval auto child_sequence()
 		{
 			using child_t = std::tuple_element_t<I, Tuple>;
-			auto seq = tree_maker<child_t>{}.get_sequence<child_type<T, I>>();
+			auto seq = tree_maker<child_t>{}.template get_sequence<child_type<T, I>>();
 			return detail::sequence_add_prefix(seq, array{ I } );
 		};
 		
@@ -131,7 +131,7 @@ namespace ruzhouxie
 
 			//auto child_tape = tape_drop<offset>(FWD(tape));
 			using child_t = std::tuple_element_t<I, Tuple>;
-			return tree_maker<child_t>{}.process_tape<child_type<T, I>, offset>(FWD(tape));
+			return tree_maker<child_t>{}.template process_tape<child_type<T, I>, offset>(FWD(tape));
 		};
 
 		template<typename T, size_t Offset, typename Tape>

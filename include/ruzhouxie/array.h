@@ -32,7 +32,7 @@ namespace ruzhouxie
 		template<typename Self>
 		constexpr auto&& operator[](this Self&& self, size_t i)noexcept
 		{
-			return fwd<Self&&, T>(self.data[i]);
+			return rzx::fwd<Self&&, T>(self.data[i]);
 		}
 
 		static constexpr size_t size()noexcept

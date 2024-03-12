@@ -25,14 +25,14 @@ namespace ruzhouxie
 
 		template<typename V, specified<tree_adaptor_closure> Self> requires (not tree_adaptor_closuroid<V>)
 		RUZHOUXIE_INLINE friend constexpr auto operator|(V&& view, Self&& self) 
-			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(view)))
+			AS_EXPRESSION(rzx::as_base<Fn>(FWD(self))(FWD(view)))
 
 		template<tree_adaptor_closuroid C, specified<tree_adaptor_closure> Self>
 		RUZHOUXIE_INLINE friend constexpr auto operator|(C&& closure, Self&& self) noexcept
 		{
 			return tree_adaptor_closure_ns::tree_adaptor_closure
 			{
-				[&](auto&& arg) AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(arg) | FWD(closure)))
+				[&](auto&& arg) AS_EXPRESSION(rzx::as_base<Fn>(FWD(self))(FWD(arg) | FWD(closure)))
 			};
 		}
 
@@ -52,11 +52,11 @@ namespace ruzhouxie
 
 		template<typename Self, typename...Args>
 		RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, Args&&...args) noexcept
-			requires (not requires{ as_base<Fn>(FWD(self))(FWD(args)...); })
+			requires (not requires{ rzx::as_base<Fn>(FWD(self))(FWD(args)...); })
 		{
 			return tree_adaptor_closure
 			{
-				[fn = as_base<Fn>(FWD(self)), ...args_ = FWD(args)](this auto&& self, auto&& view)
+				[fn = rzx::as_base<Fn>(FWD(self)), ...args_ = FWD(args)](this auto&& self, auto&& view)
 					//noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
 					->decltype(auto)
 					requires requires{ std::declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }

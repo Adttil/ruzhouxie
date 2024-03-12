@@ -26,6 +26,8 @@ constexpr size_t operator""uz(unsigned long long x)
 
 namespace ruzhouxie
 {
+	namespace rzx = ::ruzhouxie;
+
 	inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
 	//type without cvref.
@@ -168,7 +170,7 @@ namespace ruzhouxie
 	{
 		constexpr decltype(auto) value(this auto&& self)noexcept
 		{
-			return as_base<T>(FWD(self));
+			return rzx::as_base<T>(FWD(self));
 		}
 	};
 }
