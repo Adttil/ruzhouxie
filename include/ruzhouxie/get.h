@@ -4,154 +4,19 @@
 #include "general.h"
 #include "pipe_closure.h"
 #include "array.h"
+
 #include "macro_define.h"
-#include <concepts>
-#include <utility>
 
 namespace ruzhouxie
 {
-	template<size_t N = 0uz, typename Tag = void>
-	struct id_set
+	template<typename T>
+	concept indicesoid = requires(purified<T> t, size_t i)
 	{
-		using tag_type = Tag;
-		array<size_t, N> ids;
-
-		/*constexpr explicit id_set(const array<size_t, N>& ids) : ids(ids) {}
-		template<std::same_as<size_t>...T>
-		constexpr explicit id_set(T...ids) : ids{ ids... } {}*/
-
-		friend constexpr bool operator==(const id_set&, const id_set&) = default;
-
-		static constexpr bool empty() noexcept
-		{
-			return N == 0;
-		}
-
-		constexpr bool coutain(size_t target_id)const noexcept
-		{
-			for (size_t id : ids)
-			{
-				if (id == target_id)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-		static constexpr bool untagged() noexcept
-		{
-			return std::same_as<Tag, void>;
-		}
-
-		constexpr bool invalid()const noexcept
-		{
-			if constexpr (N == 0)
-			{
-				return false;
-			}
-			else
-			{
-				return ids[N - 1] == invalid_index;
-			}
-		}
-
-		template<size_t M>
-		constexpr bool independent_to(const id_set<M, Tag>& reserved_ids)const noexcept
-		{
-			if (reserved_ids.invalid())
-			{
-				return false;
-			}
-			else if (invalid())
-			{
-				return reserved_ids.empty();
-			}
-			for (auto id : ids)
-			{
-				if (reserved_ids.coutain(id)) return false;
-			}
-			return true;
-		}
-
-		template<size_t M, typename OTag>
-		constexpr bool independent_to(const id_set<M, OTag>& reserved_ids)const noexcept
-		{
-			return reserved_ids.empty();
-		}
+		requires std::integral<typename purified<T>::value_type>;
+		std::tuple_size_v<purified<T>>;
+		{ t[i] } -> std::same_as<typename purified<T>::value_type&>;
 	};
 
-	template<size_t N>
-	id_set(array<size_t, N>) -> id_set<N>;
-
-	template<std::same_as<size_t>...T>
-	id_set(T...) -> id_set<sizeof...(T)>;
-
-	template<typename Tag = void, size_t N>
-	constexpr id_set<N, Tag> make_id_set(array<size_t, N> arr)
-	{
-		return { arr };
-	}
-
-	template<id_set S1, id_set S2>
-	constexpr auto merge_2_id_set()
-	{
-		using tag_type1 = purified<decltype(S1)>::tag_type;
-		using tag_type2 = purified<decltype(S2)>::tag_type;
-
-		if constexpr (S1.empty())
-		{
-			return S2;
-		}
-		else if constexpr (S2.empty())
-		{
-			return S1;
-		}
-		else if constexpr (S1.invalid())
-		{
-			return S1;
-		}
-		else if constexpr (S2.invalid())
-		{
-			return S2;
-		}
-		else if constexpr (S1.untagged() || S2.untagged())
-		{
-			return id_set{ invalid_index };
-		}
-		else if constexpr (not std::same_as<tag_type1, tag_type2>)
-		{
-			return id_set<1, tag_type1>{ invalid_index };
-		}
-		else
-		{
-			return make_id_set<tag_type1>(merge_2_array<S1.ids, S2.ids>());
-		}
-	}
-
-	template<id_set...Set>
-	constexpr auto merge_id_set()
-	{
-		if constexpr (sizeof...(Set) == 0)
-		{
-			return id_set{};
-		}
-		else if constexpr (sizeof...(Set) == 1)
-		{
-			return (..., Set);
-		}
-		else return[]<size_t...I>(std::index_sequence<I...>)
-		{
-			return merge_2_id_set<merge_id_set<arg_at<I>(Set...)...>(), last_arg(Set...)>();
-		}(std::make_index_sequence<sizeof...(Set) - 1>{});
-	}
-
-	inline constexpr id_set<0, void> empty_id_set{};
-	inline constexpr id_set<1, void> invalid_id_set{ invalid_index };
-}
-
-namespace ruzhouxie
-{
 	namespace detail
 	{
 		template<auto...I>
@@ -167,7 +32,7 @@ namespace ruzhouxie
 	template<typename T>
 	inline constexpr size_t child_count = []<size_t N = 0uz>(this auto && self)
 	{
-		if constexpr (requires{ { declval<T&&>() | child<N> } -> concrete; })
+		if constexpr (requires{ { std::declval<T&&>() | child<N> } -> concrete; })
 		{
 			return self.template operator() < N + 1uz > ();
 		}
@@ -197,7 +62,7 @@ namespace ruzhouxie
 	template<auto I>
 	struct detail::child_t<I>
 	{
-		static constexpr bool is_index = indices<purified<decltype(I)>>;
+		static constexpr bool is_index = indicesoid<purified<decltype(I)>>;
 
 		template<typename T>// requires (not is_index)
 		RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
@@ -229,7 +94,7 @@ namespace ruzhouxie
 	
 
 	template<typename T, auto...I>
-	using child_type = decltype(declval<T>() | child<I...>);
+	using child_type = decltype(std::declval<T>() | child<I...>);
 
 	template<typename T>
 	concept terminal = child_count<T> == 0;
@@ -248,7 +113,7 @@ namespace ruzhouxie
 			{
 				return[]<size_t...I>(std::index_sequence<I...>)
 				{
-					return (0uz + ... + leaf_count<decltype(declval<T&&>() | child<I>())>);
+					return (0uz + ... + leaf_count<decltype(std::declval<T&&>() | child<I>())>);
 				}(std::make_index_sequence<child_count<T>>{});
 			}
 		}();
@@ -262,7 +127,7 @@ namespace ruzhouxie
 			}
 			else return[]<size_t...I>(std::index_sequence<I...>)
 			{
-				return concat_array < array{ '{' }, tree_shape<decltype(child<I>(declval<T>()))>..., array{ '}' } > ();
+				return detail::concat_array < array{ '{' }, tree_shape<decltype(child<I>(std::declval<T>()))>..., array{ '}' } > ();
 			}(std::make_index_sequence<child_count<T>>{});
 		}();
 
@@ -275,7 +140,7 @@ namespace ruzhouxie
 			}
 			else return[]<size_t...I>(std::index_sequence<I...>)
 			{
-				auto child_ranks = std::array{ tensor_rank<child_type<T, I>>... };
+				auto child_ranks = array{ tensor_rank<child_type<T, I>>... };
 				size_t child_rank_min = std::numeric_limits<size_t>::max();
 				for (size_t child_rank : child_ranks)
 				{
@@ -300,7 +165,7 @@ namespace ruzhouxie
 				constexpr size_t rank = tensor_rank<T>;
 				array<size_t, rank> result{ child_count<T> };
 
-				auto child_shapes = std::array{ array_take<rank - 1>(tensor_shape<child_type<T, I>>)... };
+				auto child_shapes = array{ detail::array_take<rank - 1>(tensor_shape<child_type<T, I>>)... };
 
 				for (size_t i = 0uz; i < rank - 1uz; ++i)
 				{
@@ -373,13 +238,13 @@ namespace ruzhouxie
 			{
 				return { strategy_t::none };
 			}
-			else if constexpr (requires{ declval<T>().template get<I>(); })
+			else if constexpr (requires{ std::declval<T>().template get<I>(); })
 			{
-				return { strategy_t::member, noexcept(declval<T>().template get<I>()) };
+				return { strategy_t::member, noexcept(std::declval<T>().template get<I>()) };
 			}
-			else if constexpr (requires{ get<I>(declval<T>()); })
+			else if constexpr (requires{ get<I>(std::declval<T>()); })
 			{
-				return { strategy_t::adl, noexcept(get<I>(declval<T>())) };
+				return { strategy_t::adl, noexcept(get<I>(std::declval<T>())) };
 			}
 			else
 			{
@@ -471,7 +336,7 @@ namespace ruzhouxie
 	{
 		static consteval auto choose_default_getter() noexcept
 		{
-			if constexpr (requires{ tag_invoke_getter{}.get<0uz>(declval<T>()); })
+			if constexpr (requires{ tag_invoke_getter{}.get<0uz>(std::declval<T>()); })
 			{
 				return tag_invoke_getter{};
 			}

@@ -62,11 +62,11 @@ namespace ruzhouxie
 			}
 
 			T base_tape;
-			decltype(get_data(declval<T>(), declval<F&>())) data;
+			decltype(get_data(std::declval<T>(), std::declval<F&>())) data;
 
 			RUZHOUXIE_INLINE constexpr data_type(auto&& base, auto&& get_tape_fn, F& fn)
 				: base_tape(FWD(base) | get_tape_fn)
-				, data(get_data(move(base_tape), fn))
+				, data(get_data(std::move(base_tape), fn))
 			{}
 
 			template<size_t I, specified<data_type> Self>
@@ -127,7 +127,7 @@ namespace ruzhouxie
 			template<auto IndexTree>
 			constexpr view_seq_and_map_info& set()
 			{
-				if constexpr(indices<decltype(IndexTree)>)
+				if constexpr(indicesoid<decltype(IndexTree)>)
 				{
 					if constexpr(IndexTree.size() == 0uz)
 					{
@@ -180,9 +180,9 @@ namespace ruzhouxie
 			{
 				return Cur;
 			}
-			else if constexpr(not indices<decltype(Seq | child<I>)>)
+			else if constexpr(not indicesoid<decltype(Seq | child<I>)>)
 			{
-				static_assert(indices<decltype(Seq | child<I>)>, "Invalid sequence.");
+				static_assert(indicesoid<decltype(Seq | child<I>)>, "Invalid sequence.");
 			}
 			else if constexpr((Seq | child<I>).size() == 0uz)
 			{
@@ -219,7 +219,7 @@ namespace ruzhouxie
 
 		static constexpr auto set_result_seq(auto& seq, const auto& view_map, const auto& unique_view_tape_map)noexcept
 		{
-			if constexpr(indices<decltype(seq)>)
+			if constexpr(indicesoid<decltype(seq)>)
 			{
 				if (seq.size() != 0uz)
 				{
@@ -342,7 +342,7 @@ namespace ruzhouxie
 			template<auto IndexTree>
 			constexpr view_seq_and_map_info& set()
 			{
-				if constexpr(indices<decltype(IndexTree)>)
+				if constexpr(indicesoid<decltype(IndexTree)>)
 				{
 					if constexpr(IndexTree.size() == 0uz)
 					{
@@ -395,9 +395,9 @@ namespace ruzhouxie
 			{
 				return Cur;
 			}
-			else if constexpr(not indices<decltype(Seq | child<I>)>)
+			else if constexpr(not indicesoid<decltype(Seq | child<I>)>)
 			{
-				static_assert(indices<decltype(Seq | child<I>)>, "Invalid sequence.");
+				static_assert(indicesoid<decltype(Seq | child<I>)>, "Invalid sequence.");
 			}
 			else if constexpr((Seq | child<I>).size() == 0uz)
 			{
@@ -486,7 +486,7 @@ namespace ruzhouxie
 
 		static constexpr auto set_result_seq(auto& seq, const auto& view_map, const auto& unique_view_tape_map)noexcept
 		{
-			if constexpr(indices<decltype(seq)>)
+			if constexpr(indicesoid<decltype(seq)>)
 			{
 				if (seq.size() != 0uz)
 				{

@@ -21,7 +21,7 @@ struct Tr
 
 int main()
 {
-	constexpr auto layout = rzx::tuple{ std::array{ 0uz }, std::array{ 1uz }, std::array{ 0uz } };
+	constexpr auto layout = rzx::tuple{ rzx::array{ 0uz }, rzx::array{ 1uz }, rzx::array{ 0uz } };
 
 	constexpr 
 	auto r = rzx::tuple_maker<rzx::tuple<int, double, int>>{}(X{ 1, 4.14}
@@ -34,7 +34,7 @@ int main()
     std::tuple trs{ Tr{}, Tr{} };
 	constexpr auto layout1 = std::array//把[x, y]看作[x, x, y, x, y]的布局
     {
-        std::array{0uz}, std::array{1uz}, std::array{0uz}, std::array{1uz}, std::array{1uz}
+        rzx::array{0uz}, rzx::array{1uz}, rzx::array{0uz}, rzx::array{1uz}, rzx::array{1uz}
     };
 
 	std::puts("==================");
@@ -44,7 +44,7 @@ int main()
 
 	constexpr auto seq = rzx::tuple
     {
-        std::array{0uz}, std::array{1uz}, std::array{2uz}, std::array{3uz}, std::array{4uz}
+        rzx::array{0uz}, rzx::array{1uz}, rzx::array{2uz}, rzx::array{3uz}, rzx::array{4uz}
     };
 	auto tape = std::move(exp) | rzx::get_tape<seq>;
 	auto [a,b,c,d,e] = tape.sequence;

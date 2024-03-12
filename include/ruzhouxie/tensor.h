@@ -88,7 +88,7 @@ namespace ruzhouxie
 	{
 		if constexpr(child_count<Vec> == 1uz)
 		{
-			return FWD(vector) | child<0, empty_id_set>;
+			return FWD(vector) | child<0>;
 		}
 		else
 		{

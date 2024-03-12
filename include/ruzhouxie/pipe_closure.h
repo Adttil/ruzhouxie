@@ -2,9 +2,8 @@
 #define RUZHOUXIE_PIPE_CLOSURE_H
 
 #include "general.h"
+
 #include "macro_define.h"
-#include "ruzhouxie/general.h"
-#include "ruzhouxie/macro_define.h"
 
 namespace ruzhouxie
 {
@@ -15,29 +14,25 @@ namespace ruzhouxie
 	}
 	using detail::tree_adaptor_closure_ns::tree_adaptor_closure;
 
+	template<typename T>
+	concept tree_adaptor_closuroid = std::same_as<tree_adaptor_closure<typename purified<T>::fn_type>, purified<T>>;
+
 	template<typename Fn>
 	struct detail::tree_adaptor_closure_ns::tree_adaptor_closure : Fn
 	{
 		using fn_type = Fn;
 		using Fn::operator();
 
-		/*template<taggedable T, specified<tree_adaptor_closure> Self>
-		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self)
-			AS_EXPRESSION(as_base<Fn>(FWD(self))(view{  FWD(t) })*/
+		template<typename V, specified<tree_adaptor_closure> Self> requires (not tree_adaptor_closuroid<V>)
+		RUZHOUXIE_INLINE friend constexpr auto operator|(V&& view, Self&& self) 
+			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(view)))
 
-
-		template<typename T, specified<tree_adaptor_closure> Self>
-		requires (not requires{ requires std::same_as<tree_adaptor_closure<typename purified<T>::fn_type>, purified<T>>; })
-		RUZHOUXIE_INLINE friend constexpr auto operator|(T&& t, Self&& self) 
-			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(t)))
-
-		template<typename Pipe, specified<tree_adaptor_closure> Self>
-		RUZHOUXIE_INLINE friend constexpr auto operator|(Pipe&& t, Self&& self) noexcept
-			requires std::same_as<tree_adaptor_closure<typename purified<Pipe>::fn_type>, purified<Pipe>>
+		template<tree_adaptor_closuroid C, specified<tree_adaptor_closure> Self>
+		RUZHOUXIE_INLINE friend constexpr auto operator|(C&& closure, Self&& self) noexcept
 		{
 			return tree_adaptor_closure_ns::tree_adaptor_closure
 			{
-				[&](auto&& arg) AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(arg) | FWD(t)))
+				[&](auto&& arg) AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(arg) | FWD(closure)))
 			};
 		}
 
@@ -45,18 +40,6 @@ namespace ruzhouxie
 		{
 			return FWD(self);
 		}
-
-		// RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this auto&& self, auto&&...args)noexcept
-		// 	requires (not requires{ as_base<Fn>(FWD(self))(FWD(args)...); }) && (NArgsMin > sizeof...(args))
-		// {
-		// 	return tree_adaptor_closure_ns::tree_adaptor_closure
-		// 	{
-		// 		[&] (auto&&...appended_args)
-		// 			AS_EXPRESSION(as_base<Fn>(FWD(self))(FWD(args)..., FWD(appended_args)...))
-		// 		/*[&] (this auto&& new_fn, auto&&...appended_args)
-		// 			AS_EXPRESSION(as_base<Fn>(FWDLIKE(new_fn, self))(FWDLIKE(new_fn, args)..., FWD(appended_args)...))*/
-		// 	};
-		// }
 	};
 }
 
@@ -74,9 +57,9 @@ namespace ruzhouxie
 			return tree_adaptor_closure
 			{
 				[fn = as_base<Fn>(FWD(self)), ...args_ = FWD(args)](this auto&& self, auto&& view)
-					//noexcept(noexcept(declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
+					//noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
 					->decltype(auto)
-					requires requires{ declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
+					requires requires{ std::declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
 				{
 					return fn(FWD(view), FWDLIKE(self, args_)...);
 				}

@@ -83,54 +83,29 @@ namespace ruzhouxie
 		!std::is_const_v<std::remove_reference_t<T>>;
 
 	template<typename T>
-	concept as_array = std::same_as<purified<T>,
-		std::array<typename purified<T>::value_type, std::tuple_size_v<purified<T>>>>;
-
-	template<typename T>
 	constexpr T declvalue()noexcept;
-
-	using std::move;
-	using std::as_const;
-	using std::declval;
-
-	template<bool Condition>
-	RUZHOUXIE_INTRINSIC constexpr auto&& move_if(auto&& ref)noexcept
-	{
-		if constexpr (Condition) 
-		{
-			return move(ref);
-		}
-		else
-		{
-			return ref;
-		}
-	}
 
 	template<size_t I, typename...T>
 	using type_at = std::tuple_element_t<I, std::tuple<T...>>;
-
-	template<typename...T>
-	using forward_type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
-		std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
-		type_at<sizeof...(T) - 1, T...>&
-	>;
-
-	template<typename...T>
-	using forward_const_type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
-		const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
-		const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&
-	>;
 
 	template<typename...T>
 	RUZHOUXIE_INTRINSIC constexpr decltype(auto) fwd(auto&& arg) noexcept
 	{
 		if constexpr (readonly<decltype(arg)>)
 		{
-			return static_cast<forward_const_type<T...>>(arg);
+			using type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
+				const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
+				const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&
+			>;
+			return static_cast<type>(arg);
 		}
 		else
 		{
-			return static_cast<forward_type<T...>>(arg);
+			using type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
+				std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
+				type_at<sizeof...(T) - 1, T...>&
+			>;
+			return static_cast<type>(arg);
 		}
 	}
 
@@ -149,13 +124,13 @@ namespace ruzhouxie
 	template<typename TBase>
 	RUZHOUXIE_INTRINSIC constexpr TBase&& as_base(TBase&& arg) noexcept
 	{
-		return move(arg);
+		return std::move(arg);
 	}
 
 	template<typename TBase>
 	RUZHOUXIE_INTRINSIC constexpr const TBase&& as_base(const TBase&& arg) noexcept
 	{
-		return move(arg);
+		return std::move(arg);
 	}
 
 	template <typename T = bool>
@@ -217,7 +192,8 @@ namespace ruzhouxie
 		return std::get<sizeof...(args) - 1>(std::forward_as_tuple(FWD(args)...));
 	}
 
-	constexpr bool equal(auto&& x, auto&& y)
+	RUZHOUXIE_INLINE constexpr bool equal(auto&& x, auto&& y) 
+		noexcept(not requires{ FWD(x) == FWD(y); } | noexcept(FWD(x) == FWD(y)))
 	{
 		if constexpr(requires{ FWD(x) == FWD(y); })
 		{

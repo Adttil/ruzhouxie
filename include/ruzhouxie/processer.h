@@ -1,17 +1,18 @@
 #ifndef RUZHOUXIE_RESULT_H
 #define RUZHOUXIE_RESULT_H
 
-#include "array.h"
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
 #include "general.h"
 #include "pipe_closure.h"
-#include "ruzhouxie/macro_define.h"
+#include "array.h"
 #include "tape.h"
 #include "get.h"
-#include "macro_define.h"
 #include "tuple.h"
-#include <array>
-#include <tuple>
-#include <utility>
+
+#include "macro_define.h"
 
 namespace ruzhouxie
 {
@@ -42,7 +43,7 @@ namespace ruzhouxie
 	};
 
 	template<typename View, typename Tree>
-	concept makeable = requires{ declval<View>() | make_tree<Tree>; };
+	concept makeable = requires{ std::declval<View>() | make_tree<Tree>; };
 }
 
 namespace ruzhouxie
@@ -80,7 +81,7 @@ namespace ruzhouxie
 		{
 			return [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return tuple{ concat_array(prefix, sequence | child<I>)... };
+				return tuple{ detail::concat_array(prefix, sequence | child<I>)... };
 			}(std::make_index_sequence<child_count<decltype(sequence)>>{});
 		}
 
@@ -104,7 +105,7 @@ namespace ruzhouxie
 		{
 			using child_t = std::tuple_element_t<I, Tuple>;
 			auto seq = tree_maker<child_t>{}.get_sequence<child_type<T, I>>();
-			return detail::sequence_add_prefix(seq, std::array{ I } );
+			return detail::sequence_add_prefix(seq, array{ I } );
 		};
 		
 		template<typename T>
@@ -138,7 +139,14 @@ namespace ruzhouxie
 		{
 			if constexpr(terminal<Tuple>)
 			{
-				return static_cast<Tuple>( FWD(tape) | child<Offset> );
+				if constexpr(std::is_object_v<Tuple>)
+				{
+					return static_cast<Tuple>(access_once<Offset>(FWD(tape)));
+				}
+				else
+				{
+					return static_cast<Tuple>(access_pass<Offset>(FWD(tape)));
+				}
 			}
 			else return [&]<size_t...I>(std::index_sequence<I...>)
 			{
@@ -161,7 +169,7 @@ namespace ruzhouxie
 	// 	{
 	// 		using child_t = std::tuple_element_t<I, Tuple>;
 	// 		auto seq = tree_maker<child_t>{}.get_sequence<child_type<T, I>>();
-	// 		return detail::sequence_add_prefix(seq, std::array{ I } );
+	// 		return detail::sequence_add_prefix(seq, array{ I } );
 	// 	};
 		
 	// 	template<typename T>
@@ -270,7 +278,7 @@ namespace ruzhouxie
 		static consteval auto child_sequence()
 		{
 			auto seq = get_sequence<child_type<T, I>>();
-			return detail::sequence_add_prefix(seq, std::array{ I } );
+			return detail::sequence_add_prefix(seq, array{ I } );
 		};
 
 		template<typename T>
@@ -302,7 +310,7 @@ namespace ruzhouxie
 		{
 			if constexpr(terminal<T>)
 			{
-				return FWD(tape) | child<Offset>;
+				return access_once<Offset>(FWD(tape));
 			}
 			else return [&]<size_t...I>(std::index_sequence<I...>)
 			{

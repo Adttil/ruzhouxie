@@ -1,21 +1,20 @@
 #ifndef RUZHOUXIE_ID_H
 #define RUZHOUXIE_ID_H
 
+#include <cstddef>
+#include <type_traits>
+#include <utility>
+
 #include "general.h"
 #include "pipe_closure.h"
 #include "ruzhouxie/array.h"
 #include "ruzhouxie/general.h"
 #include "ruzhouxie/macro_define.h"
-//#include "ruzhouxie/relayout.h"
 #include "tuple.h"
 #include "array.h"
 #include "get.h"
+
 #include "macro_define.h"
-#include <array>
-#include <cstddef>
-#include <initializer_list>
-#include <type_traits>
-#include <utility>
 
 namespace ruzhouxie
 {
@@ -79,7 +78,7 @@ namespace ruzhouxie
 	{
 		if constexpr(N1 >= N2)
 		{
-			if(array_take<N2>(index_pack) == other)
+			if(detail::array_take<N2>(index_pack) == other)
 			{
 				return layout_relation::included;
 			}
@@ -90,7 +89,7 @@ namespace ruzhouxie
 		}
 		else
 		{
-			if(array_take<N1>(other) == index_pack)
+			if(detail::array_take<N1>(other) == index_pack)
 			{
 				return layout_relation::intersectant;
 			}
@@ -101,9 +100,9 @@ namespace ruzhouxie
 		}
 	}
 
-	constexpr layout_relation indices_relation_to_layout(const indices auto& index_pack, const auto& layout)
+	constexpr layout_relation indices_relation_to_layout(const indicesoid auto& index_pack, const auto& layout)
 	{
-		if constexpr(indices<decltype(layout)>)
+		if constexpr(indicesoid<decltype(layout)>)
 		{
 			return indices_relation_to(index_pack, layout);
 		}
@@ -115,7 +114,7 @@ namespace ruzhouxie
 
 	constexpr layout_relation layout_relation_to(const auto& layout, const auto& other)
 	{
-		if constexpr(indices<decltype(layout)>)
+		if constexpr(indicesoid<decltype(layout)>)
 		{
 			return indices_relation_to_layout(layout, other);
 		}
@@ -135,54 +134,8 @@ namespace ruzhouxie
 		Data data;
 
 		template<size_t I, specified<tape_t> Self>
-		RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-		{
-			if constexpr(I >= child_count<decltype(Sequence)>)
-			{
-				return;
-			}
-			else
-			{
-				constexpr auto layout = Sequence | child<I>;
-				constexpr auto relation_to_rest = [&]<size_t...J>(std::index_sequence<J...>)
-				{
-					return (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J + I + 1uz>));
-				}(std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
-
-				if constexpr(indices<decltype(layout)>)
-				{
-					if constexpr(relation_to_rest == layout_relation::independent)
-					{
-						return FWD(self, data) | child<layout>;
-					}
-					else
-					{
-						return std::as_const(self.data) | child<layout>;
-					}
-				}
-				else if constexpr(relation_to_rest == layout_relation::independent)
-				{
-					return detail::relayout_view<decltype(FWD(self, data)), layout>
-					{
-						{}, FWD(self, data)
-					};
-				}
-				// else if constexpr(relation_to_rest == layout_relation::included)
-				// {
-				// 	return relayout_view<decltype(as_const(self.data)), layout>
-				// 	{
-				// 		as_const(self.data)
-				// 	};
-				// }
-				else
-				{
-					return detail::relayout_view<decltype(as_const(self.data)), layout>
-					{
-						{}, as_const(self.data)
-					};
-				}
-			}
-		}
+		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
+			AS_EXPRESSION(FWD(self, data) | child<I>)
 
 		template<size_t I, specified<tape_t> Self>
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) access_once(Self&& self)
@@ -201,7 +154,7 @@ namespace ruzhouxie
 					return (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J + I + 1uz>));
 				}(std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
 
-				if constexpr(indices<decltype(layout)>)
+				if constexpr(indicesoid<decltype(layout)>)
 				{
 					if constexpr(relation_to_rest == layout_relation::independent)
 					{
@@ -255,7 +208,7 @@ namespace ruzhouxie
 					return front | behind;
 				}(std::make_index_sequence<I>{}, std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
 
-				if constexpr(indices<decltype(layout)>)
+				if constexpr(indicesoid<decltype(layout)>)
 				{
 					if constexpr(relation_to_rest == layout_relation::independent)
 					{
@@ -401,13 +354,6 @@ namespace ruzhouxie
 			{
 				return tape_t<T&&, Sequence>{ FWD(t) };
 			}
-			// else return[&]<size_t...I>(std::index_sequence<I...>)
-			// {
-			// 	return tuple<decltype(FWD(t) | child<Sequence | child<I>>)...>
-			// 	{
-			// 		FWD(t) | child<Sequence | child<I>>...
-			// 	};
-			// }(std::make_index_sequence<child_count<decltype(Sequence)>>{});
 		}
 
 	private:
@@ -420,7 +366,7 @@ namespace ruzhouxie
 		template<size_t I, auto Seq>
 		static constexpr auto child_sequence(size_t& count, auto& map)
 		{
-			if constexpr(indices<decltype(Seq)>)
+			if constexpr(indicesoid<decltype(Seq)>)
 			{
 				if constexpr(Seq.size() == 0uz)
 				{
@@ -432,7 +378,7 @@ namespace ruzhouxie
 				{
 					map.child = I;
 					map.index = count++;
-					return make_tuple(array_drop<1uz>(Seq));
+					return make_tuple(detail::array_drop<1uz>(Seq));
 				}
 				else
 				{
@@ -491,7 +437,7 @@ namespace ruzhouxie
 		template<typename TSeq>
 		RUZHOUXIE_INLINE static consteval auto init_children_tape_map()
 		{
-			if constexpr(indices<TSeq>)
+			if constexpr(indicesoid<TSeq>)
 			{
 				return child_sequence_location{};
 			}
@@ -515,14 +461,14 @@ namespace ruzhouxie
 		{
 			return [&]<size_t...I>(std::index_sequence<I...>)
 			{
-				return make_tuple(decltype(declval<V>() | child<I> | get_tape<Seqs | child<I>>)::sequence...);
+				return make_tuple(decltype(std::declval<V>() | child<I> | get_tape<Seqs | child<I>>)::sequence...);
 			}(std::make_index_sequence<child_count<V>>{});
 		}
 
 		template<auto Seq, auto ChildTapeSeqs, auto Map>
 		RUZHOUXIE_INLINE static constexpr auto mapped_seq()
 		{
-			if constexpr(indices<decltype(Seq)>)
+			if constexpr(indicesoid<decltype(Seq)>)
 			{
 				if constexpr(Seq.size() == 0uz)
 				{
@@ -530,7 +476,7 @@ namespace ruzhouxie
 				}
 				else
 				{
-					return concat_array(array{ Map.child }, ChildTapeSeqs | child<Map.child, Map.index>); 
+					return detail::concat_array(array{ Map.child }, ChildTapeSeqs | child<Map.child, Map.index>); 
 				}
 			}
 			else return[]<size_t...I>(std::index_sequence<I...>)

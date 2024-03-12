@@ -51,7 +51,7 @@ namespace ruzhouxie
 				{
 					return;
 				}
-				else if constexpr(indices<child_type<layout_type, I>>)
+				else if constexpr(indicesoid<child_type<layout_type, I>>)
 				{
 					constexpr auto index_pack = Layout | child<I>;
 					return FWD(self, raw_tree) | child<index_pack>;
@@ -68,9 +68,9 @@ namespace ruzhouxie
 			template<auto Indices, typename TLayout>
 			static constexpr auto mapped_indices(const TLayout& layout)
 			{
-				if constexpr(indices<TLayout>)
+				if constexpr(indicesoid<TLayout>)
 				{
-					return concat_array(layout, Indices);
+					return detail::concat_array(layout, Indices);
 				}
 				else if constexpr(Indices.size() == 0uz)
 				{
@@ -78,14 +78,14 @@ namespace ruzhouxie
 				}
 				else
 				{
-					return mapped_indices<array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
+					return mapped_indices<detail::array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
 				}
 			}
 
 			template<auto Layout, typename Trans>
 			static constexpr auto mapped_layout(const Trans& trans)
 			{
-				if constexpr(indices<decltype(Layout)>)
+				if constexpr(indicesoid<decltype(Layout)>)
 				{
 					return mapped_indices<Layout>(trans);
 				}
@@ -122,7 +122,7 @@ namespace ruzhouxie
 			template<typename T>
 			RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
 			{
-				if constexpr (indices<layout_type>)
+				if constexpr (indicesoid<layout_type>)
 				{
 					return FWD(t) | child<Layout>;
 				}
@@ -166,9 +166,9 @@ namespace ruzhouxie
 		template<typename TLayout, size_t N>
 			constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
 		{
-			if constexpr(indices<TLayout>)
+			if constexpr(indicesoid<TLayout>)
 			{
-				return concat_array(prefix, layout);
+				return detail::concat_array(prefix, layout);
 			}
 			else return[&]<size_t...I>(std::index_sequence<I...>)
 			{
