@@ -42,9 +42,9 @@ namespace ruzhouxie
         struct enumerate_t
         {
             template<typename View>
-			RUZHOUXIE_INLINE constexpr auto operator()(View&& view)const
+		    RUZHOUXIE_INLINE constexpr auto operator()(View&& view)const
 			{
-				return zip(range<0uz, child_count<View>>, FWD(view));
+			    return zip(range<0uz, child_count<View>>, FWD(view));
 			}
         };
     }

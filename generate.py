@@ -1,10 +1,10 @@
 def generate_sequence(n, generate_once, split = ", "):
-	if n == 0: 
-		return ""
-	result = generate_once(0)
-	for i in range(1, n): 
-		result += split + generate_once(i)
-	return result
+    if n == 0: 
+	    return ""
+    result = generate_once(0)
+    for i in range(1, n): 
+	    result += split + generate_once(i)
+    return result
 
 def generate_tuple_specialization(i):
     result = "template<" + generate_sequence(i, lambda i : "typename T" + str(i)) + ">\n"
@@ -39,31 +39,31 @@ def generate_tuple_specialization(i):
     return result
 
 def generate_tuple_specialization_implement(max_element_count):
-	result = ""
-	for i in range(max_element_count + 1): 
-		result += generate_tuple_specialization(i)
-		result += '\n'
-	return result
+    result = ""
+    for i in range(max_element_count + 1): 
+	    result += generate_tuple_specialization(i)
+	    result += '\n'
+    return result
 
 def generate_aggregate_getter_invoker_for(memeber_count):
-	result = "if constexpr (n == " + str(memeber_count) + "uz)\n{\n"
+    result = "if constexpr (n == " + str(memeber_count) + "uz)\n{\n"
 	
-	result += "    auto&& ["
-	result += generate_sequence(memeber_count, lambda i : "m" + str(i))
-	result += "] = FWD(t);\n"
+    result += "    auto&& ["
+    result += generate_sequence(memeber_count, lambda i : "m" + str(i))
+    result += "] = FWD(t);\n"
 	
-	result += "    return ::ruzhouxie::arg_at<I>(";
-	result += generate_sequence(memeber_count, lambda i : "FWDLIKE(t, m" + str(i) + ')')
+    result += "    return ::ruzhouxie::arg_at<I>(";
+    result += generate_sequence(memeber_count, lambda i : "FWDLIKE(t, m" + str(i) + ')')
 
-	result += ");\n}\n"
-	return result
+    result += ");\n}\n"
+    return result
 
 def generate_aggregate_getter_invoker(max_memeber_count):
-	return generate_sequence(max_memeber_count, lambda i : generate_aggregate_getter_invoker_for(i + 1), "else ")
+    return generate_sequence(max_memeber_count, lambda i : generate_aggregate_getter_invoker_for(i + 1), "else ")
 
 
 with open("include/ruzhouxie/generate/tuple_specialization.code", 'w') as file:
     file.write(generate_tuple_specialization_implement(16))
 
 with open("include/ruzhouxie/generate/aggregate_getter_invoker.code", 'w') as file:
-	file.write(generate_aggregate_getter_invoker(64))
+    file.write(generate_aggregate_getter_invoker(64))

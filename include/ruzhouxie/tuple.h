@@ -11,151 +11,151 @@
 
 namespace ruzhouxie
 {
-	template<typename...T>
-	struct tuple;
+    template<typename...T>
+    struct tuple;
 
-	template<typename T, typename...Rest>
-	struct tuple<T, Rest...>
+    template<typename T, typename...Rest>
+    struct tuple<T, Rest...>
 	{
-		RUZHOUXIE_MAYBE_EMPTY T              first;
-		RUZHOUXIE_MAYBE_EMPTY tuple<Rest...> rest;
+	    RUZHOUXIE_MAYBE_EMPTY T              first;
+	    RUZHOUXIE_MAYBE_EMPTY tuple<Rest...> rest;
 
 		/*template<size_t I> requires (I <= sizeof...(Rest))
-		RUZHOUXIE_INLINE constexpr auto&& get(this auto&& self) noexcept
+	    RUZHOUXIE_INLINE constexpr auto&& get(this auto&& self) noexcept
 		{
-			if constexpr (I)
+		    if constexpr (I)
 			{
-				return FWD(self, rest).get<I - 1>();
+			    return FWD(self, rest).get<I - 1>();
 			}
-			else
+		    else
 			{
-				return FWD(self, first);
+			    return FWD(self, first);
 			}
 		}*/
 
 		//now structure binding is not support get with deducing this in vs17.8.1.
 
-		template<size_t I>
-			requires (I <= sizeof...(Rest))
-		RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
+	    template<size_t I>
+		    requires (I <= sizeof...(Rest))
+	    RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
 		{
-			if constexpr (I)
+		    if constexpr (I)
 			{
-				return rest.template get<I - 1>();
+			    return rest.template get<I - 1>();
 			}
-			else
+		    else
 			{
-				return (first);
+			    return (first);
 			}
 		}
 
-		template<size_t I>
-			requires (I <= sizeof...(Rest))
-		RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+	    template<size_t I>
+		    requires (I <= sizeof...(Rest))
+	    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
 		{
-			if constexpr (I)
+		    if constexpr (I)
 			{
-				return rest.template get<I - 1>();
+			    return rest.template get<I - 1>();
 			}
-			else
+		    else
 			{
-				return (first);
+			    return (first);
 			}
 		}
 
-		template<size_t I>
-			requires (I <= sizeof...(Rest))
-		RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
+	    template<size_t I>
+		    requires (I <= sizeof...(Rest))
+	    RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
 		{
-			if constexpr (I)
+		    if constexpr (I)
 			{
-				return std::move(rest).template get<I - 1>();
+			    return std::move(rest).template get<I - 1>();
 			}
-			else
+		    else
 			{
-				return fwd<tuple&&, T>(first);
+			    return fwd<tuple&&, T>(first);
 			}
 		}
 
-		template<size_t I>
-			requires (I <= sizeof...(Rest))
-		RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+	    template<size_t I>
+		    requires (I <= sizeof...(Rest))
+	    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
 		{
-			if constexpr (I)
+		    if constexpr (I)
 			{
-				return std::move(rest).template get<I - 1>();
+			    return std::move(rest).template get<I - 1>();
 			}
-			else
+		    else
 			{
-				return fwd<const tuple&&, T>(first);
+			    return fwd<const tuple&&, T>(first);
 			}
 		}
 
-		friend constexpr bool operator==(const tuple&, const tuple&) = default;
+	    friend constexpr bool operator==(const tuple&, const tuple&) = default;
 	};
 
-	template<typename...T>
-	tuple(T...) -> tuple<std::decay_t<T>...>;
+    template<typename...T>
+    tuple(T...) -> tuple<std::decay_t<T>...>;
 
-	template<typename...Args>
-	RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
-		AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... })
+    template<typename...Args>
+    RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
+	    AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... })
 
-	template<typename...Args>
-	RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
+    template<typename...Args>
+    RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
 	{
-		return { FWD(args)... };
+	    return { FWD(args)... };
 	}
 
-	template<typename Tpl>
-	constexpr auto tuple_cat(Tpl&& tpl)
+    template<typename Tpl>
+    constexpr auto tuple_cat(Tpl&& tpl)
 	{
-		return FWD(tpl);
+	    return FWD(tpl);
 	}
 
-	template<typename Tpl1, typename Tpl2>
-	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
+    template<typename Tpl1, typename Tpl2>
+    constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
 		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
 	{
-		constexpr size_t s1 = std::tuple_size_v<purified<Tpl1>>;
-		constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
-		return[&]<size_t...i, size_t...j>(std::index_sequence<i...>, std::index_sequence<j...>)
+	    constexpr size_t s1 = std::tuple_size_v<purified<Tpl1>>;
+	    constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
+	    return[&]<size_t...i, size_t...j>(std::index_sequence<i...>, std::index_sequence<j...>)
 		{
-			return tuple<purified<decltype(FWD(tpl1).template get<i>())>..., purified<decltype(FWD(tpl2).template get<j>())>...>
+		    return tuple<purified<decltype(FWD(tpl1).template get<i>())>..., purified<decltype(FWD(tpl2).template get<j>())>...>
 			{
-				FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()...
+			    FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()...
 			};
 		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
 	}
 
-	template<typename Tpl1, typename Tpl2, typename...Rest>
-	constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
+    template<typename Tpl1, typename Tpl2, typename...Rest>
+    constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
 		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
 	{
-		return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
+	    return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
 	}
 
-	template<typename T, typename...Elems>
-	RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
+    template<typename T, typename...Elems>
+    RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
 	{
-		return locate_type<T, Elems...>(fn);
+	    return locate_type<T, Elems...>(fn);
 	}
 
-	template<typename...T, typename V>
-	constexpr bool tuple_contain(const tuple<T...>& tpl, const V& value)
+    template<typename...T, typename V>
+    constexpr bool tuple_contain(const tuple<T...>& tpl, const V& value)
 	{
-		return [&]<size_t...I>(std::index_sequence<I...>)
+	    return [&]<size_t...I>(std::index_sequence<I...>)
 		{
-			return (false || ... || rzx::equal(tpl.template get<I>(), value));
+		    return (false || ... || rzx::equal(tpl.template get<I>(), value));
 		}(std::index_sequence_for<T...>{});
 	}
 
-	template<size_t N, typename...Elems>
-	constexpr auto tuple_drop(const tuple<Elems...>& tpl)
+    template<size_t N, typename...Elems>
+    constexpr auto tuple_drop(const tuple<Elems...>& tpl)
 	{
-		return [&]<size_t...I>(std::index_sequence<I...>)
+	    return [&]<size_t...I>(std::index_sequence<I...>)
 		{
-			return tuple{ tpl.template get<I + N>()... };
+		    return tuple{ tpl.template get<I + N>()... };
 		}(std::make_index_sequence<sizeof...(Elems) - N>{});
 	}
 }

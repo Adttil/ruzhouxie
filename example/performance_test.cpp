@@ -14,41 +14,41 @@ using value_t = std::conditional_t<TEST_INT, int, float>;
 
 using rzxmat = tuple
 <
-	tuple<value_t, value_t, value_t, value_t>,
-	tuple<value_t, value_t, value_t, value_t>,
-	tuple<value_t, value_t, value_t, value_t>,
-	tuple<value_t, value_t, value_t, value_t>
+    tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>
 	/*std::conditional_t<TEST_INT,*/
 		//tuple<constant_t<0>, constant_t<0>, constant_t<0>, constant_t<1>>
 	/*,
-		tuple<constant_t<0.0f>, constant_t<0.0f>, constant_t<0.0f>, constant_t<1.0f>>
+	    tuple<constant_t<0.0f>, constant_t<0.0f>, constant_t<0.0f>, constant_t<1.0f>>
 	>*/
 >;
 
 using rzxmat2 = tuple
 <
-	tuple<value_t, value_t, value_t, value_t>,
-	tuple<value_t, value_t, value_t, value_t>,
-	tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>,
+    tuple<value_t, value_t, value_t, value_t>,
     tuple<constant_t<0>, constant_t<0>, constant_t<0>, constant_t<1>>
 >;
 
 
 struct timer
 {
-	decltype(std::chrono::system_clock::now()) start;
+    decltype(std::chrono::system_clock::now()) start;
 
-	timer()
+    timer()
 	{
-		std::puts("=======================================");
-		start = std::chrono::system_clock::now();
+	    std::puts("=======================================");
+	    start = std::chrono::system_clock::now();
 	}
 
 	~timer()
 	{
-		auto end = std::chrono::system_clock::now();
-		auto dur = end - start;
-		std::cout << '{' << dur.count() << "}====================================";
+	    auto end = std::chrono::system_clock::now();
+	    auto dur = end - start;
+	    std::cout << '{' << dur.count() << "}====================================";
 	}
 };
 
@@ -57,9 +57,9 @@ size_t N;
 
 value_t random() 
 {
-	static std::conditional_t<TEST_INT, std::uniform_int_distribution<>, std::uniform_real_distribution<value_t>> 
-		dis(-1, 1);
-	return dis(gen);
+    static std::conditional_t<TEST_INT, std::uniform_int_distribution<>, std::uniform_real_distribution<value_t>> 
+	    dis(-1, 1);
+    return dis(gen);
 }
 
 value_t zero;
@@ -71,54 +71,54 @@ void rzx2_test();
 
 int main()
 {
-	unsigned int seed;
-	std::cin >> zero >> one;
-	std::cin >> seed;
-	std::cin >> N;
+    unsigned int seed;
+    std::cin >> zero >> one;
+    std::cin >> seed;
+    std::cin >> N;
 
-	gen.seed(seed);
-	glm_test();
+    gen.seed(seed);
+    glm_test();
 	
-	gen.seed(seed);
-	rzx_test();
+    gen.seed(seed);
+    rzx_test();
 
-	gen.seed(seed);
-	rzx2_test();
+    gen.seed(seed);
+    rzx2_test();
 }
 
 void glm_test()
 {
-	using namespace glm;
+    using namespace glm;
 	
-	using matrix = std::conditional_t<TEST_INT, imat4x4, mat4x4>;
+    using matrix = std::conditional_t<TEST_INT, imat4x4, mat4x4>;
 
-	matrix m{};
+    matrix m{};
 	{
-		m[0][0] = random();
-		m[1][0] = random();
-		m[2][0] = random();
-		m[3][0] = random();
+	    m[0][0] = random();
+	    m[1][0] = random();
+	    m[2][0] = random();
+	    m[3][0] = random();
 
-		m[0][1] = random();
-		m[1][1] = random();
-		m[2][1] = random();
-		m[3][1] = random();
+	    m[0][1] = random();
+	    m[1][1] = random();
+	    m[2][1] = random();
+	    m[3][1] = random();
 
-		m[0][2] = random();
-		m[1][2] = random();
-		m[2][2] = random();
-		m[3][2] = random();
+	    m[0][2] = random();
+	    m[1][2] = random();
+	    m[2][2] = random();
+	    m[3][2] = random();
 
-		m[0][3] = zero;
-		m[1][3] = zero;
-		m[2][3] = zero;
-		m[3][3] = one;
+	    m[0][3] = zero;
+	    m[1][3] = zero;
+	    m[2][3] = zero;
+	    m[3][3] = one;
 	}
 
 	{
-		std::cout << "glm\n";
-		timer t{};
-		for (size_t i = 0; i < N; ++i)
+	    std::cout << "glm\n";
+	    timer t{};
+	    for (size_t i = 0; i < N; ++i)
 		{
             m = m * m;
 			//data[i - 2] = data[i - 1] * data[i];
@@ -131,17 +131,17 @@ void glm_test()
 		}
 	}
 
-	std::cout << m[0][0] << ", " << m[2][2] << '\n';
+    std::cout << m[0][0] << ", " << m[2][2] << '\n';
 }
 
 //RUZHOUXIE_INLINE constexpr rzxmat rzx_mul(const rzxmat& l, const rzxmat& r)
 //{
-//	return mat_mul(l, r) | to<tuple>();
+//    return mat_mul(l, r) | to<tuple>();
 //}
 
 void rzx_test()
 {
-	rzxmat m{};
+    rzxmat m{};
 
 	{
 		(m | child<0, 0>) = random();
@@ -164,31 +164,31 @@ void rzx_test()
 	}
 
 	{
-		std::cout << "rzx\n";
-		timer t{};
-		for (size_t i = 0; i < N; ++i)
+	    std::cout << "rzx\n";
+	    timer t{};
+	    for (size_t i = 0; i < N; ++i)
 		{
 			//m = mat_mul(m, m);
 
 			//[[msvc::flatten]]
-			m = +mat_mul(m, m);
+		    m = +mat_mul(m, m);
 
 			//m | child<0> = mat_mul_vec(m, m | component<3, 1>)/* | to<tuple>()*/;
 			/*m | child<0, 3> = r | child<0>;
-			m | child<1, 3> = r | child<1>;
-			m | child<2, 3> = r | child<2>;
-			m | child<3, 3> = r | child<3>;*/
+		    m | child<1, 3> = r | child<1>;
+		    m | child<2, 3> = r | child<2>;
+		    m | child<3, 3> = r | child<3>;*/
 			//data[i - 2] = mat_mul(data[i - 1], data[i]);
 			//data[i - 2] = mat_mul_to(data[i - 1], data[i]);
 		}
 	}
 
-	std::cout << (m | child<0, 0>) << ", " << (m | child<2, 2>) << '\n';
+    std::cout << (m | child<0, 0>) << ", " << (m | child<2, 2>) << '\n';
 }
 
 void rzx2_test()
 {
-	rzxmat2 m{};
+    rzxmat2 m{};
 
 	{
 		(m | child<0, 0>) = random();
@@ -206,24 +206,24 @@ void rzx2_test()
 	}
 
 	{
-		std::cout << "rzx2\n";
-		timer t{};
-		for (size_t i = 0; i < N; ++i)
+	    std::cout << "rzx2\n";
+	    timer t{};
+	    for (size_t i = 0; i < N; ++i)
 		{
 			//m = mat_mul(m, m);
 
 			//[[msvc::flatten]]
-			m = +mat_mul(m, m);
+		    m = +mat_mul(m, m);
 
 			//m | child<0> = mat_mul_vec(m, m | component<3, 1>)/* | to<tuple>()*/;
 			/*m | child<0, 3> = r | child<0>;
-			m | child<1, 3> = r | child<1>;
-			m | child<2, 3> = r | child<2>;
-			m | child<3, 3> = r | child<3>;*/
+		    m | child<1, 3> = r | child<1>;
+		    m | child<2, 3> = r | child<2>;
+		    m | child<3, 3> = r | child<3>;*/
 			//data[i - 2] = mat_mul(data[i - 1], data[i]);
 			//data[i - 2] = mat_mul_to(data[i - 1], data[i]);
 		}
 	}
 
-	std::cout << (m | child<0, 0>) << ", " << (m | child<2, 2>) << '\n';
+    std::cout << (m | child<0, 0>) << ", " << (m | child<2, 2>) << '\n';
 }

@@ -17,7 +17,7 @@ set(MAGIC_CPP_INCLUDE_TESTS OFF)
 
 add_definitions(-w)
 if(MSVC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /permissive-")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /permissive-")
 endif()
 
 include(FetchContent)

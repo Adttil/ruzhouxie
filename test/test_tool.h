@@ -20,7 +20,7 @@ namespace ruzhouxie::test
     		<< "Type of [" << exp1_str << "] is:\n" << ::magic::visualize<T1>(magic_option) << '\n'
     	    << "Type of [" << exp2_str << "] is:\n" << ::magic::visualize<T2>(magic_option) << '\n';
             
-    	if constexpr(equal_valid)
+        if constexpr(equal_valid)
     	{
             GTEST_ASSERT_(::testing::internal::EqHelper::Compare(exp1_str, exp2_str, exp1, exp2), GTEST_NONFATAL_FAILURE_);
     	}

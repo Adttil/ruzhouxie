@@ -12,23 +12,23 @@ struct Y { double a; X b; };
 
 struct Tr
 {
-	Tr() { std::puts("Tr();"); };
-	Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
-	Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
-	Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
-	Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
+    Tr() { std::puts("Tr();"); };
+    Tr(const Tr&) { std::puts("Tr(const Tr&);"); }
+    Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
+    Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
+    Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
 	~Tr()noexcept { std::puts("~Tr();"); }
 };
 
 int main()
 {
-	auto tpl = rzx::tuple{ Tr{}, Tr{} };
+    auto tpl = rzx::tuple{ Tr{}, Tr{} };
 
-	constexpr std::array index = std::array{ 0uz };
+    constexpr std::array index = std::array{ 0uz };
 
-	constexpr auto seq = rzx::to<rzx::tuple>().get_sequence<decltype(std::move(tpl))>();
+    constexpr auto seq = rzx::to<rzx::tuple>().get_sequence<decltype(std::move(tpl))>();
 
-	std::puts("==================");
-	auto copy = std::move(tpl) | rzx::to<rzx::tuple>();
-	std::puts("==================");
+    std::puts("==================");
+    auto copy = std::move(tpl) | rzx::to<rzx::tuple>();
+    std::puts("==================");
 }
