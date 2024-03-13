@@ -1,38 +1,21 @@
-#ifndef RUZHOUXIE_ID_H
-#define RUZHOUXIE_ID_H
-
-#include <cstddef>
-#include <type_traits>
-#include <utility>
+#ifndef RUZHOUXIE_TAPE_H
+#define RUZHOUXIE_TAPE_H
 
 #include "general.h"
 #include "tree_adaptor.h"
-#include "ruzhouxie/array.h"
-#include "ruzhouxie/general.h"
-#include "ruzhouxie/macro_define.h"
 #include "tuple.h"
 #include "array.h"
 #include "get.h"
 
 #include "macro_define.h"
 
-namespace ruzhouxie
+namespace ruzhouxie::detail
 {
-	namespace detail
-	{
-		template<typename T, auto Layout>
-		struct relayout_view;
-	}
-
+	template<typename T, auto Layout>
+	struct relayout_view;
+	
 	template<typename T, auto...ReservedLayouts>
 	struct reserved_view;
-
-	enum class access_mode
-	{
-		unknown,
-		pass,
-		once
-	};
 
 	enum class layout_relation
 	{
@@ -41,7 +24,7 @@ namespace ruzhouxie
 		included
 	};
 
-	constexpr layout_relation operator|(layout_relation l, layout_relation r)noexcept
+	consteval layout_relation operator|(layout_relation l, layout_relation r)
 	{
 		if(l == layout_relation::included || r == layout_relation::included)
 		{
@@ -57,7 +40,7 @@ namespace ruzhouxie
 		}
 	}
 
-	constexpr layout_relation operator&(layout_relation l, layout_relation r)noexcept
+	consteval layout_relation operator&(layout_relation l, layout_relation r)
 	{
 		if (l == layout_relation::independent && r == layout_relation::independent)
 		{
@@ -74,7 +57,7 @@ namespace ruzhouxie
 	}
 
 	template<size_t N1, size_t N2>
-	constexpr layout_relation indices_relation_to(const array<size_t, N1>& index_pack, const array<size_t, N2>& other)
+	consteval layout_relation indices_relation_to(const array<size_t, N1>& index_pack, const array<size_t, N2>& other)
 	{
 		if constexpr(N1 >= N2)
 		{
@@ -100,7 +83,7 @@ namespace ruzhouxie
 		}
 	}
 
-	constexpr layout_relation indices_relation_to_layout(const indicesoid auto& index_pack, const auto& layout)
+	consteval layout_relation indices_relation_to_layout(const indicesoid auto& index_pack, const auto& layout)
 	{
 		if constexpr(indicesoid<decltype(layout)>)
 		{
@@ -112,7 +95,7 @@ namespace ruzhouxie
 		}(std::make_index_sequence<child_count<decltype(layout)>>{});
 	}
 
-	constexpr layout_relation layout_relation_to(const auto& layout, const auto& other)
+	consteval layout_relation layout_relation_to(const auto& layout, const auto& other)
 	{
 		if constexpr(indicesoid<decltype(layout)>)
 		{
@@ -123,6 +106,16 @@ namespace ruzhouxie
 			return (... & layout_relation_to(layout | child<I>, other));
 		}(std::make_index_sequence<child_count<decltype(layout)>>{});
 	}
+}
+
+namespace ruzhouxie
+{
+	enum class access_mode
+	{
+		unknown,
+		pass,
+		once
+	};
 
 	template<typename Data, auto Sequence>
 	struct tape_t
@@ -133,9 +126,9 @@ namespace ruzhouxie
 		//Each child of data is also necessary to meet the above requirements.
 		Data data;
 
-		template<size_t I, specified<tape_t> Self>
-		RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-			AS_EXPRESSION(FWD(self, data) | child<I>)
+		// template<size_t I, specified<tape_t> Self>
+		// RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
+		// 	AS_EXPRESSION(FWD(self, data) | child<I>)
 
 		template<size_t I, specified<tape_t> Self>
 		RUZHOUXIE_INLINE friend constexpr decltype(auto) access_once(Self&& self)
@@ -151,12 +144,12 @@ namespace ruzhouxie
 				{
 					//for some compiler.
 					constexpr auto layout = Sequence | child<I>;
-					return (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J + I + 1uz>));
+					return (detail::layout_relation::independent | ... | detail::layout_relation_to(layout, Sequence | child<J + I + 1uz>));
 				}(std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
 
 				if constexpr(indicesoid<decltype(layout)>)
 				{
-					if constexpr(relation_to_rest == layout_relation::independent)
+					if constexpr(relation_to_rest == detail::layout_relation::independent)
 					{
 						return FWD(self, data) | child<layout>;
 					}
@@ -165,18 +158,19 @@ namespace ruzhouxie
 						return std::as_const(self.data) | child<layout>;
 					}
 				}
-				else if constexpr(relation_to_rest == layout_relation::independent)
+				else if constexpr(relation_to_rest == detail::layout_relation::independent)
 				{
 					return detail::relayout_view<decltype(FWD(self, data)), layout>
 					{
 						{}, FWD(self, data)
 					};
 				}
-				// else if constexpr(relation_to_rest == layout_relation::included)
+				// else if constexpr(relation_to_rest == layout_relation::intersectant)
 				// {
-				// 	return relayout_view<decltype(as_const(self.data)), layout>
+				// 	constexpr auto other = ...;
+				// 	return detail::reserved_view<decltype(FWD(self, data)), other>
 				// 	{
-				// 		as_const(self.data)
+				// 		{}, FWD(self, data)
 				// 	};
 				// }
 				else
@@ -203,14 +197,14 @@ namespace ruzhouxie
 				{
 					//for some compiler.
 					constexpr auto layout = Sequence | child<I>;
-					constexpr auto front = (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<J>));
-					constexpr auto behind = (layout_relation::independent | ... | layout_relation_to(layout, Sequence | child<K + I + 1uz>));
+					constexpr auto front = (detail::layout_relation::independent | ... | detail::layout_relation_to(layout, Sequence | child<J>));
+					constexpr auto behind = (detail::layout_relation::independent | ... | detail::layout_relation_to(layout, Sequence | child<K + I + 1uz>));
 					return front | behind;
 				}(std::make_index_sequence<I>{}, std::make_index_sequence<child_count<decltype(Sequence)> - I - 1uz>{});
 
 				if constexpr(indicesoid<decltype(layout)>)
 				{
-					if constexpr(relation_to_rest == layout_relation::independent)
+					if constexpr(relation_to_rest == detail::layout_relation::independent)
 					{
 						return FWD(self, data) | child<layout>;
 					}
@@ -219,7 +213,7 @@ namespace ruzhouxie
 						return std::as_const(self.data) | child<layout>;
 					}
 				}
-				else if constexpr(relation_to_rest == layout_relation::independent)
+				else if constexpr(relation_to_rest == detail::layout_relation::independent)
 				{
 					return detail::relayout_view<decltype(FWD(self, data)), layout>
 					{

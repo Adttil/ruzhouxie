@@ -32,7 +32,7 @@ namespace ruzhouxie
 		{
 			return tree_adaptor_closure_ns::tree_adaptor_closure
 			{
-				[&](auto&& arg) AS_EXPRESSION(rzx::as_base<Fn>(FWD(self))(FWD(arg) | FWD(closure)))
+				[&] RUZHOUXIE_INLINE (auto&& arg) AS_EXPRESSION(rzx::as_base<Fn>(FWD(self))(FWD(arg) | FWD(closure)))
 			};
 		}
 
@@ -56,7 +56,7 @@ namespace ruzhouxie
 		{
 			return tree_adaptor_closure
 			{
-				[fn = rzx::as_base<Fn>(FWD(self)), ...args_ = FWD(args)](this auto&& self, auto&& view)
+				[fn = rzx::as_base<Fn>(FWD(self)), ...args_ = FWD(args)] RUZHOUXIE_INLINE (this auto&& self, auto&& view)
 					//noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
 					->decltype(auto)
 					requires requires{ std::declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
