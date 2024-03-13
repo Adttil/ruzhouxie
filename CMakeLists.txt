@@ -5,6 +5,7 @@ project (ruzhouxie)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(MAGICCPP_INCLUDE_TESTS OFF)
 
 add_definitions(-w)
 if(MSVC)
@@ -21,14 +22,22 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+FetchContent_Declare(
+    magic_cpp
+    URL https://github.com/Adttil/magic-cpp/archive/refs/heads/opttest.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(magic_cpp)
+
 include_directories("include")
 
 file(GLOB test_srcs "test/*.cpp")
-add_executable(all_tests ${test_srcs})
-target_link_libraries(all_tests GTest::gtest_main)
+add_executable(ruzhouxie_tests ${test_srcs})
+target_link_libraries(ruzhouxie_tests PRIVATE GTest::gtest_main MAGIC_CPP)
 
 file(GLOB_RECURSE example_srcs RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "example/*.cpp")
 foreach(srcfile IN LISTS example_srcs)
     get_filename_component(elfname ${srcfile} NAME_WE)
     add_executable(${elfname} ${srcfile})
+    target_link_libraries(${elfname} PRIVATE MAGIC_CPP)
 endforeach()
