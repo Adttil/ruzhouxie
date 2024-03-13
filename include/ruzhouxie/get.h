@@ -2,7 +2,7 @@
 #define RUZHOUXIE_GET_H
 
 #include "general.h"
-#include "pipe_closure.h"
+#include "tree_adaptor.h"
 #include "array.h"
 
 #include "macro_define.h"

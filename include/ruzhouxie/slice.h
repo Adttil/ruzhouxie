@@ -3,7 +3,7 @@
 
 #include "general.h"
 #include "get.h"
-#include "pipe_closure.h"
+#include "tree_adaptor.h"
 #include "relayout.h"
 #include "ruzhouxie/array.h"
 #include "ruzhouxie/tuple.h"

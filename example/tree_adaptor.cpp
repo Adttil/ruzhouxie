@@ -1,4 +1,4 @@
-#include "ruzhouxie/pipe_closure.h"
+#include "ruzhouxie/tree_adaptor.h"
 #include "test_tool.h"
 #include <functional>
 #include <ruzhouxie/transform.h>

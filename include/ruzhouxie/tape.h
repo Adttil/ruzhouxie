@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "general.h"
-#include "pipe_closure.h"
+#include "tree_adaptor.h"
 #include "ruzhouxie/array.h"
 #include "ruzhouxie/general.h"
 #include "ruzhouxie/macro_define.h"

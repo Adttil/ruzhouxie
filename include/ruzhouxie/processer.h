@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "general.h"
-#include "pipe_closure.h"
+#include "tree_adaptor.h"
 #include "array.h"
 #include "tape.h"
 #include "get.h"
