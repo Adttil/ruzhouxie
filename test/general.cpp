@@ -3,7 +3,7 @@
 
 using namespace ruzhouxie;
 
-TEST(Field_Count, NoRef_NoArray)
+TEST(Specified, SameType)
 {
     ASSERT_EQ((specified<int&, int>), true);
 }
