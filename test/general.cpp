@@ -3,7 +3,7 @@
 
 using namespace ruzhouxie;
 
-TEST(Specified, SameType)
+TEST(specified, same)
 {
     MAGIC_CHECK(true, specified<int, int>);
     MAGIC_CHECK(true, specified<const int, int>);
@@ -48,7 +48,7 @@ TEST(Specified, SameType)
     MAGIC_CHECK(true, specified<const int&&, const int&&>);
 }
 
-TEST(Specified, Derived)
+TEST(specified, derived)
 {
     struct Base{};
     struct Drived : Base{};

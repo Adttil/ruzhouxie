@@ -3,7 +3,7 @@
 
 using namespace ruzhouxie;
 
-TEST(TupleGet, Value)
+TEST(tuple, get)
 {
     auto tpl = tuple{ 1, 3.14, std::string{"wow"} };
 
@@ -13,7 +13,7 @@ TEST(TupleGet, Value)
 	MAGIC_CHECK(tpl, tuple{ 1, 3.14, std::string{"wow"} });
 }
 
-TEST(TupleCategory, Object)
+TEST(tuple_category, object)
 {
 	auto tpl = rzx::tuple{ 1 };
 
@@ -23,7 +23,7 @@ TEST(TupleCategory, Object)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<0>()), const int&&);
 }
 
-TEST(TupleCategory, Ref)
+TEST(tuple_category, ref)
 {
 	int i = 1;
 	auto tpl = rzx::tuple<int&>{ i };
@@ -33,7 +33,7 @@ TEST(TupleCategory, Ref)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<0>()), int&);
 }
 
-TEST(TupleCategory, ConstRef)
+TEST(tuple_category, const_ref)
 {
 	int i = 1;
 	auto tpl = rzx::tuple<const int&>{ i };
@@ -43,7 +43,7 @@ TEST(TupleCategory, ConstRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<0>()), const int&);
 }
 
-TEST(TupleCategory, RValueRef)
+TEST(tuple_category, rvalue_ref)
 {
 	int i = 1;
 	auto tpl = rzx::tuple<int&&>{ std::move(i) };
@@ -53,7 +53,7 @@ TEST(TupleCategory, RValueRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<0>()), int&&);
 }
 
-TEST(TupleCategory, ConstRValueRef)
+TEST(tuple_category, const_rvalue_ref)
 {
 	int i = 1;
 	auto tpl = rzx::tuple<const int&&>{ std::move(i) };
@@ -63,7 +63,7 @@ TEST(TupleCategory, ConstRValueRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<0>()), const int&&);
 }
 
-TEST(TupleCategory, NormalObject)
+TEST(normal_tuple_category, object)
 {
 	auto tpl = rzx::tuple{ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 };
 	MAGIC_TCHECK(decltype(tpl.get<16>()), int&);
@@ -72,7 +72,7 @@ TEST(TupleCategory, NormalObject)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<16>()), const int&&);
 }
 
-TEST(TupleCategory, NormalRef)
+TEST(normal_tuple_category, ref)
 {
 	int i = 1;
 	auto tpl = rzx::fwd_as_tuple(i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i);
@@ -82,7 +82,7 @@ TEST(TupleCategory, NormalRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<16>()), int&);
 }
 
-TEST(TupleCategory, NormalConstRef)
+TEST(normal_tuple_category, const_ref)
 {
 	const int i = 1;
 	auto tpl = rzx::fwd_as_tuple(i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i);
@@ -92,7 +92,7 @@ TEST(TupleCategory, NormalConstRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<16>()), const int&);
 }
 
-TEST(TupleCategory, NormalRValueRef)
+TEST(normal_tuple_category, rvalue_ref)
 {
 	int i = 1;
 	auto tpl = rzx::fwd_as_tuple(i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, std::move(i));
@@ -102,7 +102,7 @@ TEST(TupleCategory, NormalRValueRef)
 	MAGIC_TCHECK(decltype(std::move(std::as_const(tpl)).get<16>()), int&&);
 }
 
-TEST(TupleCategory, NormalConstRValueRef)
+TEST(normal_tuple_category, const_rvalue_ref)
 {
 	const int i = 1;
 	auto tpl = rzx::fwd_as_tuple(i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i, std::move(i));
