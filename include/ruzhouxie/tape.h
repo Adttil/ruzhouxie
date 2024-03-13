@@ -106,6 +106,15 @@ namespace ruzhouxie::detail
             return (... & layout_relation_to(layout | child<I>, other));
         }(std::make_index_sequence<child_count<decltype(layout)>>{});
     }
+    
+    enum class tape_access_strategy_t
+    {
+        none,
+        forward,
+        as_const,
+        forward_relayout,
+        as_const_relayout
+    };
 }
 
 namespace ruzhouxie
@@ -130,12 +139,15 @@ namespace ruzhouxie
         // RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
         //     AS_EXPRESSION(FWD(self, data) | child<I>)
 
+    private:
+        using strategy_t = detail::tape_access_strategy_t;
+
         template<size_t I, specified<tape_t> Self>
-        RUZHOUXIE_INLINE friend constexpr decltype(auto) access_once(Self&& self)
+        static consteval choice_t<strategy_t> access_once_choose()
         {
             if constexpr(I >= child_count<decltype(Sequence)>)
             {
-                return;
+                return { strategy_t::none };
             }
             else
             {
@@ -151,35 +163,62 @@ namespace ruzhouxie
                 {
                     if constexpr(relation_to_rest == detail::layout_relation::independent)
                     {
-                        return FWD(self, data) | child<layout>;
+                        return { strategy_t::forward, noexcept(FWD(std::declval<Self>(), data) | child<layout>) };
                     }
                     else
                     {
-                        return std::as_const(self.data) | child<layout>;
+                        return { strategy_t::as_const, noexcept(std::as_const(std::declval<Self&>().data) | child<layout>) };
                     }
                 }
                 else if constexpr(relation_to_rest == detail::layout_relation::independent)
                 {
-                    return detail::relayout_view<decltype(FWD(self, data)), layout>
-                    {
-                        {}, FWD(self, data)
-                    };
+                    return { strategy_t::forward_relayout, true };
                 }
                 // else if constexpr(relation_to_rest == layout_relation::intersectant)
                 // {
-                //     constexpr auto other = ...;
-                //     return detail::reserved_view<decltype(FWD(self, data)), other>
-                //     {
-                //         {}, FWD(self, data)
-                //     };
+                    //todo...
                 // }
                 else
                 {
-                    return detail::relayout_view<decltype(as_const(self.data)), layout>
-                    {
-                        {}, as_const(self.data)
-                    };
+                    return { strategy_t::as_const_relayout, true };
                 }
+            }
+        }
+
+    public:
+        template<size_t I, specified<tape_t> Self>
+        RUZHOUXIE_INLINE friend constexpr decltype(auto) access_once(Self&& self)
+            noexcept(access_once_choose<I, Self>().nothrow)
+            requires(access_once_choose<I, Self>().strategy != strategy_t::none)
+        {
+            constexpr auto layout = Sequence | child<I>;
+            constexpr strategy_t strategy = access_once_choose<I, Self>().strategy;
+            
+            if constexpr(strategy == strategy_t::forward)
+            {
+                return FWD(self, data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::as_const)
+            {
+                return std::as_const(self.data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::forward_relayout)
+            {
+                return detail::relayout_view<decltype(FWD(self, data)), layout>
+                {
+                   {}, FWD(self, data)
+                };
+            }
+            else if constexpr(strategy == strategy_t::as_const_relayout)
+            {
+                return detail::relayout_view<decltype(as_const(self.data)), layout>
+                {
+                    {}, as_const(self.data)
+                };
+            }
+            else
+            {
+                static_assert(strategy == strategy_t::as_const_relayout, "Should not reach.");
             }
         }
 
