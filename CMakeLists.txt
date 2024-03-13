@@ -2,10 +2,18 @@ cmake_minimum_required (VERSION 3.8)
 
 project (ruzhouxie)
 
+add_library(RUZHOUXIE INTERFACE)
+target_include_directories(RUZHOUXIE INTERFACE include)
+
+option(RUZHOUXIE_INCLUDE_TESTS "Include tests" ON)
+if(NOT RUZHOUXIE_INCLUDE_TESTS)
+        return()
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(MAGICCPP_INCLUDE_TESTS OFF)
+set(MAGIC_CPP_INCLUDE_TESTS OFF)
 
 add_definitions(-w)
 if(MSVC)
@@ -24,7 +32,7 @@ FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(
     magic_cpp
-    URL https://github.com/Adttil/magic-cpp/archive/refs/heads/opttest.zip
+    URL https://github.com/Adttil/magic-cpp/archive/refs/heads/opt-test.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(magic_cpp)
