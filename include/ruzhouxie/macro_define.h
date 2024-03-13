@@ -3,7 +3,7 @@
 
 #ifdef __clang__
 
-#define RUZHOUXIE_MAYBE_EMPTY [[msvc::no_unique_address]]
+#define RUZHOUXIE_MAYBE_EMPTY [[no_unique_address]]
 #define RUZHOUXIE_INLINE [[clang::always_inline]]
 #define RUZHOUXIE_INLINE_CALLS
 #define RUZHOUXIE_INTRINSIC
