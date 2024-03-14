@@ -1,6 +1,10 @@
 #ifndef RUZHOUXIE_MACRO_DEFINE_H
 #define RUZHOUXIE_MACRO_DEFINE_H
 
+#ifndef NDEBUG
+#define RUZHOUXIE_DEBUG_TAPE
+#endif 
+
 #ifdef __clang__
 
 #define RUZHOUXIE_MAYBE_EMPTY [[no_unique_address]]

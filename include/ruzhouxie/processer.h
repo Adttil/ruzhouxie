@@ -141,11 +141,11 @@ namespace ruzhouxie
 			{
 			    if constexpr(std::is_object_v<Tuple>)
 				{
-				    return static_cast<Tuple>(access_once<Offset>(FWD(tape)));
+				    return static_cast<Tuple>(access<Offset>(FWD(tape)));
 				}
 			    else
 				{
-				    return static_cast<Tuple>(access_pass<Offset>(FWD(tape)));
+				    return static_cast<Tuple>(pass<Offset>(FWD(tape)));
 				}
 			}
 		    else return [&]<size_t...I>(std::index_sequence<I...>)
@@ -310,7 +310,7 @@ namespace ruzhouxie
 		{
 		    if constexpr(terminal<T>)
 			{
-			    return access_once<Offset>(FWD(tape));
+			    return access<Offset>(FWD(tape));
 			}
 		    else return [&]<size_t...I>(std::index_sequence<I...>)
 			{

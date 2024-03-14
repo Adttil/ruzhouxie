@@ -110,21 +110,21 @@ namespace ruzhouxie::detail
     enum class tape_access_strategy_t
     {
         none,
-        forward,
-        as_const,
-        forward_relayout,
-        as_const_relayout
+        last,
+        not_last,
+        relayout_last,
+        relayout_not_last
     };
 }
 
 namespace ruzhouxie
 {
-    enum class access_mode
-    {
-        unknown,
-        pass,
-        once
-    };
+    // enum class access_mode
+    // {
+    //     unknown,
+    //     pass,
+    //     once
+    // };
 
     template<typename Data, auto Sequence>
     struct tape_t
@@ -135,15 +135,16 @@ namespace ruzhouxie
         //Each child of data is also necessary to meet the above requirements.
         Data data;
 
-        // template<size_t I, specified<tape_t> Self>
-        // RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-        //     AS_EXPRESSION(FWD(self, data) | child<I>)
+#ifdef RUZHOUXIE_DEBUG_TAPE
+        //This help to check if the access order is legal.
+        size_t min_valid_index = 0;
+#endif
 
     private:
         using strategy_t = detail::tape_access_strategy_t;
 
         template<size_t I, specified<tape_t> Self>
-        static consteval choice_t<strategy_t> access_once_choose()
+        static consteval choice_t<strategy_t> access_choose()
         {
             if constexpr(I >= child_count<decltype(Sequence)>)
             {
@@ -163,16 +164,16 @@ namespace ruzhouxie
                 {
                     if constexpr(relation_to_rest == detail::layout_relation::independent)
                     {
-                        return { strategy_t::forward, noexcept(FWD(std::declval<Self>(), data) | child<layout>) };
+                        return { strategy_t::last, noexcept(FWD(std::declval<Self>(), data) | child<layout>) };
                     }
                     else
                     {
-                        return { strategy_t::as_const, noexcept(std::as_const(std::declval<Self&>().data) | child<layout>) };
+                        return { strategy_t::not_last, noexcept(std::as_const(std::declval<Self&>().data) | child<layout>) };
                     }
                 }
                 else if constexpr(relation_to_rest == detail::layout_relation::independent)
                 {
-                    return { strategy_t::forward_relayout, true };
+                    return { strategy_t::relayout_last, true };
                 }
                 // else if constexpr(relation_to_rest == layout_relation::intersectant)
                 // {
@@ -180,59 +181,22 @@ namespace ruzhouxie
                 // }
                 else
                 {
-                    return { strategy_t::as_const_relayout, true };
+                    return { strategy_t::relayout_not_last, true };
                 }
             }
         }
 
-    public:
         template<size_t I, specified<tape_t> Self>
-        RUZHOUXIE_INLINE friend constexpr decltype(auto) access_once(Self&& self)
-            noexcept(access_once_choose<I, Self>().nothrow)
-            requires(access_once_choose<I, Self>().strategy != strategy_t::none)
-        {
-            constexpr auto layout = Sequence | child<I>;
-            constexpr strategy_t strategy = access_once_choose<I, Self>().strategy;
-            
-            if constexpr(strategy == strategy_t::forward)
-            {
-                return FWD(self, data) | child<layout>;
-            }
-            else if constexpr(strategy == strategy_t::as_const)
-            {
-                return std::as_const(self.data) | child<layout>;
-            }
-            else if constexpr(strategy == strategy_t::forward_relayout)
-            {
-                return detail::relayout_view<decltype(FWD(self, data)), layout>
-                {
-                   {}, FWD(self, data)
-                };
-            }
-            else if constexpr(strategy == strategy_t::as_const_relayout)
-            {
-                return detail::relayout_view<decltype(as_const(self.data)), layout>
-                {
-                    {}, as_const(self.data)
-                };
-            }
-            else
-            {
-                static_assert(strategy == strategy_t::as_const_relayout, "Should not reach.");
-            }
-        }
-
-        template<size_t I, specified<tape_t> Self>
-        RUZHOUXIE_INLINE friend constexpr decltype(auto) access_pass(Self&& self)
+        static consteval choice_t<strategy_t> pass_choose()
         {
             if constexpr(I >= child_count<decltype(Sequence)>)
             {
-                return;
+                return { strategy_t::none };
             }
             else
             {
                 constexpr auto layout = Sequence | child<I>;
-                constexpr auto relation_to_rest = []<size_t...J, size_t...K>(std::index_sequence<J...>, std::index_sequence<K...>)
+                 constexpr auto relation_to_rest = []<size_t...J, size_t...K>(std::index_sequence<J...>, std::index_sequence<K...>)
                 {
                     //for some compiler.
                     constexpr auto layout = Sequence | child<I>;
@@ -245,84 +209,155 @@ namespace ruzhouxie
                 {
                     if constexpr(relation_to_rest == detail::layout_relation::independent)
                     {
-                        return FWD(self, data) | child<layout>;
+                        return { strategy_t::last, noexcept(FWD(std::declval<Self>(), data) | child<layout>) };
                     }
                     else
                     {
-                        return std::as_const(self.data) | child<layout>;
+                        return { strategy_t::not_last, noexcept(std::as_const(std::declval<Self&>().data) | child<layout>) };
                     }
                 }
                 else if constexpr(relation_to_rest == detail::layout_relation::independent)
                 {
-                    return detail::relayout_view<decltype(FWD(self, data)), layout>
-                    {
-                        {}, FWD(self, data)
-                    };
+                    return { strategy_t::relayout_last, true };
                 }
-                // else if constexpr(relation_to_rest == layout_relation::included)
+                // else if constexpr(relation_to_rest == layout_relation::intersectant)
                 // {
-                //     return relayout_view<decltype(as_const(self.data)), layout>
-                //     {
-                //         as_const(self.data)
-                //     };
+                    //todo...
                 // }
                 else
                 {
-                    return detail::relayout_view<decltype(as_const(self.data)), layout>
-                    {
-                        {}, as_const(self.data)
-                    };
+                    return { strategy_t::relayout_not_last, true };
                 }
             }
         }
 
-        template<size_t I, access_mode Mode = access_mode::unknown, specified<tape_t> Self = void>
+    public:
+        template<size_t I, specified<tape_t> Self>
         RUZHOUXIE_INLINE friend constexpr decltype(auto) access(Self&& self)
+            noexcept(access_choose<I, Self>().nothrow)
+            requires(access_choose<I, Self>().strategy != strategy_t::none)
         {
-            if constexpr(Mode == access_mode::once)
+#ifdef RUZHOUXIE_DEBUG_TAPE
+            if(I < self.min_valid_index)
             {
-                return access_once<I>(FWD(self));
+                //Tape should be accessed by order of sequence.
+                std::unreachable();
+            }
+            self.min_valid_index = I + 1uz;
+#endif
+            constexpr auto layout = Sequence | child<I>;
+            constexpr strategy_t strategy = access_choose<I, Self>().strategy;
+            
+            if constexpr(strategy == strategy_t::last)
+            {
+                return FWD(self, data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::not_last)
+            {
+                return std::as_const(self.data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::relayout_last)
+            {
+                return detail::relayout_view<decltype(FWD(self, data)), layout>
+                {
+                   {}, FWD(self, data)
+                };
+            }
+            else if constexpr(strategy == strategy_t::relayout_not_last)
+            {
+                return detail::relayout_view<decltype(as_const(self.data)), layout>
+                {
+                    {}, as_const(self.data)
+                };
             }
             else
             {
-                return access_pass<I>(FWD(self));
+                static_assert(strategy == strategy_t::relayout_not_last, "Should not reach.");
             }
         }
 
-        template<auto InputLayoutsZip, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
-        static constexpr auto get_unique_tape_seq_and_set_map(auto& map)noexcept
+        template<size_t I, specified<tape_t> Self>
+        RUZHOUXIE_INLINE friend constexpr decltype(auto) pass(Self&& self)
+            noexcept(pass_choose<I, Self>().nothrow)
+            requires(pass_choose<I, Self>().strategy != strategy_t::none)
         {
-            if constexpr(I >= child_count<decltype(InputLayoutsZip)>)
+#ifdef RUZHOUXIE_DEBUG_TAPE
+            if(I < self.min_valid_index)
+            {
+                //Tape should be accessed by order of sequence.
+                std::unreachable();
+            }
+            self.min_valid_index = I + 1uz;
+#endif
+            constexpr auto layout = Sequence | child<I>;
+            constexpr strategy_t strategy = pass_choose<I, Self>().strategy;
+            
+            if constexpr(strategy == strategy_t::last)
+            {
+                return FWD(self, data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::not_last)
+            {
+                return std::as_const(self.data) | child<layout>;
+            }
+            else if constexpr(strategy == strategy_t::relayout_last)
+            {
+                return detail::relayout_view<decltype(FWD(self, data)), layout>
+                {
+                   {}, FWD(self, data)
+                };
+            }
+            else if constexpr(strategy == strategy_t::relayout_not_last)
+            {
+                return detail::relayout_view<decltype(as_const(self.data)), layout>
+                {
+                    {}, as_const(self.data)
+                };
+            }
+            else
+            {
+                static_assert(strategy == strategy_t::relayout_not_last, "Should not reach.");
+            }
+        }
+    };
+
+    namespace detail 
+    {
+        template<auto Seq, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
+        consteval auto get_unique_seq_and_set_map(auto& map)noexcept
+        {
+            if constexpr(I >= child_count<decltype(Seq)>)
             {
                 return CurLayouts;
             }
-            else if constexpr(tuple_contain(CurLayouts, InputLayoutsZip | child<I>))
+            else if constexpr(tuple_contain(CurLayouts, Seq | child<I>))
             {
-                return get_unique_tape_seq_and_set_map<InputLayoutsZip, I + 1uz, Cur, CurLayouts>(map);
+                return get_unique_seq_and_set_map<Seq, I + 1uz, Cur, CurLayouts>(map);
             }
             else
             {
                 map[I] = child_count<decltype(Cur)>;
-                return get_unique_tape_seq_and_set_map<
-                    InputLayoutsZip, I + 1uz,
+                return get_unique_seq_and_set_map<
+                    Seq, I + 1uz,
                     tuple_cat(Cur, tuple{ I }),
-                    tuple_cat(CurLayouts, tuple<purified<decltype(InputLayoutsZip | child<I>)>>{ InputLayoutsZip | child<I> })
+                    tuple_cat(CurLayouts, tuple<purified<decltype(Seq | child<I>)>>{ Seq | child<I> })
                 >(map);
             }
         }
 
-        static consteval auto get_unique_seq_and_map()
+        template<auto Seq>
+        consteval auto get_unique_seq_and_map()
         {
-            array<size_t, child_count<decltype(Sequence)>> map{};
-            auto seq = get_unique_tape_seq_and_set_map<Sequence>(map);
+            array<size_t, child_count<decltype(Seq)>> map{};
+            auto seq = detail::get_unique_seq_and_set_map<Seq>(map);
             struct result_t
             {
                 decltype(seq) sequence;
-                array<size_t, child_count<decltype(Sequence)>> map;
+                array<size_t, child_count<decltype(Seq)>> map;
             };
             return result_t{ seq, map };
         }
-    };
+    }
 
     template<auto Seq>
     RUZHOUXIE_INLINE constexpr auto make_tape(auto&& data)noexcept
@@ -364,6 +399,14 @@ namespace ruzhouxie
 
         template<auto Sequence>
         struct get_tape_t;
+
+        enum class strategy_t
+        {
+            none,
+            tag_invoke,
+            branched,
+            terminal
+        };
     }
 
     template<auto Sequence>
@@ -372,20 +415,45 @@ namespace ruzhouxie
     template<auto Sequence>
     struct detail::get_tape_t_ns::get_tape_t
     {
+    private:
         template<typename T>
-        RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t)const
+        static consteval choice_t<strategy_t> choose()
         {
-            if constexpr (requires{ tag_invoke<Sequence>(get_tape<Sequence>, FWD(t)); })
+            if constexpr (requires{ tag_invoke<Sequence>(get_tape<Sequence>, std::declval<T>()); })
             {
-                return tag_invoke<Sequence>(get_tape<Sequence>, FWD(t));
+                return { strategy_t::tag_invoke, noexcept(tag_invoke<Sequence>(get_tape<Sequence>, std::declval<T>())) };
             }
             else if constexpr(branched<T>)
             {
-                return get_tuple_tape(FWD(t));
+                return { strategy_t::branched, true };
             }
             else
             {
+                return { strategy_t::terminal, true };
+            }
+        }
+    public:
+        template<typename T>
+        RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t)const
+            noexcept(choose<T>().nothrow)
+            requires(choose<T>().strategy != strategy_t::none)
+        {
+            constexpr strategy_t strategy = choose<T>().strategy;
+            if constexpr (strategy == strategy_t::tag_invoke)
+            {
+                return tag_invoke<Sequence>(get_tape<Sequence>, FWD(t));
+            }
+            else if constexpr(strategy == strategy_t::branched)
+            {
+                return get_tuple_tape(FWD(t));
+            }
+            else if constexpr(strategy == strategy_t::terminal)
+            {
                 return tape_t<T&&, Sequence>{ FWD(t) };
+            }
+            else
+            {
+                static_assert(strategy == strategy_t::tag_invoke, "Should not reach.");
             }
         }
 

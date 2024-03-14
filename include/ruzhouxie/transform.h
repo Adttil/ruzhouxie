@@ -47,16 +47,16 @@ namespace ruzhouxie
         struct data_type
         {
             //constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
-            static constexpr auto unique_base_tape_seq_and_map = T::get_unique_seq_and_map();
+            static constexpr auto unique_base_tape_seq_and_map = detail::get_unique_seq_and_map<T::sequence>();
             
             RUZHOUXIE_INLINE static constexpr auto get_data(T&& base_tape, F& fn)
             {
                 auto uinque_base_tape = make_tape<unique_base_tape_seq_and_map.sequence>(FWD(base_tape, data));
                 return [&]<size_t...I>(std::index_sequence<I...>)
                 {
-                    return tuple<decltype(fn(access_pass<I>(FWD(uinque_base_tape))))...>
+                    return tuple<decltype(fn(pass<I>(FWD(uinque_base_tape))))...>
                     {
-                        fn(access_pass<I>(FWD(uinque_base_tape)))...
+                        fn(pass<I>(FWD(uinque_base_tape)))...
                     };
                 }(std::make_index_sequence<child_count<decltype(unique_base_tape_seq_and_map.sequence)>>{});
             }
@@ -87,16 +87,16 @@ namespace ruzhouxie
 
             //auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
             
-            constexpr auto unique_input_tape_seq_and_map = base_tape_type::get_unique_seq_and_map();
+            constexpr auto unique_input_tape_seq_and_map = detail::get_unique_seq_and_map<base_tape_type::sequence>();
     
             //auto uinque_input_tape = make_tape<unique_input_tape_seq_and_map.sequence>(FWD(input_tape, data));
             constexpr auto uinque_input_map = unique_input_tape_seq_and_map.map;
 
             // const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
             // {
-            //     return tuple<decltype(FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape))))...>
+            //     return tuple<decltype(FWD(self, fn)(pass<I>(FWD(uinque_input_tape))))...>
             //     {
-            //         FWD(self, fn)(access_pass<I>(FWD(uinque_input_tape)))...
+            //         FWD(self, fn)(pass<I>(FWD(uinque_input_tape)))...
             //     };
             // };
 
