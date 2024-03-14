@@ -18,6 +18,46 @@ namespace ruzhouxie
             return static_cast<size_t>(size - -index % size);
         }
     }
+
+    RUZHOUXIE_INLINE constexpr auto&& max(auto&& arg0, auto&&...rest)
+    {
+        if constexpr(sizeof...(rest) == 0)
+        {
+            return FWD(arg0);
+        }
+        else
+        {
+            auto&& rest_max = max(FWD(rest)...);
+            if(arg0 > rest_max)
+            {
+                return FWD(arg0);
+            }
+            else
+            {
+                return FWD(rest_max);
+            }
+        }
+    }
+
+    RUZHOUXIE_INLINE constexpr auto&& min(auto&& arg0, auto&&...rest)
+    {
+        if constexpr(sizeof...(rest) == 0)
+        {
+            return FWD(arg0);
+        }
+        else
+        {
+            auto&& rest_max = max(FWD(rest)...);
+            if(arg0 < rest_max)
+            {
+                return FWD(arg0);
+            }
+            else
+            {
+                return FWD(rest_max);
+            }
+        }
+    }
 }
 
 #include "macro_undef.h"

@@ -4,6 +4,7 @@
 #include "general.h"
 #include "tree_adaptor.h"
 #include "array.h"
+#include "tuple.h"
 #include "math.h"
 
 #include "macro_define.h"
@@ -102,85 +103,67 @@ namespace ruzhouxie
 
     template<typename T>
     inline constexpr size_t leaf_count = []
+    {
+        if constexpr (terminal<T>)
         {
-            if constexpr (terminal<T>)
+            return 1uz;
+        }
+        else
+        {
+            return[]<size_t...I>(std::index_sequence<I...>)
             {
-                return 1uz;
-            }
-            else
-            {
-                return[]<size_t...I>(std::index_sequence<I...>)
-                {
-                    return (0uz + ... + leaf_count<decltype(std::declval<T>() | child<I>())>);
-                }(std::make_index_sequence<child_count<T>>{});
-            }
-        }();
+                return (0uz + ... + leaf_count<child_type<T, I>>);
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+    }();
 
     template<typename T>
     inline constexpr auto tree_shape = []
+    {
+        if constexpr (terminal<T>)
         {
-            if constexpr (terminal<T>)
-            {
-                return array{ '{', '}' };
-            }
-            else return[]<size_t...I>(std::index_sequence<I...>)
-            {
-                return detail::concat_array<array{ '{' }, tree_shape<decltype(child<I>(std::declval<T>()))>..., array{ '}' }>();
-            }(std::make_index_sequence<child_count<T>>{});
-        }();
+            return array{ '{', '}' };
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            return detail::concat_array<array{ '{' }, tree_shape<child_type<T, I>>..., array{ '}' }>();
+        }(std::make_index_sequence<child_count<T>>{});
+    }();
 
     template<typename T>
     inline constexpr size_t tensor_rank = []
+    {
+        if constexpr (terminal<T>)
         {
-            if constexpr (terminal<T>)
-            {
-                return 0uz;
-            }
-            else return[]<size_t...I>(std::index_sequence<I...>)
-            {
-                auto child_ranks = array{ tensor_rank<child_type<T, I>>... };
-                size_t child_rank_min = std::numeric_limits<size_t>::max();
-                for (size_t child_rank : child_ranks)
-                {
-                    if (child_rank < child_rank_min)
-                    {
-                        child_rank_min = child_rank;
-                    }
-                }
-                return 1uz + child_rank_min;
-            }(std::make_index_sequence<child_count<T>>{});
-        }();
+            return 0uz;
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            return 1uz + min(tensor_rank<child_type<T, I>>...);
+        }(std::make_index_sequence<child_count<T>>{});
+    }();
 
     template<typename T>
     inline constexpr auto tensor_shape = []
+    {
+        if constexpr (terminal<T>)
         {
-            if constexpr (terminal<T>)
+            return array<size_t, 0>{};
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr size_t rank = tensor_rank<T>;
+            array<size_t, rank> result{ child_count<T> };
+
+            constexpr auto child_shapes = tuple{ tensor_shape<child_type<T, I>>... };
+            for (size_t i = 0uz; i < rank - 1uz; ++i)
             {
-                return array<size_t, 0>{};
+                result[i + 1uz] = min((child_shapes | child<I>)[i]...);
             }
-            else return[]<size_t...I>(std::index_sequence<I...>)
-            {
-                constexpr size_t rank = tensor_rank<T>;
-                array<size_t, rank> result{ child_count<T> };
 
-                auto child_shapes = array{ detail::array_take<rank - 1>(tensor_shape<child_type<T, I>>)... };
-
-                for (size_t i = 0uz; i < rank - 1uz; ++i)
-                {
-                    size_t child_axis_length_min = std::numeric_limits<size_t>::max();
-                    for (const auto& child_shape : child_shapes)
-                    {
-                        if (child_shape[i] < child_axis_length_min)
-                        {
-                            child_axis_length_min = child_shape[i];
-                        }
-                    }
-                    result[i + 1uz] = child_axis_length_min;
-                }
-
-                return result;
-            }(std::make_index_sequence<child_count<T>>{});
-        }();
+            return result;
+        }(std::make_index_sequence<child_count<T>>{});
+    }();
 }
 
 namespace ruzhouxie
