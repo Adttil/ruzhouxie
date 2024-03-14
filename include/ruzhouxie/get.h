@@ -62,13 +62,11 @@ namespace ruzhouxie
     template<auto I> requires std::integral<decltype(I)> || indicesoid<decltype(I)>
     struct detail::child_t<I>
     {
-        static constexpr bool is_index = indicesoid<purified<decltype(I)>>;
-
         template<typename T>
         RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
             AS_EXPRESSION(getter<purified<T>>{}.template get<normalize_index(I, child_count<T>)>(FWD(t)))
         
-        template<typename T> requires is_index && (I.size() == 0uz)
+        template<typename T> requires (I.size() == 0uz)
         RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
         {
             return FWD(t);
@@ -77,10 +75,10 @@ namespace ruzhouxie
     private:
         template<typename T, size_t...J>
         RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) 
-            AS_EXPRESSION(FWD(t) | child<static_cast<size_t>(I[J]) ...>)
+            AS_EXPRESSION(FWD(t) | child<I[J]...>)
 
     public:    
-        template<typename T> requires is_index && (I.size() > 0uz)
+        template<typename T> requires (I.size() > 0uz)
         RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
             AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
     };
