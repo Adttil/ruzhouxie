@@ -1,10 +1,6 @@
 #ifndef RUZHOUXIE_RESULT_H
 #define RUZHOUXIE_RESULT_H
 
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
 #include "general.h"
 #include "tree_adaptor.h"
 #include "array.h"
