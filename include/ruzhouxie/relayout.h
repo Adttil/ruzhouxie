@@ -298,9 +298,9 @@ namespace ruzhouxie
     {
         return [&]<size_t...I>(std::index_sequence<I...>)
         {
-            return tuple<purified<decltype(t | child<modulo(Begin + I, child_count<T>)>)>...>
+            return tuple<purified<decltype(t | child<normalize_index(Begin + I, child_count<T>)>)>...>
             {
-                t | child<modulo(Begin + I, child_count<T>)>...
+                t | child<normalize_index(Begin + I, child_count<T>)>...
             };
         }(std::make_index_sequence<Count>{});
     }

@@ -4,6 +4,7 @@
 #include "general.h"
 #include "tree_adaptor.h"
 #include "array.h"
+#include "math.h"
 
 #include "macro_define.h"
 
@@ -30,9 +31,15 @@ namespace ruzhouxie
     }
 
     template<typename T>
+    struct getter_trait;
+
+    template<typename T>
+    using getter = getter_trait<T>::type;
+
+    template<typename T>
     inline constexpr size_t child_count = []<size_t N = 0uz>(this auto&& self)
     {
-        if constexpr (requires{ { std::declval<T>() | child<N> } -> concrete; })
+        if constexpr (requires{ { getter<purified<T>>{}.template get<N>(std::declval<T>()) } -> concrete; })
         {
             return self.template operator()<N + 1uz>();
         }
@@ -41,13 +48,7 @@ namespace ruzhouxie
             return N;
         }
     }();
-
-    template<typename T>
-    struct getter_trait;
-
-    template<typename T>
-    using getter = getter_trait<T>::type;
-
+    
     template<>
     struct detail::child_t<>
     {
@@ -65,7 +66,7 @@ namespace ruzhouxie
 
         template<typename T>
         RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-            AS_EXPRESSION(getter<purified<T>>{}.template get<static_cast<size_t>(I)>(FWD(t)))
+            AS_EXPRESSION(getter<purified<T>>{}.template get<normalize_index(I, child_count<T>)>(FWD(t)))
         
         template<typename T> requires is_index && (I.size() == 0uz)
         RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
@@ -89,7 +90,7 @@ namespace ruzhouxie
     {
         template<typename T> 
         RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-            AS_EXPRESSION(getter<purified<T>>{}.template get<I>(FWD(t)) | child<Rest...>)
+            AS_EXPRESSION(FWD(t) | child<I> | child<Rest...>)
     };
 
     template<typename T, auto...I>

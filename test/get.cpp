@@ -11,9 +11,12 @@ TEST(child, aggregate)
     X x{ 233, y, std::move(z) };
 
     MAGIC_CHECK(x | rzx::child<0>, 233);
+    MAGIC_CHECK(x | rzx::child<3>, 233);
     MAGIC_CHECK(x | rzx::child<0>(), 233);
     MAGIC_CHECK(rzx::child<0>(x), 233);
     MAGIC_CHECK(x | rzx::child<1>, 3.1f);
+    MAGIC_CHECK(x | rzx::child<4>, 3.1f);
+    MAGIC_CHECK(x | rzx::child<-2>, 3.1f);
     MAGIC_CHECK(x | rzx::child<2>, 1.4);
 
     MAGIC_TCHECK(decltype(x | rzx::child<0>), int&);

@@ -60,16 +60,17 @@ namespace ruzhouxie
                     };
                 }(std::make_index_sequence<child_count<decltype(unique_base_tape_seq_and_map.sequence)>>{});
             }
+            using result_data_type = decltype(get_data(std::declval<T>(), std::declval<F&>()));
 
             T base_tape;
-            decltype(get_data(std::declval<T>(), std::declval<F&>())) data;
+            result_data_type data;
 
             RUZHOUXIE_INLINE constexpr data_type(auto&& base, auto&& get_tape_fn, F& fn)
                 : base_tape(FWD(base) | get_tape_fn)
                 , data(get_data(std::move(base_tape), fn))
             {}
 
-            template<size_t I, specified<data_type> Self>
+            template<size_t I, specified<data_type> Self> requires (I < child_count<result_data_type>)
             RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
                 AS_EXPRESSION(FWD(self, data) | child<I>)
 

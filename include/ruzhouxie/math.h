@@ -7,9 +7,16 @@
 
 namespace ruzhouxie
 {
-    constexpr size_t modulo(size_t I, size_t N)
+    RUZHOUXIE_INLINE constexpr size_t normalize_index(std::integral auto index, size_t size)noexcept
     {
-        return I % N;
+        if(index >= 0)
+        {
+            return static_cast<size_t>(index % size);
+        }
+        else
+        {
+            return static_cast<size_t>(size - -index % size);
+        }
     }
 }
 
