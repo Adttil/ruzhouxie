@@ -411,130 +411,133 @@ namespace ruzhouxie
 
     template<auto Sequence>
     constexpr inline tree_adaptor_closure<detail::get_tape_t_ns::get_tape_t<Sequence>> get_tape{};
+}
 
+namespace ruzhouxie::detail
+{
+    template<typename TSeq>
+    static consteval auto init_children_tapes_map()
+    {
+        if constexpr(indicesoid<TSeq>)
+        {
+            return size_t{};
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(init_children_tapes_map<child_type<TSeq, I>>()...);
+        }(std::make_index_sequence<child_count<TSeq>>{});
+    }
+
+    template<size_t I, auto Seq>
+    consteval auto get_child_sequence_and_set_map(size_t& count, auto& map)
+    {
+        if constexpr(indicesoid<decltype(Seq)>)
+        {
+            if constexpr(Seq.size() == 0uz)
+            {
+                return make_tuple(Seq);
+            }
+            else if constexpr(Seq[0] == I)
+            {
+                map = count++;
+                return make_tuple(detail::array_drop<1uz>(Seq));
+            }
+            else
+            {
+                return tuple{};
+            }
+        }
+        else return[&]<size_t...J>(std::index_sequence<J...>)
+        {
+            static_assert(sizeof...(J) > 0, "invalid sequence.");
+            //To ensure the order of evaluation.
+            auto args = tuple<purified<decltype(get_child_sequence_and_set_map<I, Seq | child<J>>(count, map | child<J>))>...>
+            {
+                get_child_sequence_and_set_map<I, Seq | child<J>>(count, map | child<J>)... 
+            };
+            return tuple_cat(args | child<J>...);
+        }(std::make_index_sequence<child_count<decltype(Seq)>>{});
+    }
+
+    template<size_t ChildCount, auto Seq>
+    static consteval auto get_children_sequnces_and_map()
+    {
+        auto map = init_children_tapes_map<decltype(Seq)>();
+        auto counts = array<size_t, ChildCount>{};
+        auto children_sequence = [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(get_child_sequence_and_set_map<I, Seq>(counts[I], map)...);
+        }(std::make_index_sequence<ChildCount>{});
+
+        struct result_t
+        {
+            decltype(children_sequence) sequences;
+            decltype(map) map;
+        };
+        return result_t{ children_sequence, map };
+    }
+
+    template<auto Seqs, typename V, size_t...I>
+    RUZHOUXIE_INLINE static constexpr auto get_children_tapes_impl(V&& view, std::index_sequence<I...>)
+        AS_EXPRESSION(tape_data_tie{ FWD(view) | child<I> | get_tape<Seqs | child<I>>... })
+
+    template<auto Seq, typename V>
+    RUZHOUXIE_INLINE static constexpr auto get_children_tapes(V&& view)
+        AS_EXPRESSION(get_children_tapes_impl<get_children_sequnces_and_map<child_count<V>, Seq>().sequences>(FWD(view), std::make_index_sequence<child_count<V>>{}))
+
+    template<auto Seqs, typename V>
+    consteval auto get_children_tapes_seq()
+    {
+        return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(decltype(std::declval<V>() | child<I> | get_tape<Seqs | child<I>>)::sequence...);
+        }(std::make_index_sequence<child_count<V>>{});
+    }
+
+    template<auto Seq, auto ChildTapeSeqs, auto Map>
+    consteval auto mapped_children_tapes_seq()
+    {
+        if constexpr(indicesoid<decltype(Seq)>)
+        {
+            if constexpr(Seq.size() == 0uz)
+            {
+                return Seq;
+            }
+            else
+            {
+                return detail::concat_array(array{ Seq[0] }, ChildTapeSeqs | child<Seq[0], Map>); 
+            }
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(mapped_children_tapes_seq<Seq | child<I>, ChildTapeSeqs, Map | child<I>>()...);
+        }(std::make_index_sequence<child_count<decltype(Seq)>>{});
+    }
+    
+    template<auto Seq, typename V>
+    RUZHOUXIE_INLINE static constexpr auto get_tuple_tape(V&& view)
+        noexcept(noexcept(get_children_tapes<Seq>(FWD(view))))
+        requires(requires{get_children_tapes<Seq>(FWD(view));})
+    {
+        constexpr auto children_sequence_map = get_children_sequnces_and_map<child_count<V>, Seq>();
+        constexpr auto children_sequences = children_sequence_map.sequences;
+        constexpr auto children_map = children_sequence_map.map;
+        constexpr auto children_tapes_seq = get_children_tapes_seq<children_sequences, V>();
+        constexpr auto result_tape_seq = mapped_children_tapes_seq<Seq, children_tapes_seq, children_map>();
+
+        return tape_t<decltype(get_children_tapes<Seq>(FWD(view))), result_tape_seq>
+        {
+            get_children_tapes<Seq>(FWD(view))
+        };
+    }
+}
+
+namespace ruzhouxie
+{
     template<auto Sequence>
     struct detail::get_tape_t_ns::get_tape_t
     {
     private:
-        template<size_t I, auto Seq>
-        static consteval auto child_sequence(size_t& count, auto& map)
-        {
-            if constexpr(indicesoid<decltype(Seq)>)
-            {
-                if constexpr(Seq.size() == 0uz)
-                {
-                    return make_tuple(Seq);
-                }
-                else if constexpr(Seq[0] == I)
-                {
-                    map = count++;
-                    return make_tuple(detail::array_drop<1uz>(Seq));
-                }
-                else
-                {
-                    return tuple{};
-                }
-            }
-            else return[&]<size_t...J>(std::index_sequence<J...>)
-            {
-                static_assert(sizeof...(J) > 0, "invalid sequence.");
-                //To ensure the order of evaluation.
-                auto args = tuple<purified<decltype(child_sequence<I, Seq | child<J>>(count, map | child<J>))>...>
-                {
-                    child_sequence<I, Seq | child<J>>(count, map | child<J>)... 
-                };
-                return tuple_cat(args | child<J>...);
-            }(std::make_index_sequence<child_count<decltype(Seq)>>{});
-        }
-
-        template<size_t ChildCount, auto Seq = Sequence>
-        static consteval auto children_sequnce()
-        {
-            constexpr size_t n = child_count<decltype(Seq)>;
-            auto map = init_children_tape_map();
-            auto counts = array<size_t, ChildCount>{};
-            auto children_sequence = [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return make_tuple(child_sequence<I, Seq>(counts[I], map)...);
-            }(std::make_index_sequence<ChildCount>{});
-
-            struct result_t
-            {
-                decltype(children_sequence) sequences;
-                decltype(map) map;
-            };
-
-            return result_t{ children_sequence, map };
-        }
-
-        
-        template<typename TSeq = decltype(Sequence)>
-        RUZHOUXIE_INLINE static consteval auto init_children_tape_map()
-        {
-            if constexpr(indicesoid<TSeq>)
-            {
-                return size_t{};
-            }
-            else return[]<size_t...I>(std::index_sequence<I...>)
-            {
-                return make_tuple(init_children_tape_map<child_type<TSeq, I>>()...);
-            }(std::make_index_sequence<child_count<TSeq>>{});
-        }
-
-        template<auto Seqs, typename V, size_t...I>
-        RUZHOUXIE_INLINE static constexpr auto get_children_tapes_impl(V&& view, std::index_sequence<I...>)
-            AS_EXPRESSION(tape_data_tie{ FWD(view) | child<I> | get_tape<Seqs | child<I>>... })
-
-        template<typename V>
-        RUZHOUXIE_INLINE static constexpr auto get_children_tapes(V&& view)
-            AS_EXPRESSION(get_children_tapes_impl<children_sequnce<child_count<V>>().sequences>(FWD(view), std::make_index_sequence<child_count<V>>{}))
-
-        template<auto Seqs, typename V>
-        static consteval auto get_children_tapes_seq()
-        {
-            return [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return make_tuple(decltype(std::declval<V>() | child<I> | get_tape<Seqs | child<I>>)::sequence...);
-            }(std::make_index_sequence<child_count<V>>{});
-        }
-
-        template<auto Seq, auto ChildTapeSeqs, auto Map>
-       static consteval auto mapped_seq()
-        {
-            if constexpr(indicesoid<decltype(Seq)>)
-            {
-                if constexpr(Seq.size() == 0uz)
-                {
-                    return Seq;
-                }
-                else
-                {
-                    return detail::concat_array(array{ Seq[0] }, ChildTapeSeqs | child<Seq[0], Map>); 
-                }
-            }
-            else return[]<size_t...I>(std::index_sequence<I...>)
-            {
-                return make_tuple(mapped_seq<Seq | child<I>, ChildTapeSeqs, Map | child<I>>()...);
-            }(std::make_index_sequence<child_count<decltype(Seq)>>{});
-        }
-        
-        template<typename V>
-        RUZHOUXIE_INLINE static constexpr auto get_tuple_tape(V&& view)
-            noexcept(noexcept(get_children_tapes(FWD(view))))
-            requires(requires{get_children_tapes(FWD(view));})
-        {
-            constexpr auto children_sequence_map = children_sequnce<child_count<V>>();
-            constexpr auto children_sequences = children_sequence_map.sequences;
-            constexpr auto children_map = children_sequence_map.map;
-            constexpr auto children_tapes_seq = get_children_tapes_seq<children_sequences, V>();
-            constexpr auto result_tape_seq = mapped_seq<Sequence, children_tapes_seq, children_map>();
-
-            return tape_t<decltype(get_children_tapes(FWD(view))), result_tape_seq>
-            {
-                get_children_tapes(FWD(view))
-            };
-        }
-        
         template<typename T>
         static consteval choice_t<strategy_t> choose()
         {
@@ -544,7 +547,7 @@ namespace ruzhouxie
             }
             else if constexpr(branched<T>)
             {
-                return { strategy_t::branched, noexcept(get_tuple_tape(std::declval<T>())) };
+                return { strategy_t::branched, noexcept(detail::get_tuple_tape<Sequence>(std::declval<T>())) };
             }
             else
             {
@@ -565,7 +568,7 @@ namespace ruzhouxie
             }
             else if constexpr(strategy == strategy_t::branched)
             {
-                return get_tuple_tape(FWD(t));
+                return detail::get_tuple_tape<Sequence>(FWD(t));
             }
             else if constexpr(strategy == strategy_t::terminal)
             {
