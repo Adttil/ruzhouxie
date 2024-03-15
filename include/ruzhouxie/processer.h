@@ -259,34 +259,5 @@ namespace ruzhouxie
 
 }
 
-//for_each
-namespace ruzhouxie
-{
-    // namespace detail 
-    // {
-    //     struct for_each_t 
-    //     {
-    //         template<branched Tree>
-    //         RUZHOUXIE_INLINE constexpr void operator()(auto&& fn, Tree&& tree)const
-    //             noexcept//todo...
-    //         {
-    //             auto each_fn = [&]<size_t...I>(std::index_sequence<I...>)
-    //             {
-    //                 constexpr size_t cur = child_count<Tree> - sizeof...(I) - 1uz;
-    //                 constexpr auto rest_ids = merge_id_set<id_tree_to_set<id_tree_get<I + cur + 1uz>(id_tree<Tree>())>()...>();
-    //                 fn(FWD(tree) | child<cur, rest_ids>);
-    //             };
-
-    //             [&] <size_t...I>(std::index_sequence<I...>) 
-    //             {
-    //                 (..., each_fn(std::make_index_sequence<child_count<Tree> - I - 1uz>{}));
-    //             }(std::make_index_sequence<child_count<Tree>>{});
-    //         }
-    //     };
-    // }
-
-    // inline constexpr adaptor_closure<detail::for_each_t> for_each{};
-}
-
 #include "macro_undef.h"
 #endif
