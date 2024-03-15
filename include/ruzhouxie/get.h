@@ -19,6 +19,8 @@ namespace ruzhouxie
         { t[i] } -> std::same_as<typename purified<T>::value_type&>;
     };
 
+    inline constexpr array<size_t, 0uz> indices_of_whole_view{};
+
     namespace detail
     {
         template<auto...I>
@@ -148,7 +150,7 @@ namespace ruzhouxie
     {
         if constexpr (terminal<T>)
         {
-            return array<size_t, 0>{};
+            return array<size_t, 0uz>{};
         }
         else return[]<size_t...I>(std::index_sequence<I...>)
         {

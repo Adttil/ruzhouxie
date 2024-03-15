@@ -12,30 +12,41 @@
 
 namespace ruzhouxie
 {
+	template<typename P>
+    struct processer 
+	{
+	    template<typename V>
+	    RUZHOUXIE_INLINE constexpr auto operator()(this const P& self, V&& view)
+		    AS_EXPRESSION(self.template process_tape<V&&, 0uz>(FWD(view) | get_tape<P::template get_sequence<V&&>()>))
+	};
+}
+
+namespace ruzhouxie
+{
     namespace detail
 	{
-	    template<typename Target>
+	    template<typename Tree>
 	    struct make_tree_t;
 	}
 
     inline namespace functors
 	{
-	    template<typename T>
-	    inline constexpr tree_adaptor_closure<detail::make_tree_t<T>> make_tree{};
+	    template<typename Tree>
+	    inline constexpr tree_adaptor_closure<detail::make_tree_t<Tree>> make_tree{};
 	}
 
-    template<typename Target>
+    template<typename Tree>
     struct tree_maker_trait;
 
-    template<typename Target>
-    using tree_maker = tree_maker_trait<Target>::type;
+    template<typename Tree>
+    using tree_maker = tree_maker_trait<Tree>::type;
 
-    template<typename Target>
+    template<typename Tree>
     struct detail::make_tree_t
 	{
-	    template<typename T>
-	    RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-		    AS_EXPRESSION(tree_maker<Target>{}(FWD(t)))
+	    template<typename V>
+	    RUZHOUXIE_INLINE constexpr auto operator()(V&& view)const
+		    AS_EXPRESSION(tree_maker<Tree>{}(FWD(view)))
 	};
 
     template<typename View, typename Tree>
@@ -51,22 +62,14 @@ namespace ruzhouxie
 	    template<typename T>
 	    void tag_invoke();
 
-	    template<typename Target>
+	    template<typename Tree>
 	    struct tag_invoke_tree_maker
 		{
-		    RUZHOUXIE_INLINE constexpr auto operator()(auto&& source)const
-			    AS_EXPRESSION(tag_invoke<Target>(make_tree<Target>, FWD(source)))
+		    RUZHOUXIE_INLINE constexpr auto operator()(auto&& view)const
+			    AS_EXPRESSION(tag_invoke<Tree>(make_tree<Tree>, FWD(view)))
 		};
 	}
     using detail::tag_invoke_tree_maker_ns::tag_invoke_tree_maker;
-
-    template<typename P>
-    struct processer 
-	{
-	    template<typename V>
-	    RUZHOUXIE_INLINE constexpr auto operator()(this const P& self, V&& view)
-		    AS_EXPRESSION(self.template process_tape<V&&, 0uz>(FWD(view) | get_tape<P::template get_sequence<V&&>()>))
-	};
 
     namespace detail
 	{
@@ -91,30 +94,28 @@ namespace ruzhouxie
     template<typename Tuple>
     struct tuple_maker : processer<tuple_maker<Tuple>>
 	{
-		//using processer<tuple_maker<Tuple>>::operator();
-
-	    template<size_t I, typename T> requires branched<Tuple>
+	    template<size_t I, typename V>
 	    static consteval auto child_sequence()
 		{
 		    using child_t = std::tuple_element_t<I, Tuple>;
-		    auto seq = tree_maker<child_t>{}.template get_sequence<child_type<T, I>>();
+		    auto seq = tree_maker<child_t>{}.template get_sequence<child_type<V, I>>();
 		    return detail::sequence_add_prefix(seq, array{ I } );
 		};
 		
-	    template<typename T>
+	    template<typename V>
 	    static consteval auto get_sequence()
 		{
 		    if constexpr(terminal<Tuple>)
 			{
-			    return tuple{ array<size_t, 0uz>{} };
+			    return tuple{ indices_of_whole_view };
 			}
 		    else return []<size_t...I>(std::index_sequence<I...>)
 			{
-			    return tuple_cat(child_sequence<I, T>()...);
+			    return tuple_cat(child_sequence<I, V>()...);
 			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 		}
 
-	    template<typename T, size_t Offset, size_t I, typename Tape> requires branched<Tuple>
+	    template<typename T, size_t Offset, size_t I, typename Tape>
 	    static constexpr auto child_process_tape(Tape&& tape)
 		{
 		    constexpr size_t offset = []<size_t...J>(std::index_sequence<J...>)
@@ -164,7 +165,7 @@ namespace ruzhouxie
 	// 	{
 	// 	    if constexpr(terminal<Tuple>)
 	// 		{
-	// 		    return tuple{ array<size_t, 0uz>{} };
+	// 		    return tuple{ indices_of_whole_view };
 	// 		}
 	// 	    else return []<size_t...I>(std::index_sequence<I...>)
 	// 		{
@@ -273,7 +274,7 @@ namespace ruzhouxie
 		{
 		    if constexpr(terminal<T>)
 			{
-			    return tuple{ array<size_t, 0uz>{} };
+			    return tuple{ indices_of_whole_view };
 			}
 		    else return []<size_t...I>(std::index_sequence<I...>)
 			{

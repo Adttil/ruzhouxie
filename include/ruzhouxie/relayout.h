@@ -182,7 +182,7 @@ namespace ruzhouxie
 	{
 	    if constexpr (terminal<T>)
 		{
-		    return array<size_t, 0uz>{};
+		    return indices_of_whole_view;
 		}
 	    else return[]<size_t...I>(std::index_sequence<I...>)
 		{

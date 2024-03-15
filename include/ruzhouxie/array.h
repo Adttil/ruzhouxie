@@ -244,7 +244,7 @@ namespace ruzhouxie::detail
     // {
     //     if constexpr (sizeof...(Arr) == 0)
     //     {
-    //         return array<size_t, 0>{};
+    //         return array<size_t, 0uz>{};
     //     }
     //     else if constexpr (sizeof...(Arr) == 1)
     //     {
