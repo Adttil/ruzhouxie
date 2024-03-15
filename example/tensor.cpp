@@ -56,6 +56,7 @@ int main()
     //auto exp = rzx::vec_mul_mat(vec, mat);
     //auto r = exp | rzx::make_tree<vec_t>;
     rzx::mat<2, 2> r = +exp;
+    auto r2 = exp | rzx::to<rzx::tuple>();
     //MAGIC_CHECK((mat | rzx::child<0, 0>), 1.0);
     //MAGIC_SHOW_TYPE(exp0);
     MAGIC_SHOW_TYPE(exp);
