@@ -17,7 +17,7 @@ struct Tr
     Tr(Tr&&)noexcept { std::puts("Tr(Tr&&);"); }
     Tr& operator=(const Tr&) { std::puts("Tr& operator=(const Tr&);"); return *this; }
     Tr& operator=(Tr&&)noexcept { std::puts("Tr& operator=(Tr&&);"); return *this; }
-	~Tr()noexcept { std::puts("~Tr();"); }
+    ~Tr()noexcept { std::puts("~Tr();"); }
 };
 
 int main()
