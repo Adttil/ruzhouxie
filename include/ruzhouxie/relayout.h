@@ -4,15 +4,13 @@
 #include "general.h"
 #include "get.h"
 #include "tree_adaptor.h"
-#include "ruzhouxie/array.h"
-#include "ruzhouxie/general.h"
-#include "ruzhouxie/tuple.h"
+#include "array.h"
+#include "tuple.h"
 #include "tree_view.h"
 #include "constant.h"
 #include "math.h"
 
 #include "macro_define.h"
-#include <utility>
 
 namespace ruzhouxie
 {
