@@ -60,15 +60,12 @@ namespace ruzhouxie
 	}
     using detail::tag_invoke_tree_maker_ns::tag_invoke_tree_maker;
 
-    template<typename T>
+    template<typename P>
     struct processer 
 	{
-	    template<typename Tree>
-	    RUZHOUXIE_INLINE constexpr auto operator()(this const T& self, Tree&& tree)
-		// {
-		//     return self.template process_tape<Tree&&>(get_tape<self.template get_sequence<Tree&&>()>(FWD(tree)));
-		// }
-		    AS_EXPRESSION(self.template process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<self.template get_sequence<Tree&&>()>))
+	    template<typename V>
+	    RUZHOUXIE_INLINE constexpr auto operator()(this const P& self, V&& view)
+		    AS_EXPRESSION(self.template process_tape<V&&, 0uz>(FWD(view) | get_tape<P::template get_sequence<V&&>()>))
 	};
 
     namespace detail
@@ -149,12 +146,6 @@ namespace ruzhouxie
 			    return Tuple{ child_process_tape<T, Offset, I>(FWD(tape))... };
 			}(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 		}
-
-#ifdef __clang__
-	    template<typename Tree>
-	    RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
-		    AS_EXPRESSION(process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
-#endif
 	};
 
 	// template<typename Tuple>
@@ -313,12 +304,6 @@ namespace ruzhouxie
 			    return Tpl{ child_process_tape<T, Offset, I>(FWD(tape))... };
 			}(std::make_index_sequence<child_count<T>>{});
 		}
-
-#ifdef __clang__
-	    template<typename Tree>
-	    RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
-		    AS_EXPRESSION(process_tape<Tree&&, 0uz>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
-#endif
 	};
 
 

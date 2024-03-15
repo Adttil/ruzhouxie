@@ -64,31 +64,22 @@ namespace ruzhouxie
     template<typename T>
     struct tree_maker_trait<view<T>>
 	{
-	    struct type1// : processer<type1>
+	    struct type : processer<type>
 		{
 		    static constexpr tree_maker<T> maker{};
 
 		    template<typename U>
 		    static consteval auto get_sequence()
 			{
-			    return maker.template get_sequence<U>();
+			    return tree_maker<T>::template get_sequence<U>();
 			}
 
-		    template<typename U, typename Tape>
+		    template<typename U, size_t Offset, typename Tape>
 		    constexpr auto process_tape(Tape&& tape)const
 			{
-			    return view<T>{ maker.template process_tape<U>(FWD(tape)) };
+			    return view<T>{ maker.template process_tape<U, Offset>(FWD(tape)) };
 			}
-
-		    template<typename Tree>
-		    RUZHOUXIE_INLINE constexpr auto operator()(Tree&& tree)const
-			{
-			    return process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>);
-			}
-			//AS_EXPRESSION(process_tape<Tree&&>(FWD(tree) | get_tape<get_sequence<Tree&&>()>))
 		};
-
-	    using type = type1;
 	};
 
     namespace detail

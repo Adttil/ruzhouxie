@@ -41,7 +41,7 @@ int main()
     
 
     //auto mat = std::array{ X{ 1, 2.0 }, X{ 3, 4.0 } };
-    auto mat = rzx::array{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
+    auto mat = rzx::mat<2, 2>{ rzx::vec<2>{ 1.0, 2.0 }, rzx::vec<2>{ 3.0, 4.0 } };
     using mat_t = decltype(mat);
         // rzx::mat<2, 2>{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
     auto vec = rzx::array{ 1.0, 2.0 };
@@ -55,10 +55,11 @@ int main()
     //auto exp = mat | rzx::transpose<>;
     //auto exp = rzx::vec_mul_mat(vec, mat);
     //auto r = exp | rzx::make_tree<vec_t>;
-    auto r = exp | rzx::make_tree<mat_t>;
+    rzx::mat<2, 2> r = +exp;
     //MAGIC_CHECK((mat | rzx::child<0, 0>), 1.0);
     //MAGIC_SHOW_TYPE(exp0);
     MAGIC_SHOW_TYPE(exp);
+    MAGIC_SHOW_TYPE(+exp);
     MAGIC_SHOW_TYPE(r);
     
     std::cout << r[0][0] << ", " << r[0][1] << '\n';

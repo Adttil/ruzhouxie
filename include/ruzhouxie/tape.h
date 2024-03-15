@@ -137,7 +137,8 @@ namespace ruzhouxie
 
 #ifdef RUZHOUXIE_DEBUG_TAPE
         //This help to check if the access order is legal.
-        size_t min_valid_index = 0;
+        mutable size_t min_valid_index = 0;
+        mutable bool is_for_pass = false;
 #endif
 
     private:
@@ -238,7 +239,7 @@ namespace ruzhouxie
             requires(access_choose<I, Self>().strategy != strategy_t::none)
         {
 #ifdef RUZHOUXIE_DEBUG_TAPE
-            if(I < self.min_valid_index)
+            if(I < self.min_valid_index || self.is_for_pass)
             {
                 //Tape should be accessed by order of sequence.
                 std::unreachable();
@@ -287,6 +288,7 @@ namespace ruzhouxie
                 //Tape should be accessed by order of sequence.
                 std::unreachable();
             }
+            self.is_for_pass = true;
             self.min_valid_index = I + 1uz;
 #endif
             constexpr auto layout = Sequence | child<I>;
