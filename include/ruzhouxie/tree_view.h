@@ -21,7 +21,8 @@ namespace ruzhouxie
             View raw_view;
 
             template<typename U>
-            constexpr operator U(this auto&& self) 
+            RUZHOUXIE_INLINE constexpr operator U(this auto&& self)
+                noexcept(noexcept(FWD(self, raw_view) | make_tree<U>))
                 requires requires{ FWD(self, raw_view) | make_tree<U>; }
             {
                 return FWD(self, raw_view) | make_tree<U>;
@@ -32,7 +33,7 @@ namespace ruzhouxie
         struct view_base
         {
             template<typename Self>
-            constexpr auto operator+(this Self&& self)
+            RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
             {
                 return universal_view<Self&&>{ FWD(self) };
             }
