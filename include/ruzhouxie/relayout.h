@@ -14,28 +14,9 @@
 
 namespace ruzhouxie
 {
-    namespace detail
+    template<typename T, auto Layout>
+    struct detail::relayout_view : view_base<relayout_view<T, Layout>>
     {
-        // template<auto layout>
-        // constexpr auto relayout_id_tree(const auto& tree) 
-        // {
-        //     using layout_type = purified<decltype(layout)>;
-        //     return[&]<size_t...I>(std::index_sequence<I...>)
-        //     {
-        //         if constexpr (tensor_rank<layout_type> >= 2uz)
-        //         {
-        //             return tuple{ relayout_id_tree<layout | child<I>>(tree)... };
-        //         }
-        //         else
-        //         {
-        //             return id_tree_get<layout | child<I>...>(tree);
-        //         }
-        //     }(std::make_index_sequence<child_count<layout_type>>{});
-        // }
-
-        template<typename T, auto Layout>
-        struct relayout_view : view_base<relayout_view<T, Layout>>
-        {
             static constexpr auto layout = Layout;
             using layout_type = purified<decltype(Layout)>;
 
@@ -107,9 +88,8 @@ namespace ruzhouxie
                 constexpr auto transformed_sequence = mapped_layout<Seq>(Layout);
                 return FWD(self, raw_tree) | get_tape<transformed_sequence>;
             }
-        };
-    }
-
+    };
+    
     namespace detail
     {
         template<auto Layout>
