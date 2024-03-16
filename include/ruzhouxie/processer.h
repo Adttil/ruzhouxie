@@ -184,6 +184,22 @@ namespace ruzhouxie
     {
         template<template<typename...> typename Tpl>
         struct to_tpl_temp_t;
+
+        template<typename V, template<typename...> typename Tpl>
+        constexpr auto decl_tuple()
+        {
+            if constexpr(terminal<V>)
+            {
+                return declvalue<std::decay_t<V>>();
+            }
+            else return[]<size_t...I>(std::index_sequence<I...>)
+            {
+                return declvalue<Tpl<decltype(decl_tuple<child_type<V, I>, Tpl>())...>>();
+            }(std::make_index_sequence<child_count<V>>{});
+        }
+
+        template<typename V, template<typename...> typename Tpl>
+        using tree_tuple_type = decltype(decl_tuple<V, Tpl>());
     }
 
     template<template<typename...> typename Tpl = tuple>
@@ -201,59 +217,22 @@ namespace ruzhouxie
     template<template<typename...> typename Tpl = tuple, branched T>
     RUZHOUXIE_INLINE constexpr decltype(auto) to(T&& t)
     {
-        return to<Tpl>()(t);
+        using tree_type = detail::tree_tuple_type<T&&, Tpl>;
+        return make_tree<tree_type>;
     }
 
     template<template<typename...> typename Tpl>
-    struct detail::to_tpl_temp_t : processer<detail::to_tpl_temp_t<Tpl>>
+    struct detail::to_tpl_temp_t : processer<to_tpl_temp_t<Tpl>>
     {   
-    private:
-        template<size_t I, typename T>
-        static consteval auto child_sequence()
-        {
-            auto seq = get_sequence<child_type<T, I>>();
-            return detail::sequence_add_prefix(seq, array{ I } );
-        };
-
-    public:
         template<typename T>
         static consteval auto get_sequence()
         {
-            if constexpr(terminal<T>)
-            {
-                return tuple{ indices_of_whole_view };
-            }
-            else return []<size_t...I>(std::index_sequence<I...>)
-            {
-                return tuple_cat(child_sequence<I, T>()...);
-            }(std::make_index_sequence<child_count<T>>{});
+            return tree_maker<tree_tuple_type<T, Tpl>>::template get_sequence<T>();
         }
 
-        template<terminal T, size_t Offset, typename Tape>
+        template<typename T, size_t Offset, typename Tape>
         RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
-            AS_EXPRESSION(T{ access<Offset>(FWD(tape)) })
-    private:
-        template<typename T, size_t Offset, size_t I>
-        static consteval size_t child_tape_offset()
-        {
-            return []<size_t...J>(std::index_sequence<J...>)
-            {
-                return (Offset + ... + std::tuple_size_v<decltype(child_sequence<J, T>())>); 
-            }(std::make_index_sequence<I>{});
-        }
-
-        template<typename T, size_t Offset, size_t I, typename Tape>
-        RUZHOUXIE_INLINE static constexpr auto child_process_tape(Tape&& tape)
-            AS_EXPRESSION(to_tpl_temp_t{}.template process_tape<child_type<T, I>, child_tape_offset<T, Offset, I>()>(FWD(tape)))
-
-        template<typename T, size_t Offset, typename Tape, size_t...I>
-        RUZHOUXIE_INLINE static constexpr auto children_process_tape(Tape&& tape, std::index_sequence<I...>)
-            AS_EXPRESSION(Tpl{ child_process_tape<T, Offset, I>(FWD(tape))... })
-
-    public:
-        template<branched T, size_t Offset, typename Tape>
-        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
-            AS_EXPRESSION(children_process_tape<T, Offset>(FWD(tape), std::make_index_sequence<child_count<T>>{}))
+            AS_EXPRESSION(tree_maker<tree_tuple_type<T, Tpl>>{}.template process_tape<T, Offset>(FWD(tape)))
     };
 
 
