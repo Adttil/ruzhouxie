@@ -93,7 +93,15 @@ namespace ruzhouxie
 
 	    friend constexpr bool operator==(const tuple&, const tuple&) = default;
 	};
+}
 
+namespace ruzhouxie
+{
+#include "generate/tuple_specialization.code"
+}
+
+namespace ruzhouxie
+{
     template<typename...T>
     tuple(T...) -> tuple<std::decay_t<T>...>;
 
@@ -105,6 +113,11 @@ namespace ruzhouxie
     RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
 	{
 	    return { FWD(args)... };
+	}
+
+    constexpr auto tuple_cat()
+	{
+	    return tuple{};
 	}
 
     template<typename Tpl>
@@ -166,12 +179,6 @@ struct std::tuple_size<ruzhouxie::tuple<T...>> : std::tuple_size<std::tuple<T...
 
 template<size_t I, typename...T>
 struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
-
-
-namespace ruzhouxie
-{
-#include "generate/tuple_specialization.code"
-}
 
 #include "macro_undef.h"
 #endif

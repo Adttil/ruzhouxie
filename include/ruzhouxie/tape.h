@@ -91,7 +91,7 @@ namespace ruzhouxie::detail
         }
         else return [&]<size_t...I>(std::index_sequence<I...>)
         {
-            return (... | indices_relation_to_layout(index_pack, layout | child<I>));
+            return (layout_relation::independent | ... | indices_relation_to_layout(index_pack, layout | child<I>));
         }(std::make_index_sequence<child_count<decltype(layout)>>{});
     }
 
@@ -100,6 +100,10 @@ namespace ruzhouxie::detail
         if constexpr(indicesoid<decltype(layout)>)
         {
             return indices_relation_to_layout(layout, other);
+        }
+        else if constexpr(child_count<decltype(layout)> == 0uz)
+        {
+            return layout_relation::independent;
         }
         else return [&]<size_t...I>(std::index_sequence<I...>)
         {
