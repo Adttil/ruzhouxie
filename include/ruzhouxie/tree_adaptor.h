@@ -57,13 +57,13 @@ namespace ruzhouxie
             return tree_adaptor_closure
             {
                 [fn = rzx::as_base<Fn>(FWD(self)), ...args_ = FWD(args)] RUZHOUXIE_INLINE_LAMBDA (this auto&& self, auto&& view)
-                    //noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))//clang bug.
+                    noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))
                     ->decltype(auto)
                     requires requires{ std::declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
                 {
                     return fn(FWD(view), FWDLIKE(self, args_)...);
                 }
-                    //AS_EXPRESSION(Fn{}(FWD(view), FWDLIKE(self, args)...))
+                    //AS_EXPRESSION(fn(FWD(view), FWDLIKE(self, args)...))
             };
         }
     };
