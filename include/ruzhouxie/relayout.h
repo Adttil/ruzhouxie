@@ -14,80 +14,123 @@
 
 namespace ruzhouxie
 {
+    namespace detail 
+    {
+        enum class relayout_view_child_Strategy
+        {
+            none,
+            child,
+            relayout
+        };
+    }
+
     template<typename T, auto Layout>
     struct detail::relayout_view : view_base<relayout_view<T, Layout>>
     {
-            static constexpr auto layout = Layout;
-            using layout_type = purified<decltype(Layout)>;
+        static constexpr auto layout = Layout;
+        using layout_type = purified<decltype(Layout)>;
 
-            RUZHOUXIE_MAYBE_EMPTY T raw_tree;
+        RUZHOUXIE_MAYBE_EMPTY T raw_tree;
+    
+    private:
+        using strategy_t = relayout_view_child_Strategy;
 
-            template<size_t I, specified<relayout_view> Self>
-            RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-                //todo... noexcept)
+        template<size_t I, specified<relayout_view> Self>
+        static consteval choice_t<strategy_t> child_Choose()
+        {
+            if constexpr(I >= child_count<layout_type>)
             {
-                if constexpr (I >= child_count<layout_type>)
+                return { strategy_t::none, true };
+            }
+            else if constexpr(indicesoid<child_type<layout_type, I>>)
+            {
+                if constexpr(requires{ { FWD(std::declval<Self>(), raw_tree) | child<Layout | child<I>> } -> concrete; })
                 {
-                    return;
-                }
-                else if constexpr(indicesoid<child_type<layout_type, I>>)
-                {
-                    constexpr auto index_pack = Layout | child<I>;
-                    return FWD(self, raw_tree) | child<index_pack>;
+                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), raw_tree) | child<Layout | child<I>>) };
                 }
                 else
                 {
-                    return relayout_view<decltype(FWD(self, raw_tree)), Layout | child<I>>
-                    {
-                        {}, FWD(self, raw_tree)
-                    };
+                    return { strategy_t::none, true };
                 }
             }
-
-            template<auto Indices, typename TLayout>
-            static constexpr auto mapped_indices(const TLayout& layout)
+            else 
             {
-                if constexpr(indicesoid<TLayout>)
-                {
-                    return detail::concat_array(layout, Indices);
-                }
-                else if constexpr(Indices.size() == 0uz)
-                {
-                    return layout;
-                }
-                else
-                {
-                    return mapped_indices<detail::array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
-                }
+                return { strategy_t::relayout, true };
             }
-
-            template<auto Layout, typename Trans>
-            static constexpr auto mapped_layout(const Trans& trans)
+        }
+    
+    public:
+        template<size_t I, specified<relayout_view> Self>
+        RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+            noexcept(child_Choose<I, Self>().nothrow)
+        {
+            constexpr strategy_t strategy = child_Choose<I, Self>().strategy;
+            if constexpr (strategy == strategy_t::none)
             {
-                if constexpr(indicesoid<decltype(Layout)>)
-                {
-                    return mapped_indices<Layout>(trans);
-                }
-                else return[&]<size_t...I>(std::index_sequence<I...>)
-                {
-                    return tuple<decltype(mapped_layout<Layout | child<I>>(trans))...>
-                    {
-                        mapped_layout<Layout | child<I>>(trans)...
-                    };
-                }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+                return;
             }
-
-            template<auto Seq, specified<relayout_view> Self>
-            RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
+            else if constexpr(strategy == strategy_t::child)
             {
-                // constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
-                // {
-                //     return tuple{ Layout | child<Seq | child<I>> ... };
-                // }(std::make_index_sequence<child_count<decltype(Seq)>>{});
-
-                constexpr auto transformed_sequence = mapped_layout<Seq>(Layout);
-                return FWD(self, raw_tree) | get_tape<transformed_sequence>;
+                constexpr auto index_pack = Layout | child<I>;
+                return FWD(self, raw_tree) | child<index_pack>;
             }
+            else if constexpr(strategy == strategy_t::relayout)
+            {
+                return relayout_view<decltype(FWD(self, raw_tree)), Layout | child<I>>
+                {
+                    {}, FWD(self, raw_tree)
+                };
+            }
+            else
+            {
+                static_assert(strategy == strategy_t::none, "Should not reach.");
+            }
+        }
+
+        template<auto Indices, typename TLayout>
+        static constexpr auto mapped_indices(const TLayout& layout)
+        {
+            if constexpr(indicesoid<TLayout>)
+            {
+                return detail::concat_array(layout, Indices);
+            }
+            else if constexpr(Indices.size() == 0uz)
+            {
+                return layout;
+            }
+            else
+            {
+                return mapped_indices<detail::array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
+            }
+        }
+
+        template<auto Layout, typename Trans>
+        static constexpr auto mapped_layout(const Trans& trans)
+        {
+            if constexpr(indicesoid<decltype(Layout)>)
+            {
+                return mapped_indices<Layout>(trans);
+            }
+            else return[&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return tuple<decltype(mapped_layout<Layout | child<I>>(trans))...>
+                {
+                    mapped_layout<Layout | child<I>>(trans)...
+                };
+            }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+        }
+
+        template<auto Seq, specified<relayout_view> Self>
+        RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
+        {
+            // constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
+            // {
+            //     return tuple{ Layout | child<Seq | child<I>> ... };
+            // }(std::make_index_sequence<child_count<decltype(Seq)>>{});
+
+            constexpr auto transformed_sequence = mapped_layout<Seq>(Layout);
+            return FWD(self, raw_tree) | get_tape<transformed_sequence>;
+        }
     };
     
     namespace detail
