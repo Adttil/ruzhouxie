@@ -25,13 +25,13 @@ namespace ruzhouxie
     }
 
     template<typename V, auto Layout>
-    struct detail::relayout_view : detail::view_base<V>, constant_t<Layout>, view_interface<relayout_view<V, Layout>>
+    struct relayout_view : detail::view_base<V>, constant_t<Layout>, view_interface<relayout_view<V, Layout>>
     {
     private:
         template<size_t I, specified<relayout_view> Self>
-        static consteval choice_t<relayout_view_child_Strategy> child_Choose()
+        static consteval choice_t<detail::relayout_view_child_Strategy> child_Choose()
         {
-            using strategy_t = relayout_view_child_Strategy;
+            using strategy_t = detail::relayout_view_child_Strategy;
             using layout_type = purified<decltype(Layout)>;
 
             if constexpr(I >= child_count<layout_type>)
@@ -60,7 +60,7 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
             noexcept(child_Choose<I, Self>().nothrow)
         {
-            using strategy_t = relayout_view_child_Strategy;
+            using strategy_t = detail::relayout_view_child_Strategy;
             constexpr strategy_t strategy = child_Choose<I, Self>().strategy;
             
             if constexpr (strategy == strategy_t::none)
@@ -124,12 +124,12 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
             AS_EXPRESSION(FWD(self).base() | get_tape<mapped_layout<Seq>(Layout)>)
     };
-
+    
+    template<typename V, auto Layout>
+    relayout_view(V&&, constant_t<Layout>) -> relayout_view<V, Layout>;
+    
     namespace detail
     {
-        template<typename V, auto Layout>
-        relayout_view(V&&, constant_t<Layout>) -> relayout_view<V, Layout>;
-
         template<auto Layout>
         struct relayout_t
         {
@@ -201,7 +201,7 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, View&& view)
         {
             constexpr auto layout = self.relayout(default_layout<View>);
-            return detail::relayout_view{ FWD(view), constant_t<layout>{} };
+            return relayout_view{ FWD(view), constant_t<layout>{} };
         }
     };
 }

@@ -9,14 +9,17 @@
 
 #include "macro_define.h"
 
-namespace ruzhouxie::detail
+namespace ruzhouxie
 {
     template<typename T, auto Layout>
     struct relayout_view;
     
     template<typename T, auto...ReservedLayouts>
     struct reserved_view;
+}
 
+namespace ruzhouxie::detail
+{
     enum class layout_relation
     {
         independent,
@@ -263,14 +266,14 @@ namespace ruzhouxie
             }
             else if constexpr(strategy == strategy_t::relayout_last)
             {
-                return detail::relayout_view<decltype(FWD(self, data)), layout>
+                return relayout_view<decltype(FWD(self, data)), layout>
                 {
                    FWD(self, data)
                 };
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
-                return detail::relayout_view<decltype(as_const(self.data)), layout>
+                return relayout_view<decltype(as_const(self.data)), layout>
                 {
                     as_const(self.data)
                 };
@@ -308,14 +311,14 @@ namespace ruzhouxie
             }
             else if constexpr(strategy == strategy_t::relayout_last)
             {
-                return detail::relayout_view<decltype(FWD(self, data)), layout>
+                return relayout_view<decltype(FWD(self, data)), layout>
                 {
                    FWD(self, data)
                 };
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
-                return detail::relayout_view<decltype(as_const(self.data)), layout>
+                return relayout_view<decltype(as_const(self.data)), layout>
                 {
                     as_const(self.data)
                 };

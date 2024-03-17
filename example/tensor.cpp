@@ -72,7 +72,7 @@ int main()
     //std::tuple<std::array<double, 2>, std::array<double, 2>> e2 = +rzx::mat_mul(r, mat);
 
     /*MAGIC_CHECK(
-        (ruzhouxie::specified<const ruzhouxie::view<rzx::detail::relayout_view<X, 0>>&, rzx::detail::relayout_view<X, 0>>),
+        (ruzhouxie::specified<const ruzhouxie::view<rzx::relayout_view<X, 0>>&, rzx::relayout_view<X, 0>>),
         true);
     MAGIC_CHECK((mat | rzx::component<1, 1>), 2.0);
     MAGIC_CHECK((mat | rzx::component<1, 1> | rzx::child<0>), 2.0);*/

@@ -16,7 +16,7 @@ namespace ruzhouxie
     using rmat = view<array<array<T, NColumn>, NRow>>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
-    using cmat = view<detail::relayout_view<
+    using cmat = view<relayout_view<
 	    array<array<T, NRow>, NColumn>,
 	    transpose<0uz, 1uz>.relayout(default_layout<array<array<T, NRow>, NColumn>>)
 		>>;
