@@ -22,12 +22,18 @@ namespace ruzhouxie
     }
 
     template<typename V, typename F>
-    struct detail::transform_view : view_interface<transform_view<V, F>>
+    struct detail::transform_view : view_base<V>, wrapper<F>, view_interface<transform_view<V, F>>
     {
-        RUZHOUXIE_MAYBE_EMPTY V base;
-        RUZHOUXIE_MAYBE_EMPTY F fn;
+        // RUZHOUXIE_MAYBE_EMPTY V base;
+        // RUZHOUXIE_MAYBE_EMPTY F fn;
 
         static constexpr size_t size = child_count<V>;
+
+        template<specified<transform_view> Self>
+        RUZHOUXIE_INLINE constexpr auto&& fn(this Self&& self)noexcept
+        {
+            return rzx::as_base<wrapper<F>>(FWD(self)).value();
+        }
 
         template<size_t I, specified<transform_view> Self>
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
@@ -39,7 +45,7 @@ namespace ruzhouxie
             }
             else
             {
-                return FWD(self, fn)(FWD(self, base) | child<I>);
+                return FWD(self).fn()(FWD(self).base() | child<I>);
             }
         }
 
@@ -83,7 +89,7 @@ namespace ruzhouxie
         {
             constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
 
-            using base_tape_type = decltype(FWD(self, base) | get_tape<input_seq_map.seq>);
+            using base_tape_type = decltype(FWD(self).base() | get_tape<input_seq_map.seq>);
 
             //auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
             
@@ -105,7 +111,7 @@ namespace ruzhouxie
 
             return tape_t<data_type<base_tape_type>, result_layouts>
             {
-                data_type<base_tape_type>{ FWD(self, base), get_tape<input_seq_map.seq>, self.fn }
+                data_type<base_tape_type>{ FWD(self).base(), get_tape<input_seq_map.seq>, self.fn() }
             };
             
             // constexpr auto s = std::make_index_sequence<child_count<decltype(unique_input_tape_seq_and_map.sequence)>>{};
@@ -553,7 +559,7 @@ namespace ruzhouxie
             {
                 return transform_view<V, std::decay_t<F>>
                 {
-                    {}, FWD(view), FWD(fn)
+                    FWD(view), FWD(fn)
                 };
             }
         };
