@@ -63,8 +63,8 @@ int main()
     MAGIC_SHOW_TYPE(+exp);
     MAGIC_SHOW_TYPE(r);
     
-    //std::cout << r[0][0] << ", " << r[0][1] << '\n';
-    //std::cout << r[1][0] << ", " << r[1][1] << '\n';
+    std::cout << r.base()[0][0] << ", " << r.base()[0][1] << '\n';
+    std::cout << r.base()[1][0] << ", " << r.base()[1][1] << '\n';
     //std::array<std::array<double, 2>, 2> e{};
     //rzx::mat_mul(r, mat) >> e;
 
