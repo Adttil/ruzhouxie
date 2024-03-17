@@ -28,6 +28,18 @@ namespace ruzhouxie
                 return FWD(self, raw_view) | make_tree<U>;
             }
         };
+        
+        template<typename V>
+        struct view_base
+	    {
+	        V base_view;
+
+            template<specified<view_base> Self>
+	        RUZHOUXIE_INLINE constexpr decltype(auto) base(this Self&& self)noexcept
+		    {
+		        return FWD(self, base_view);
+		    }
+	    };
     }
     
     template<typename View>
@@ -39,6 +51,8 @@ namespace ruzhouxie
             return detail::universal_view<Self&&>{ FWD(self) };
         }
     };
+
+    
 }
 
 //view
