@@ -150,29 +150,17 @@ namespace ruzhouxie
         };
 
         template<size_t N>
-        struct repeat_t
+        inline constexpr auto repeat_layout = []<size_t...I>(std::index_sequence<I...>)
         {
-            static constexpr auto layout = []<size_t...I>(std::index_sequence<I...>)
-            {
-                return tuple{ array<size_t, I - I>{}... };
-            }(std::make_index_sequence<N>{});
-
-            template<typename T>
-            RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-            {
-                return relayout_view{ FWD(t), constant_t<layout>{} };
-            }
-        };
+            return tuple{ array<size_t, I - I>{}... };
+        }(std::make_index_sequence<N>{});
     };
+      
+    template<auto Layout>
+    inline constexpr tree_adaptor_closure<detail::relayout_t<Layout>> relayout{};
 
-    inline namespace functors
-    {
-        template<auto Layout>
-        inline constexpr tree_adaptor_closure<detail::relayout_t<Layout>> relayout{};
-
-        template<size_t N>
-        inline constexpr tree_adaptor_closure<detail::repeat_t<N>> repeat{};
-    }
+    template<size_t N>
+    inline constexpr auto repeat = relayout<detail::repeat_layout<N>>;
 }
 
 namespace ruzhouxie
