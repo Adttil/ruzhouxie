@@ -14,8 +14,8 @@
 namespace rzx = ruzhouxie;
 
 rzx::mat<2, 2> matrix{
-    rzx::vec<2>{ 1.0, 2.0 },
-    rzx::vec<2>{ 3.0, 4.0 }
+    rzx::array{ 1.0, 2.0 },
+    rzx::array{ 3.0, 4.0 }
 };
 rzx::vec<2> vector{ 1.0, 2.0 };
 
