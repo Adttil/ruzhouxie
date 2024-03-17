@@ -47,16 +47,22 @@ namespace ruzhouxie
     template<typename T>
     struct view : wrapper<T>, detail::view_base<view<T>>
     {
+        template<specified<view> Self>
+        RUZHOUXIE_INLINE constexpr auto&& base(this Self&& self)
+        {
+            return rzx::as_base<wrapper<T>>(FWD(self)).value();
+        }
+
         template<size_t I, specified<view> Self> requires (I >= child_count<T>)
         RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self){}
 
         template<size_t I, specified<view> Self> requires (I < child_count<T>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-            AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | child<I>)
+            AS_EXPRESSION(FWD(self).base() | child<I>)
 
         template<auto Seq, specified<view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq>)
+            AS_EXPRESSION(FWD(self).base() | get_tape<Seq>)
 
         template<std::same_as<view> V>
         friend consteval auto tag_invoke(tag_t<make_tree<V>>)
