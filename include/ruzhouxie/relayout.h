@@ -24,13 +24,10 @@ namespace ruzhouxie
         };
     }
 
-    template<typename T, auto Layout>
-    struct detail::relayout_view : view_base<relayout_view<T, Layout>>
+    template<typename V, auto Layout>
+    struct detail::relayout_view : view_base<relayout_view<V, Layout>>
     {
-        static constexpr auto layout = Layout;
-        using layout_type = purified<decltype(Layout)>;
-
-        RUZHOUXIE_MAYBE_EMPTY T raw_tree;
+        RUZHOUXIE_MAYBE_EMPTY V base_view;
     
     private:
         using strategy_t = relayout_view_child_Strategy;
@@ -38,15 +35,16 @@ namespace ruzhouxie
         template<size_t I, specified<relayout_view> Self>
         static consteval choice_t<strategy_t> child_Choose()
         {
+            using layout_type = purified<decltype(Layout)>;
             if constexpr(I >= child_count<layout_type>)
             {
                 return { strategy_t::none, true };
             }
             else if constexpr(indicesoid<child_type<layout_type, I>>)
             {
-                if constexpr(requires{ { FWD(std::declval<Self>(), raw_tree) | child<Layout | child<I>> } -> concrete; })
+                if constexpr(requires{ { FWD(std::declval<Self>(), base_view) | child<Layout | child<I>> } -> concrete; })
                 {
-                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), raw_tree) | child<Layout | child<I>>) };
+                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), base_view) | child<Layout | child<I>>) };
                 }
                 else
                 {
@@ -72,13 +70,13 @@ namespace ruzhouxie
             else if constexpr(strategy == strategy_t::child)
             {
                 constexpr auto index_pack = Layout | child<I>;
-                return FWD(self, raw_tree) | child<index_pack>;
+                return FWD(self, base_view) | child<index_pack>;
             }
             else if constexpr(strategy == strategy_t::relayout)
             {
-                return relayout_view<decltype(FWD(self, raw_tree)), Layout | child<I>>
+                return relayout_view<decltype(FWD(self, base_view)), Layout | child<I>>
                 {
-                    {}, FWD(self, raw_tree)
+                    {}, FWD(self, base_view)
                 };
             }
             else
@@ -124,7 +122,7 @@ namespace ruzhouxie
     public:
         template<auto Seq, specified<relayout_view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(FWD(self, raw_tree) | get_tape<mapped_layout<Seq>(Layout)>)
+            AS_EXPRESSION(FWD(self, base_view) | get_tape<mapped_layout<Seq>(Layout)>)
     };
     
     namespace detail
