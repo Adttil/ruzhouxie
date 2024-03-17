@@ -30,12 +30,12 @@ namespace ruzhouxie
         RUZHOUXIE_MAYBE_EMPTY V base_view;
     
     private:
-        using strategy_t = relayout_view_child_Strategy;
-
         template<size_t I, specified<relayout_view> Self>
-        static consteval choice_t<strategy_t> child_Choose()
+        static consteval choice_t<relayout_view_child_Strategy> child_Choose()
         {
+            using strategy_t = relayout_view_child_Strategy;
             using layout_type = purified<decltype(Layout)>;
+
             if constexpr(I >= child_count<layout_type>)
             {
                 return { strategy_t::none, true };
@@ -62,7 +62,9 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
             noexcept(child_Choose<I, Self>().nothrow)
         {
+            using strategy_t = relayout_view_child_Strategy;
             constexpr strategy_t strategy = child_Choose<I, Self>().strategy;
+            
             if constexpr (strategy == strategy_t::none)
             {
                 return;
