@@ -59,14 +59,8 @@ namespace ruzhouxie
 namespace ruzhouxie
 {
     template<typename T>
-    struct view : wrapper<T>, view_interface<view<T>>
+    struct view : detail::view_base<T>, view_interface<view<T>>
     {
-        template<specified<view> Self>
-        RUZHOUXIE_INLINE constexpr auto&& base(this Self&& self)
-        {
-            return rzx::as_base<wrapper<T>>(FWD(self)).value();
-        }
-
         template<size_t I, specified<view> Self> requires (I >= child_count<T>)
         RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self){}
 
