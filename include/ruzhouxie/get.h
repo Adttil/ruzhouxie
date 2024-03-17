@@ -86,7 +86,7 @@ namespace ruzhouxie
             AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
     };
 
-    template<std::integral auto I, std::integral auto...Rest>
+    template<std::integral auto I, std::integral auto...Rest> requires(sizeof...(Rest) > 0)
     struct detail::child_t<I, Rest...>
     {
         template<typename T> 
