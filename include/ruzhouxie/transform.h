@@ -22,7 +22,7 @@ namespace ruzhouxie
     }
 
     template<typename V, typename F>
-    struct detail::transform_view : view_base<transform_view<V, F>>
+    struct detail::transform_view : view_interface<transform_view<V, F>>
     {
         RUZHOUXIE_MAYBE_EMPTY V base;
         RUZHOUXIE_MAYBE_EMPTY F fn;
@@ -269,7 +269,7 @@ namespace ruzhouxie
     }
 
     template<typename Fn, typename...Views>
-    struct detail::zip_transform_view : view_base<zip_transform_view<Fn, Views...>>
+    struct detail::zip_transform_view : view_interface<zip_transform_view<Fn, Views...>>
     {
         RUZHOUXIE_MAYBE_EMPTY Fn fn;
         RUZHOUXIE_MAYBE_EMPTY tuple<Views...> views;

@@ -25,7 +25,7 @@ namespace ruzhouxie
     }
 
     template<typename V, auto Layout>
-    struct detail::relayout_view : view_base<relayout_view<V, Layout>>
+    struct detail::relayout_view : view_interface<relayout_view<V, Layout>>
     {
         RUZHOUXIE_MAYBE_EMPTY V base_view;
     

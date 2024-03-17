@@ -7,7 +7,7 @@
 #include "processer.h"
 #include "macro_define.h"
 
-//view_base
+//view_interface
 namespace ruzhouxie
 {
     template<typename T>
@@ -28,24 +28,24 @@ namespace ruzhouxie
                 return FWD(self, raw_view) | make_tree<U>;
             }
         };
-
-        template<typename View>
-        struct view_base
-        {
-            template<typename Self>
-            RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
-            {
-                return universal_view<Self&&>{ FWD(self) };
-            }
-        };
     }
+    
+    template<typename View>
+    struct view_interface
+    {
+        template<typename Self>
+        RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
+        {
+            return detail::universal_view<Self&&>{ FWD(self) };
+        }
+    };
 }
 
 //view
 namespace ruzhouxie
 {
     template<typename T>
-    struct view : wrapper<T>, detail::view_base<view<T>>
+    struct view : wrapper<T>, view_interface<view<T>>
     {
         template<specified<view> Self>
         RUZHOUXIE_INLINE constexpr auto&& base(this Self&& self)
