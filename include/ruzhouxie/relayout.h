@@ -87,8 +87,9 @@ namespace ruzhouxie
             }
         }
 
+    private:
         template<auto Indices, typename TLayout>
-        static constexpr auto mapped_indices(const TLayout& layout)
+        static consteval auto mapped_indices(const TLayout& layout)
         {
             if constexpr(indicesoid<TLayout>)
             {
@@ -105,7 +106,7 @@ namespace ruzhouxie
         }
 
         template<auto Layout, typename Trans>
-        static constexpr auto mapped_layout(const Trans& trans)
+        static consteval auto mapped_layout(const Trans& trans)
         {
             if constexpr(indicesoid<decltype(Layout)>)
             {
@@ -120,17 +121,10 @@ namespace ruzhouxie
             }(std::make_index_sequence<child_count<decltype(Layout)>>{});
         }
 
+    public:
         template<auto Seq, specified<relayout_view> Self>
-        RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-        {
-            // constexpr auto transformed_sequence = []<size_t...I>(std::index_sequence<I...>)
-            // {
-            //     return tuple{ Layout | child<Seq | child<I>> ... };
-            // }(std::make_index_sequence<child_count<decltype(Seq)>>{});
-
-            constexpr auto transformed_sequence = mapped_layout<Seq>(Layout);
-            return FWD(self, raw_tree) | get_tape<transformed_sequence>;
-        }
+        RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
+            AS_EXPRESSION(FWD(self, raw_tree) | get_tape<mapped_layout<Seq>(Layout)>)
     };
     
     namespace detail
