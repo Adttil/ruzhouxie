@@ -272,51 +272,30 @@ namespace ruzhouxie
     };
 }
 
-//transpose
+//span
 namespace ruzhouxie
 {
-    //todo...add Aixs
-    template<size_t Begin, size_t Count/*, size_t Axis = 0uz*/, typename T = void>
-    constexpr auto range_copy(const T& t)
-    {
-        return [&]<size_t...I>(std::index_sequence<I...>)
-        {
-            return tuple<purified<decltype(t | child<normalize_index(Begin + I, child_count<T>)>)>...>
-            {
-                t | child<normalize_index(Begin + I, child_count<T>)>...
-            };
-        }(std::make_index_sequence<Count>{});
-    }
-
     namespace detail
     {
-        template<size_t Begin, size_t Count>
-        struct span_t
+        template<size_t Begin, size_t Count/*, size_t Axis = 0uz*/>
+        struct span_t : relayouter<span_t<Begin, Count>>
         {
-            template<typename T>
-            RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+            template<typename L>
+            static consteval auto relayout(const L& layout)
             {
-                constexpr auto tensor_layout = default_layout<T>;
-                return relayout_view
+                return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return tuple<purified<decltype(layout | child<normalize_index(Begin + I, child_count<L>)>)>...>
                 {
-                    FWD(t), constant_t<range_copy<Begin, Count>(tensor_layout)>{}
+                    layout | child<normalize_index(Begin + I, child_count<L>)>...
                 };
-            }
-
-            template<size_t I, specified<span_t> T> requires(I < Count)
-            friend constexpr auto tag_invoke(tag_t<child<I>>, T&&)noexcept
-            {
-                return constant_t<Begin + I>{};
+            }(std::make_index_sequence<Count>{});
             }
         };
-
-        
-    };
-
+    }
+    
     template<size_t Begin, size_t Count>
     inline constexpr tree_adaptor_closure<detail::span_t<Begin, Count>> span{};
-    
-    
 }
 
 #include "macro_undef.h"
