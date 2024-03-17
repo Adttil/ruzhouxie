@@ -13,7 +13,7 @@ namespace ruzhouxie
     using vec = view<array<T, Dim>>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
-    using rmat = view<array<array<T, NColumn>, NRow>>;
+    using rmat = view<array<vec<NColumn, T>, NRow>>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
     using cmat = view<relayout_view<

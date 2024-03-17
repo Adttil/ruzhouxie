@@ -136,10 +136,10 @@ namespace ruzhouxie
 
         template<typename T, size_t Offset, size_t I, typename Tape>
         RUZHOUXIE_INLINE static constexpr auto child_process_tape(Tape&& tape)
-        AS_EXPRESSION(
+        AS_EXPRESSION(std::tuple_element_t<I, Tuple>{
             tree_maker<std::tuple_element_t<I, Tuple>>{}
                 .template process_tape<child_type<T, I>, child_tape_offset<T, Offset, I>()>(FWD(tape))
-        )
+        })
 
         template<typename T, size_t Offset, typename Tape, size_t...I>
         RUZHOUXIE_INLINE constexpr auto process_tape_Impl(Tape&& tape, std::index_sequence<I...>)const
