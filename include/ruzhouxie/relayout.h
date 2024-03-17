@@ -25,26 +25,24 @@ namespace ruzhouxie
     }
 
     template<typename V, auto Layout>
-    struct detail::relayout_view : view_base<relayout_view<V, Layout>>
+    struct detail::relayout_view : detail::view_base<V>, view_interface<relayout_view<V, Layout>>
     {
-        RUZHOUXIE_MAYBE_EMPTY V base_view;
-    
     private:
-        using strategy_t = relayout_view_child_Strategy;
-
         template<size_t I, specified<relayout_view> Self>
-        static consteval choice_t<strategy_t> child_Choose()
+        static consteval choice_t<relayout_view_child_Strategy> child_Choose()
         {
+            using strategy_t = relayout_view_child_Strategy;
             using layout_type = purified<decltype(Layout)>;
+
             if constexpr(I >= child_count<layout_type>)
             {
                 return { strategy_t::none, true };
             }
             else if constexpr(indicesoid<child_type<layout_type, I>>)
             {
-                if constexpr(requires{ { FWD(std::declval<Self>(), base_view) | child<Layout | child<I>> } -> concrete; })
+                if constexpr(requires{ { std::declval<Self>().base() | child<Layout | child<I>> } -> concrete; })
                 {
-                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), base_view) | child<Layout | child<I>>) };
+                    return { strategy_t::child, noexcept(std::declval<Self>().base() | child<Layout | child<I>>) };
                 }
                 else
                 {
@@ -62,7 +60,9 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
             noexcept(child_Choose<I, Self>().nothrow)
         {
+            using strategy_t = relayout_view_child_Strategy;
             constexpr strategy_t strategy = child_Choose<I, Self>().strategy;
+            
             if constexpr (strategy == strategy_t::none)
             {
                 return;
@@ -70,13 +70,13 @@ namespace ruzhouxie
             else if constexpr(strategy == strategy_t::child)
             {
                 constexpr auto index_pack = Layout | child<I>;
-                return FWD(self, base_view) | child<index_pack>;
+                return FWD(self).base() | child<index_pack>;
             }
             else if constexpr(strategy == strategy_t::relayout)
             {
                 return relayout_view<decltype(FWD(self, base_view)), Layout | child<I>>
                 {
-                    {}, FWD(self, base_view)
+                    FWD(self).base()
                 };
             }
             else
@@ -122,7 +122,7 @@ namespace ruzhouxie
     public:
         template<auto Seq, specified<relayout_view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(FWD(self, base_view) | get_tape<mapped_layout<Seq>(Layout)>)
+            AS_EXPRESSION(FWD(self).base() | get_tape<mapped_layout<Seq>(Layout)>)
     };
     
     namespace detail
@@ -141,7 +141,7 @@ namespace ruzhouxie
                 }
                 else
                 {
-                    return relayout_view<T, Layout>{ {}, FWD(t) };
+                    return relayout_view<T, Layout>{ FWD(t) };
                 }
             }
         };
@@ -157,7 +157,7 @@ namespace ruzhouxie
             template<typename T>
             RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
             {
-                return relayout_view<T, layout>{ {}, FWD(t) };
+                return relayout_view<T, layout>{ FWD(t) };
             }
         };
     };
@@ -212,7 +212,7 @@ namespace ruzhouxie
             constexpr auto layout = self.relayout(default_layout<View>);
             return detail::relayout_view<View, layout>
             {
-                {}, FWD(view)
+                FWD(view)
             };
         }
     };
@@ -329,7 +329,7 @@ namespace ruzhouxie
                 constexpr auto tensor_layout = default_layout<T>;
                 return relayout_view<T, range_copy<Begin, Count>(tensor_layout)>
                 {
-                    {}, FWD(t)
+                    FWD(t)
                 };
             }
 

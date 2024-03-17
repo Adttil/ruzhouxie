@@ -20,6 +20,6 @@ int main()
     trace_t trace{};
 
     std::puts("==================");
-    std::array<trace_t, 3> result = +(std::move(trace) | rzx::as_ref | rzx::repeat<3>);
+    rzx::vec<3, trace_t> result = +(std::move(trace) | rzx::as_ref | rzx::repeat<3>);
     std::puts("==================");
 }

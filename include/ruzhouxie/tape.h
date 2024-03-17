@@ -265,14 +265,14 @@ namespace ruzhouxie
             {
                 return detail::relayout_view<decltype(FWD(self, data)), layout>
                 {
-                   {}, FWD(self, data)
+                   FWD(self, data)
                 };
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
                 return detail::relayout_view<decltype(as_const(self.data)), layout>
                 {
-                    {}, as_const(self.data)
+                    as_const(self.data)
                 };
             }
             else
@@ -310,14 +310,14 @@ namespace ruzhouxie
             {
                 return detail::relayout_view<decltype(FWD(self, data)), layout>
                 {
-                   {}, FWD(self, data)
+                   FWD(self, data)
                 };
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
                 return detail::relayout_view<decltype(as_const(self.data)), layout>
                 {
-                    {}, as_const(self.data)
+                    as_const(self.data)
                 };
             }
             else

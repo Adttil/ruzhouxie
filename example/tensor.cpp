@@ -12,8 +12,8 @@ void fooo()
 {
     using namespace ruzhouxie;
     mat<2, 2> m{ 
-        vec<2>{ 1.0, 2.0 },
-        vec<2>{ 3.0, 4.0 }
+        array{ 1.0, 2.0 },
+        array{ 3.0, 4.0 }
     };
 
     //mat<2, 2> mm = +mat_mul(m, m);
@@ -41,7 +41,7 @@ int main()
     
 
     //auto mat = std::array{ X{ 1, 2.0 }, X{ 3, 4.0 } };
-    auto mat = rzx::mat<2, 2>{ rzx::vec<2>{ 1.0, 2.0 }, rzx::vec<2>{ 3.0, 4.0 } };
+    auto mat = rzx::mat<2, 2>{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
     using mat_t = decltype(mat);
         // rzx::mat<2, 2>{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
     auto vec = rzx::array{ 1.0, 2.0 };
@@ -63,8 +63,8 @@ int main()
     MAGIC_SHOW_TYPE(+exp);
     MAGIC_SHOW_TYPE(r);
     
-    std::cout << r[0][0] << ", " << r[0][1] << '\n';
-    std::cout << r[1][0] << ", " << r[1][1] << '\n';
+    std::cout << r.base()[0][0] << ", " << r.base()[0][1] << '\n';
+    std::cout << r.base()[1][0] << ", " << r.base()[1][1] << '\n';
     //std::array<std::array<double, 2>, 2> e{};
     //rzx::mat_mul(r, mat) >> e;
 

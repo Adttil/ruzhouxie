@@ -120,7 +120,7 @@ namespace ruzhouxie
 namespace ruzhouxie
 {
     template<typename T>
-    concept tree_view = std::derived_from<purified<T>, detail::view_base<purified<T>>>;
+    concept tree_view = std::derived_from<purified<T>, view_interface<purified<T>>>;
 
     template<typename L, typename R> requires tree_view<L> || tree_view<R>
     RUZHOUXIE_INLINE constexpr decltype(auto) operator+(L&& l, R&& r)noexcept

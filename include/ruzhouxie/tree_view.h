@@ -7,7 +7,7 @@
 #include "processer.h"
 #include "macro_define.h"
 
-//view_base
+//view_interface
 namespace ruzhouxie
 {
     template<typename T>
@@ -28,35 +28,49 @@ namespace ruzhouxie
                 return FWD(self, raw_view) | make_tree<U>;
             }
         };
-
-        template<typename View>
+        
+        template<typename V>
         struct view_base
-        {
-            template<typename Self>
-            RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
-            {
-                return universal_view<Self&&>{ FWD(self) };
-            }
-        };
+	    {
+	        V base_view;
+
+            template<specified<view_base> Self>
+	        RUZHOUXIE_INLINE constexpr decltype(auto) base(this Self&& self)noexcept
+		    {
+		        return FWD(self, base_view);
+		    }
+	    };
     }
+    
+    template<typename View>
+    struct view_interface
+    {
+        template<typename Self>
+        RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
+        {
+            return detail::universal_view<Self&&>{ FWD(self) };
+        }
+    };
+
+    
 }
 
 //view
 namespace ruzhouxie
 {
     template<typename T>
-    struct view : wrapper<T>, detail::view_base<view<T>>
+    struct view : detail::view_base<T>, view_interface<view<T>>
     {
         template<size_t I, specified<view> Self> requires (I >= child_count<T>)
         RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self){}
 
         template<size_t I, specified<view> Self> requires (I < child_count<T>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-            AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | child<I>)
+            AS_EXPRESSION(FWD(self).base() | child<I>)
 
         template<auto Seq, specified<view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(rzx::as_base<wrapper<T>>(FWD(self)).value() | get_tape<Seq>)
+            AS_EXPRESSION(FWD(self).base() | get_tape<Seq>)
 
         template<std::same_as<view> V>
         friend consteval auto tag_invoke(tag_t<make_tree<V>>)
