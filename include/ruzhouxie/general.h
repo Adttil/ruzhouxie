@@ -152,25 +152,13 @@ namespace ruzhouxie
     overload(Fn...) -> overload<std::decay_t<Fn>...>;
 
     template<typename T>
-    struct wrapper;
-
-    template<typename T> requires (not inheritable<T>)
-    struct wrapper<T>
+    struct wrapper
 	{
 	    T raw_value;
 
 	    constexpr decltype(auto) value(this auto&& self)noexcept
 		{
 		    return FWD(self, raw_value);
-		}
-	};
-
-    template<inheritable T>
-    struct wrapper<T> : T
-	{
-	    constexpr decltype(auto) value(this auto&& self)noexcept
-		{
-		    return rzx::as_base<T>(FWD(self));
 		}
 	};
 }
