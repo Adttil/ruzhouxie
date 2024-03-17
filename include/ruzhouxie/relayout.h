@@ -168,7 +168,7 @@ namespace ruzhouxie
     namespace detail
     {
         template<typename TLayout, size_t N>
-            constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
+        consteval auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
         {
             if constexpr(indicesoid<TLayout>)
             {
@@ -198,11 +198,8 @@ namespace ruzhouxie
     struct relayouter
     {
         template<typename View, specified<Impl> Self>
-        RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, View&& view)
-        {
-            constexpr auto layout = self.relayout(default_layout<View>);
-            return relayout_view{ FWD(view), constant_t<layout>{} };
-        }
+        RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, View&& view)
+            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<purified<Self>::relayout(default_layout<View>)>{} })
     };
 }
 
@@ -222,7 +219,7 @@ namespace ruzhouxie
     struct detail::component_t : relayouter<component_t<I, Axis>>
     {
         template<typename TLayout>
-        static constexpr auto relayout(const TLayout& layout)
+        static consteval auto relayout(const TLayout& layout)
         {
             if constexpr (Axis == 0uz)
             {
@@ -238,21 +235,6 @@ namespace ruzhouxie
                 }(std::make_index_sequence<child_count<TLayout>>{});
             }
         }
-            // RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-            // {
-            //     if constexpr (Axis == 0)
-            //     {
-            //         return t | child<I>;
-            //     }
-            //     else
-            //     {
-            //         constexpr auto tensor_layout = default_layout<T>;
-            //         return relayout_view<T, layouts::component_copy<I, Axis>(tensor_layout)>
-            //         {
-            //             {}, FWD(t)
-            //         };
-            //     }
-            // }
     };
 }
 
