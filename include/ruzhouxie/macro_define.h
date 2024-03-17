@@ -10,18 +10,15 @@
 #define RUZHOUXIE_MAYBE_EMPTY [[no_unique_address]]
 #define RUZHOUXIE_INLINE [[clang::always_inline]]
 #define RUZHOUXIE_INLINE_LAMBDA [[clang::always_inline]]
-#define RUZHOUXIE_INLINE_CALLS
 #define RUZHOUXIE_INTRINSIC
 
 #else
 
 #ifdef _MSC_VER
 
-
 #define RUZHOUXIE_MAYBE_EMPTY [[msvc::no_unique_address]]
 #define RUZHOUXIE_INLINE [[msvc::forceinline]]
 #define RUZHOUXIE_INLINE_LAMBDA
-#define RUZHOUXIE_INLINE_CALLS [[msvc::forceinline_calls]]
 #define RUZHOUXIE_INTRINSIC [[msvc::intrinsic]]
 
 #else
@@ -29,7 +26,6 @@
 #define RUZHOUXIE_MAYBE_EMPTY [[no_unique_address]]
 #define RUZHOUXIE_INLINE
 #define RUZHOUXIE_INLINE_LAMBDA
-#define RUZHOUXIE_INLINE_CALLS
 #define RUZHOUXIE_INTRINSIC
 
 #endif
