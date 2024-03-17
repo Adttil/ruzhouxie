@@ -193,10 +193,10 @@ namespace ruzhouxie
             }
             else if constexpr((Seq | child<I>).size() == 0uz)
             {
-                return [&]<size_t...I>(std::index_sequence<I...>)
+                return [&]<size_t...J>(std::index_sequence<J...>)
                 {
-                    map = array{ I... };
-                    return tuple{ array{I}... };
+                    map = array{ J... };
+                    return tuple{ array{J}... };
                 }(std::make_index_sequence<size>{});
             }
             else if constexpr(tuple_contain(Cur, array{ (Seq | child<I>)[0] } ))
@@ -408,10 +408,10 @@ namespace ruzhouxie
             }
             else if constexpr((Seq | child<I>).size() == 0uz)
             {
-                return [&]<size_t...I>(std::index_sequence<I...>)
+                return [&]<size_t...J>(std::index_sequence<J...>)
                 {
-                    map = array{ I... };
-                    return tuple{ array{I}... };
+                    map = array{ J... };
+                    return tuple{ array{J}... };
                 }(std::make_index_sequence<child_count<zip_transform_view>>{});
             }
             else if constexpr(tuple_contain(Cur, array{ (Seq | child<I>)[0] } ))

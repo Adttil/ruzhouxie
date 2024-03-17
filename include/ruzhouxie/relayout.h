@@ -103,20 +103,20 @@ namespace ruzhouxie
             }
         }
 
-        template<auto Layout, typename Trans>
+        template<auto Layout_, typename Trans>
         static consteval auto mapped_layout(const Trans& trans)
         {
-            if constexpr(indicesoid<decltype(Layout)>)
+            if constexpr(indicesoid<decltype(Layout_)>)
             {
-                return mapped_indices<Layout>(trans);
+                return mapped_indices<Layout_>(trans);
             }
             else return[&]<size_t...I>(std::index_sequence<I...>)
             {
-                return tuple<decltype(mapped_layout<Layout | child<I>>(trans))...>
+                return tuple<decltype(mapped_layout<Layout_ | child<I>>(trans))...>
                 {
-                    mapped_layout<Layout | child<I>>(trans)...
+                    mapped_layout<Layout_ | child<I>>(trans)...
                 };
-            }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+            }(std::make_index_sequence<child_count<decltype(Layout_)>>{});
         }
 
     public:

@@ -85,7 +85,7 @@ namespace ruzhouxie
 		!std::is_const_v<std::remove_reference_t<T>>;
 
     template<typename T>
-    constexpr T declvalue()noexcept;
+    T declvalue()noexcept;
 
     template<size_t I, typename...T>
     using type_at = std::tuple_element_t<I, std::tuple<T...>>;
