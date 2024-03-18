@@ -148,7 +148,14 @@ namespace ruzhouxie
     public:
         template<typename T, size_t Offset, typename Tape>
         RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
-            AS_EXPRESSION(process_tape_Impl<T, Offset>(FWD(tape), std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
+            noexcept(noexcept(process_tape_Impl<T, Offset>(FWD(tape), std::make_index_sequence<std::tuple_size_v<Tuple>>{})))
+            ->decltype(auto)
+            //for msvc, this requires con not use "tape".
+            requires requires{ process_tape_Impl<T, Offset>(std::declval<Tape>(), std::make_index_sequence<std::tuple_size_v<Tuple>>{}); }
+        {
+            return process_tape_Impl<T, Offset>(FWD(tape), std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+        }
+            //AS_EXPRESSION(process_tape_Impl<T, Offset>(FWD(tape), std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
     };
 
     template<typename Tree>

@@ -22,6 +22,7 @@ TEST(relayout, _)
     constexpr auto tpl = detail::sequence_add_prefix(tuple{ array{1} }, array{1});
     constexpr auto seq = tree_maker<array<int, 2>>::get_sequence<decltype((t))>();
     t | get_tape<tuple{ array{0uz } }>;
-    //auto r = tree_maker<array<int, 3>>{}(tuple{1,2,3});
+    auto r = array{1,2,3} | to<tuple>();
+    //auto r1 = 3 | repeat<3> | to<tuple>();
     //MAGIC_CHECK(r | child<1>, 3);
 }
