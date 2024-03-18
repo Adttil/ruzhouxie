@@ -12,7 +12,7 @@ namespace ruzhouxie::test
     };
 
     template<typename T1, typename T2>
-    inline void magic_check_impl(const char* exp1_str, const char* exp2_str, const T1& exp1, const T2& exp2)
+    inline void magic_check_impl(const char* exp1_str, const char* exp2_str, const auto& exp1, const auto& exp2)
     {
         constexpr bool equal_valid = requires{ requires requires{ exp1 == exp2; }; };
         GTEST_EXPECT_TRUE(equal_valid)

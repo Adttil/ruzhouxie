@@ -170,7 +170,11 @@ namespace ruzhouxie
 
 namespace ruzhouxie
 {
-    struct invalid_getter {};
+    struct invalid_getter 
+    {
+        template<size_t I, typename T>
+        RUZHOUXIE_INLINE constexpr void get(T&& t)const{}
+    };
 
     namespace detail::tag_invoke_getter_ns
     {

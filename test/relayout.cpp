@@ -14,12 +14,5 @@ struct X
 
 TEST(relayout, _)
 {
-    
-    //MAGIC_TCHECK(decltype(3 | repeat<3>), void);
-    3 | repeat<3>;
-    tag_invoke<0uz>(child<0uz>, view{array{1,2,3}});
-    //tag_invoke_getter{}.get<0uz>(3 | repeat<3>);
-    //getter_trait<purified<decltype(3 | repeat<3>)>>::choose_default_getter();
-    //MAGIC_TCHECK(getter<decltype(3 | repeat<3>)>, tag_invoke_getter);
-    //MAGIC_CHECK(3 | repeat<3> | child<1>, 3);
+    MAGIC_CHECK(3 | repeat<3> | child<1>, 3);
 }
