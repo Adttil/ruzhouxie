@@ -69,6 +69,7 @@ namespace ruzhouxie
             AS_EXPRESSION(FWD(self).base() | child<I>)
 
         template<auto Seq, specified<view> Self>
+            requires (not std::same_as<decltype(Seq), size_t>)//must have this in msvc, but I don't know why.
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
             AS_EXPRESSION(FWD(self).base() | get_tape<Seq>)
 
