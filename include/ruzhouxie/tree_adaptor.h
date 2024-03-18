@@ -2,6 +2,7 @@
 #define RUZHOUXIE_PIPE_CLOSURE_H
 
 #include "general.h"
+#include "tuple.h"
 
 #include "macro_define.h"
 
@@ -50,20 +51,35 @@ namespace ruzhouxie
     {
         using Fn::operator();
 
+        template<typename...Args>
+        struct closure_fn
+        {
+            Fn fn;
+            tuple<Args...> args;
+
+            template<typename V, size_t...I>
+            RUZHOUXIE_INLINE constexpr auto impl(V&& view, std::index_sequence<I...>)const
+                AS_EXPRESSION(fn(FWD(view), args.template get<I>()...))
+
+            template<typename V>
+            RUZHOUXIE_INLINE constexpr auto operator()(V&& view)const 
+                noexcept(noexcept(impl(FWD(view), std::index_sequence_for<Args...>{})))
+                ->decltype(auto)
+                //Here must use "std::declval<V>()" in MSVC.
+                requires requires{ impl(std::declval<V>(), std::index_sequence_for<Args...>{});}
+            {
+                return impl(FWD(view), std::index_sequence_for<Args...>{});
+            }
+        };
+
         template<typename Self, typename...Args>
         RUZHOUXIE_INLINE constexpr decltype(auto) operator()(this Self&& self, Args&&...args) noexcept
             requires (not requires{ rzx::as_base<Fn>(FWD(self))(FWD(args)...); })
         {
             return tree_adaptor_closure
             {
-                [fn = rzx::as_base<Fn>(FWD(self)), ...args_ = FWD(args)] RUZHOUXIE_INLINE_LAMBDA (this auto&& self, auto&& view)
-                    noexcept(noexcept(std::declval<Fn>()(FWD(view), FWD(args)...)))
-                    ->decltype(auto)
-                    requires requires{ std::declval<Fn>()(FWD(view), FWDLIKE(self, args)...); }
-                {
-                    return fn(FWD(view), FWDLIKE(self, args_)...);
-                }
-                    //AS_EXPRESSION(fn(FWD(view), FWDLIKE(self, args)...))
+                //Requires on lambda have some many different behaviors in different compilers.
+                closure_fn<std::decay_t<Args>...>{ rzx::as_base<Fn>(FWD(self)), { FWD(args)... } }
             };
         }
     };
