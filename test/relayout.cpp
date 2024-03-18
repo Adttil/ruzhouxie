@@ -15,4 +15,5 @@ struct X
 TEST(relayout, _)
 {
     MAGIC_CHECK(3 | repeat<3> | child<1>, 3);
+    MAGIC_CHECK(2, child_count<decltype(3 | repeat<2> | repeat<2>)>);
 }

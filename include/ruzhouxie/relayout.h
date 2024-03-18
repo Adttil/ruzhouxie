@@ -120,7 +120,7 @@ namespace ruzhouxie
         }
 
     public:
-        template<auto Seq, specified<relayout_view> Self>
+        template<auto Seq, specified<relayout_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
             AS_EXPRESSION(FWD(self).base() | get_tape<mapped_layout<Seq>(Layout)>)
     };

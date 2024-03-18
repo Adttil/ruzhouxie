@@ -83,7 +83,7 @@ namespace ruzhouxie
             
         };
 
-        template<auto Seq, specified<transform_view> Self>
+        template<auto Seq, specified<transform_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
             //todo...noexcept
         {

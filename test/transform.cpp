@@ -19,4 +19,7 @@ TEST(transform, _)
     transform(std::negate<>{});
     transform(std::negate<>{})(vec);
     MAGIC_CHECK(vec | transform(std::negate<>{}) | child<1>, -2);
+    MAGIC_CHECK(3 | repeat<3> | transform(std::negate<>{}) | child<1>, -3);
+    
+    MAGIC_CHECK(-3, 3 | repeat<2> | transform(std::negate<>{}) | repeat<2> | child<0, 0>);
 }
