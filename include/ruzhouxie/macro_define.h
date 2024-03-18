@@ -11,6 +11,7 @@
 #define RUZHOUXIE_INLINE [[clang::always_inline]]
 #define RUZHOUXIE_INLINE_LAMBDA [[clang::always_inline]]
 #define RUZHOUXIE_INTRINSIC
+#define RUZHOUXIE_CONSTEVAL consteval
 
 #else
 
@@ -20,6 +21,7 @@
 #define RUZHOUXIE_INLINE [[msvc::forceinline]]
 #define RUZHOUXIE_INLINE_LAMBDA
 #define RUZHOUXIE_INTRINSIC [[msvc::intrinsic]]
+#define RUZHOUXIE_CONSTEVAL constexpr
 
 #else
 
@@ -27,6 +29,7 @@
 #define RUZHOUXIE_INLINE
 #define RUZHOUXIE_INLINE_LAMBDA
 #define RUZHOUXIE_INTRINSIC
+#define RUZHOUXIE_CONSTEVAL consteval
 
 #endif
 

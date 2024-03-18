@@ -218,7 +218,7 @@ namespace ruzhouxie
         };
 
         template<size_t I, typename T>
-        static consteval choice_t<strategy_t> choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> choose()
         {
             using std::get;//for some std::get wich can not find by adl.
             if constexpr (not requires{ requires (I < size_t{ std::tuple_size<purified<T>>::value }); })
@@ -310,7 +310,7 @@ namespace ruzhouxie
     template<typename T>
     struct getter_trait
     {
-        static consteval auto choose_default_getter() noexcept
+        static RUZHOUXIE_CONSTEVAL auto choose_default_getter() noexcept
         {
             if constexpr (requires{ tag_invoke_getter{}.get<0uz>(std::declval<T>()); })
             {

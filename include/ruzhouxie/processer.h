@@ -70,7 +70,7 @@ namespace ruzhouxie
 
     namespace detail
     {
-        consteval auto sequence_add_prefix(const auto& sequence, const auto& prefix)
+        RUZHOUXIE_CONSTEVAL auto sequence_add_prefix(const auto& sequence, const auto& prefix)
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
@@ -79,7 +79,7 @@ namespace ruzhouxie
         }
 
         // template<size_t Offset>
-        // consteval auto sequence_drop(const auto& prefix)
+        // RUZHOUXIE_CONSTEVAL auto sequence_drop(const auto& prefix)
         // {
         //     return [&]<size_t...I>(std::index_sequence<I...>)
         //     {
@@ -92,7 +92,7 @@ namespace ruzhouxie
     struct leaf_maker : processer<leaf_maker<T>>
     {
         template<typename V>
-        static consteval auto get_sequence()
+        static RUZHOUXIE_CONSTEVAL auto get_sequence()
         {
             return tuple{ indices_of_whole_view };
         };
@@ -107,7 +107,7 @@ namespace ruzhouxie
     {
     private:
         template<size_t I, typename V>
-        static consteval auto child_sequence()
+        static RUZHOUXIE_CONSTEVAL auto child_sequence()
         {
             using child_t = std::tuple_element_t<I, Tuple>;
             auto seq = tree_maker<child_t>::template get_sequence<child_type<V, I>>();
@@ -116,7 +116,7 @@ namespace ruzhouxie
 
     public:
         template<typename V>
-        static consteval auto get_sequence()
+        static RUZHOUXIE_CONSTEVAL auto get_sequence()
         {
             return []<size_t...I>(std::index_sequence<I...>)
             {
@@ -126,7 +126,7 @@ namespace ruzhouxie
 
     private:
         template<typename T, size_t Offset, size_t I>
-        static consteval size_t child_tape_offset()
+        static RUZHOUXIE_CONSTEVAL size_t child_tape_offset()
         {
             return []<size_t...J>(std::index_sequence<J...>)
             {
@@ -154,7 +154,7 @@ namespace ruzhouxie
     template<typename Tree>
     struct tree_maker_trait
     {
-        static consteval auto choose_default_tree_maker() noexcept
+        static RUZHOUXIE_CONSTEVAL auto choose_default_tree_maker() noexcept
         {
             if constexpr(requires{ tag_invoke<Tree>(make_tree<Tree>); })
             {
@@ -225,7 +225,7 @@ namespace ruzhouxie
     struct detail::to_tpl_temp_t : processer<to_tpl_temp_t<Tpl>>
     {   
         template<typename T>
-        static consteval auto get_sequence()
+        static RUZHOUXIE_CONSTEVAL auto get_sequence()
         {
             return tree_maker<tree_tuple_type<T, Tpl>>::template get_sequence<T>();
         }

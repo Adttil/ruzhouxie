@@ -163,7 +163,7 @@ namespace ruzhouxie
         };
 
         template<auto Seq>
-        static consteval auto get_view_seq_and_map()
+        static RUZHOUXIE_CONSTEVAL auto get_view_seq_and_map()
         {
             constexpr auto info = view_seq_and_map_info().template set<Seq>();
 
@@ -212,7 +212,7 @@ namespace ruzhouxie
         }
 
         template<auto Seq>
-        static consteval auto get_input_seq_and_map()
+        static RUZHOUXIE_CONSTEVAL auto get_input_seq_and_map()
         {
             array<size_t, child_count<V>> map{};
             auto seq = get_input_seq_and_map_impl<Seq>(map);
@@ -243,7 +243,7 @@ namespace ruzhouxie
         }
 
         template<auto Seq, auto InputMap, auto UniqueInputMap, size_t...I>
-        static consteval auto get_result_layouts(std::index_sequence<I...>)
+        static RUZHOUXIE_CONSTEVAL auto get_result_layouts(std::index_sequence<I...>)
         {
             auto seq = Seq;
             set_result_seq(seq, InputMap, UniqueInputMap);
@@ -378,7 +378,7 @@ namespace ruzhouxie
         };
 
         template<auto Seq>
-        static consteval auto get_view_seq_and_map()
+        static RUZHOUXIE_CONSTEVAL auto get_view_seq_and_map()
         {
             constexpr auto info = view_seq_and_map_info().template set<Seq>();
 
@@ -427,7 +427,7 @@ namespace ruzhouxie
         }
 
         template<auto Seq>
-        static consteval auto get_input_seq_and_map()
+        static RUZHOUXIE_CONSTEVAL auto get_input_seq_and_map()
         {
             array<size_t, child_count<zip_transform_view>> map{};
             auto seq = get_input_seq_and_map_impl<Seq>(map);
@@ -479,7 +479,7 @@ namespace ruzhouxie
         }
 
         template<auto InputLayoutsZip>
-        static consteval auto get_unique_input_indices_and_map()
+        static RUZHOUXIE_CONSTEVAL auto get_unique_input_indices_and_map()
         {
             array<size_t, child_count<decltype(InputLayoutsZip)>> map{};
             auto indices = get_unique_input_indices_and_map_impl<InputLayoutsZip>(map);
@@ -510,7 +510,7 @@ namespace ruzhouxie
         }
 
         template<auto Seq, auto InputMap, auto UniqueInputMap, size_t...I>
-        static consteval auto get_result_layouts(std::index_sequence<I...>)
+        static RUZHOUXIE_CONSTEVAL auto get_result_layouts(std::index_sequence<I...>)
         {
             auto seq = Seq;
             set_result_seq(seq, InputMap, UniqueInputMap);

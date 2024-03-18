@@ -29,7 +29,7 @@ namespace ruzhouxie
     {
     private:
         template<size_t I, specified<relayout_view> Self>
-        static consteval choice_t<detail::relayout_view_child_Strategy> child_Choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<detail::relayout_view_child_Strategy> child_Choose()
         {
             using strategy_t = detail::relayout_view_child_Strategy;
             using layout_type = purified<decltype(Layout)>;
@@ -87,7 +87,7 @@ namespace ruzhouxie
 
     private:
         template<auto Indices, typename TLayout>
-        static consteval auto mapped_indices(const TLayout& layout)
+        static RUZHOUXIE_CONSTEVAL auto mapped_indices(const TLayout& layout)
         {
             if constexpr(indicesoid<TLayout>)
             {
@@ -104,7 +104,7 @@ namespace ruzhouxie
         }
 
         template<auto Layout_, typename Trans>
-        static consteval auto mapped_layout(const Trans& trans)
+        static RUZHOUXIE_CONSTEVAL auto mapped_layout(const Trans& trans)
         {
             if constexpr(indicesoid<decltype(Layout_)>)
             {
@@ -168,7 +168,7 @@ namespace ruzhouxie
     namespace detail
     {
         template<typename TLayout, size_t N>
-        consteval auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
+        RUZHOUXIE_CONSTEVAL auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
         {
             if constexpr(indicesoid<TLayout>)
             {
@@ -219,7 +219,7 @@ namespace ruzhouxie
     struct detail::component_t : relayouter<component_t<I, Axis>>
     {
         template<typename TLayout>
-        static consteval auto relayout(const TLayout& layout)
+        static RUZHOUXIE_CONSTEVAL auto relayout(const TLayout& layout)
         {
             if constexpr (Axis == 0uz)
             {
@@ -254,7 +254,7 @@ namespace ruzhouxie
     struct detail::transpose_t : relayouter<transpose_t<Axis1, Axis2>>
     {
         template<typename TLayout>
-        static consteval auto relayout(const TLayout& layout)
+        static RUZHOUXIE_CONSTEVAL auto relayout(const TLayout& layout)
         {
             if constexpr (Axis1 == 0uz)
             {
@@ -281,7 +281,7 @@ namespace ruzhouxie
         struct span_t : relayouter<span_t<Begin, Count>>
         {
             template<typename L>
-            static consteval auto relayout(const L& layout)
+            static RUZHOUXIE_CONSTEVAL auto relayout(const L& layout)
             {
                 return [&]<size_t...I>(std::index_sequence<I...>)
             {

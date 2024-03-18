@@ -118,7 +118,7 @@ struct std::tuple_element<I, ruzhouxie::array<T, N>>{
 namespace ruzhouxie::detail
 {
     template<size_t N, typename A>
-    consteval auto array_take(const A& arr)
+    RUZHOUXIE_CONSTEVAL auto array_take(const A& arr)
     {
         using type = A::value_type;
         array<type, N> result{};
@@ -130,7 +130,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t N, typename A>
-    consteval auto array_drop(const A& arr)
+    RUZHOUXIE_CONSTEVAL auto array_drop(const A& arr)
     {
         using type = A::value_type;
         array<type, std::tuple_size_v<A> - N> result{};
@@ -142,7 +142,7 @@ namespace ruzhouxie::detail
     }
 
     template<typename A1, typename A2>
-    consteval auto concat_2_array(const A1& arr1, const A2& arr2)
+    RUZHOUXIE_CONSTEVAL auto concat_2_array(const A1& arr1, const A2& arr2)
     {
         using type1 = A1::value_type;
         using type2 = A2::value_type;
@@ -163,7 +163,7 @@ namespace ruzhouxie::detail
     }
 
     template<typename A, typename...Rest>
-    consteval auto concat_array(const A& arr, const Rest&...rest)
+    RUZHOUXIE_CONSTEVAL auto concat_array(const A& arr, const Rest&...rest)
     {
         if constexpr (sizeof...(rest) == 0)
         {
@@ -176,7 +176,7 @@ namespace ruzhouxie::detail
     }
 
     // template<typename T, size_t N1, size_t N2>
-    // consteval auto merge_array_size(const array<T, N1>& arr1, const array<T, N2>& arr2)
+    // RUZHOUXIE_CONSTEVAL auto merge_array_size(const array<T, N1>& arr1, const array<T, N2>& arr2)
     // {
     //     size_t n = 0;
     //     auto i1 = arr1.begin();
@@ -203,7 +203,7 @@ namespace ruzhouxie::detail
     // }
     //
     // template<array arr1, array arr2>
-    // consteval auto merge_2_array()
+    // RUZHOUXIE_CONSTEVAL auto merge_2_array()
     // {
     //     using value_type = purified<decltype(arr1)>::value_type;
     //     constexpr size_t n = merge_array_size(arr1, arr2);
@@ -240,7 +240,7 @@ namespace ruzhouxie::detail
     // }
     //
     // template<array...Arr>
-    // consteval auto merge_array()
+    // RUZHOUXIE_CONSTEVAL auto merge_array()
     // {
     //     if constexpr (sizeof...(Arr) == 0)
     //     {

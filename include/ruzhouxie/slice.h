@@ -85,7 +85,7 @@ namespace ruzhouxie::detail
     struct detail::slice_t : relayouter<slice_t<SliceParam, Rest...>>
     {
         template<typename Layout>
-        static consteval auto relayout(Layout layout)
+        static RUZHOUXIE_CONSTEVAL auto relayout(Layout layout)
         {
             constexpr auto normalized_slice = SliceParam.normalize(child_count<Layout>);
             if constexpr(sizeof...(Rest) == 0uz)

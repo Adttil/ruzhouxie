@@ -27,7 +27,7 @@ namespace ruzhouxie::detail
         included
     };
 
-    consteval layout_relation operator|(layout_relation l, layout_relation r)
+    RUZHOUXIE_CONSTEVAL layout_relation operator|(layout_relation l, layout_relation r)
     {
         if(l == layout_relation::included || r == layout_relation::included)
         {
@@ -43,7 +43,7 @@ namespace ruzhouxie::detail
         }
     }
 
-    consteval layout_relation operator&(layout_relation l, layout_relation r)
+    RUZHOUXIE_CONSTEVAL layout_relation operator&(layout_relation l, layout_relation r)
     {
         if (l == layout_relation::independent && r == layout_relation::independent)
         {
@@ -60,7 +60,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t N1, size_t N2>
-    consteval layout_relation indices_relation_to(const array<size_t, N1>& index_pack, const array<size_t, N2>& other)
+    RUZHOUXIE_CONSTEVAL layout_relation indices_relation_to(const array<size_t, N1>& index_pack, const array<size_t, N2>& other)
     {
         if constexpr(N1 >= N2)
         {
@@ -86,7 +86,7 @@ namespace ruzhouxie::detail
         }
     }
 
-    consteval layout_relation indices_relation_to_layout(const indicesoid auto& index_pack, const auto& layout)
+    RUZHOUXIE_CONSTEVAL layout_relation indices_relation_to_layout(const indicesoid auto& index_pack, const auto& layout)
     {
         if constexpr(indicesoid<decltype(layout)>)
         {
@@ -98,7 +98,7 @@ namespace ruzhouxie::detail
         }(std::make_index_sequence<child_count<decltype(layout)>>{});
     }
 
-    consteval layout_relation layout_relation_to(const auto& layout, const auto& other)
+    RUZHOUXIE_CONSTEVAL layout_relation layout_relation_to(const auto& layout, const auto& other)
     {
         if constexpr(indicesoid<decltype(layout)>)
         {
@@ -152,7 +152,7 @@ namespace ruzhouxie
         using strategy_t = detail::tape_access_strategy_t;
 
         template<size_t I, specified<tape_t> Self>
-        static consteval choice_t<strategy_t> access_choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> access_choose()
         {
             if constexpr(I >= child_count<decltype(Sequence)>)
             {
@@ -195,7 +195,7 @@ namespace ruzhouxie
         }
 
         template<size_t I, specified<tape_t> Self>
-        static consteval choice_t<strategy_t> pass_choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> pass_choose()
         {
             if constexpr(I >= child_count<decltype(Sequence)>)
             {
@@ -333,7 +333,7 @@ namespace ruzhouxie
     namespace detail 
     {
         template<auto Seq, size_t I = 0uz, auto Cur = tuple{}, auto CurLayouts = tuple{}>
-        consteval auto get_unique_seq_and_set_map(auto& map)noexcept
+        RUZHOUXIE_CONSTEVAL auto get_unique_seq_and_set_map(auto& map)noexcept
         {
             if constexpr(I >= child_count<decltype(Seq)>)
             {
@@ -355,7 +355,7 @@ namespace ruzhouxie
         }
 
         template<auto Seq>
-        consteval auto get_unique_seq_and_map()
+        RUZHOUXIE_CONSTEVAL auto get_unique_seq_and_map()
         {
             array<size_t, child_count<decltype(Seq)>> map{};
             auto seq = detail::get_unique_seq_and_set_map<Seq>(map);
@@ -425,7 +425,7 @@ namespace ruzhouxie
 namespace ruzhouxie::detail
 {
     template<typename TSeq>
-    static consteval auto init_children_tapes_map()
+    static RUZHOUXIE_CONSTEVAL auto init_children_tapes_map()
     {
         if constexpr(indicesoid<TSeq>)
         {
@@ -438,7 +438,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t I, auto Seq>
-    consteval auto get_child_sequence_and_set_map(size_t& count, auto& map)
+    RUZHOUXIE_CONSTEVAL auto get_child_sequence_and_set_map(size_t& count, auto& map)
     {
         if constexpr(indicesoid<decltype(Seq)>)
         {
@@ -469,7 +469,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t ChildCount, auto Seq>
-    static consteval auto get_children_sequnces_and_map()
+    static RUZHOUXIE_CONSTEVAL auto get_children_sequnces_and_map()
     {
         auto map = init_children_tapes_map<decltype(Seq)>();
         auto counts = array<size_t, ChildCount>{};
@@ -495,7 +495,7 @@ namespace ruzhouxie::detail
         AS_EXPRESSION(get_children_tapes_impl<get_children_sequnces_and_map<child_count<V>, Seq>().sequences>(FWD(view), std::make_index_sequence<child_count<V>>{}))
 
     template<auto Seqs, typename V>
-    consteval auto get_children_tapes_seq()
+    RUZHOUXIE_CONSTEVAL auto get_children_tapes_seq()
     {
         return [&]<size_t...I>(std::index_sequence<I...>)
         {
@@ -504,7 +504,7 @@ namespace ruzhouxie::detail
     }
 
     template<auto Seq, auto ChildTapeSeqs, auto Map>
-    consteval auto mapped_children_tapes_seq()
+    RUZHOUXIE_CONSTEVAL auto mapped_children_tapes_seq()
     {
         if constexpr(indicesoid<decltype(Seq)>)
         {
@@ -548,7 +548,7 @@ namespace ruzhouxie
     {
     private:
         template<typename T>
-        static consteval choice_t<strategy_t> choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> choose()
         {
             if constexpr (requires{ tag_invoke<Sequence>(get_tape<Sequence>, std::declval<T>()); })
             {

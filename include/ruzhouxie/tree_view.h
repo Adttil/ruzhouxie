@@ -74,7 +74,7 @@ namespace ruzhouxie
             AS_EXPRESSION(FWD(self).base() | get_tape<Seq>)
 
         template<std::same_as<view> V>
-        friend consteval auto tag_invoke(tag_t<make_tree<V>>)
+        friend RUZHOUXIE_CONSTEVAL auto tag_invoke(tag_t<make_tree<V>>)
         {
             return tree_maker<T>{};
         }
@@ -91,7 +91,7 @@ namespace ruzhouxie
     //         static constexpr tree_maker<T> maker{};
 
     //         template<typename U>
-    //         static consteval auto get_sequence()
+    //         static RUZHOUXIE_CONSTEVAL auto get_sequence()
     //         {
     //             return tree_maker<T>::template get_sequence<U>();
     //         }
