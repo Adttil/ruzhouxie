@@ -3,25 +3,25 @@ struct tuple<>
 {
 
     template<size_t I> requires (I < 0uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
         
     }
 
     template<size_t I> requires (I < 0uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
         
     }
 
     template<size_t I> requires (I < 0uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         
     }
 
     template<size_t I> requires (I < 0uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         
     }
@@ -35,25 +35,25 @@ struct tuple<T0>
     RUZHOUXIE_MAYBE_EMPTY T0 element0;
 
     template<size_t I> requires (I < 1uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
+        if constexpr(I == 0uz) return element0;
     }
 
     template<size_t I> requires (I < 1uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
+        if constexpr(I == 0uz) return element0;
     }
 
     template<size_t I> requires (I < 1uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
     }
 
     template<size_t I> requires (I < 1uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
     }
@@ -68,28 +68,28 @@ struct tuple<T0, T1>
     RUZHOUXIE_MAYBE_EMPTY T1 element1;
 
     template<size_t I> requires (I < 2uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
     }
 
     template<size_t I> requires (I < 2uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
     }
 
     template<size_t I> requires (I < 2uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
     }
 
     template<size_t I> requires (I < 2uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -106,23 +106,23 @@ struct tuple<T0, T1, T2>
     RUZHOUXIE_MAYBE_EMPTY T2 element2;
 
     template<size_t I> requires (I < 3uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
     }
 
     template<size_t I> requires (I < 3uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
     }
 
     template<size_t I> requires (I < 3uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -130,7 +130,7 @@ struct tuple<T0, T1, T2>
     }
 
     template<size_t I> requires (I < 3uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -149,25 +149,25 @@ struct tuple<T0, T1, T2, T3>
     RUZHOUXIE_MAYBE_EMPTY T3 element3;
 
     template<size_t I> requires (I < 4uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
     }
 
     template<size_t I> requires (I < 4uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
     }
 
     template<size_t I> requires (I < 4uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -176,7 +176,7 @@ struct tuple<T0, T1, T2, T3>
     }
 
     template<size_t I> requires (I < 4uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -197,27 +197,27 @@ struct tuple<T0, T1, T2, T3, T4>
     RUZHOUXIE_MAYBE_EMPTY T4 element4;
 
     template<size_t I> requires (I < 5uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
     }
 
     template<size_t I> requires (I < 5uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
     }
 
     template<size_t I> requires (I < 5uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -227,7 +227,7 @@ struct tuple<T0, T1, T2, T3, T4>
     }
 
     template<size_t I> requires (I < 5uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -250,29 +250,29 @@ struct tuple<T0, T1, T2, T3, T4, T5>
     RUZHOUXIE_MAYBE_EMPTY T5 element5;
 
     template<size_t I> requires (I < 6uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
     }
 
     template<size_t I> requires (I < 6uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
     }
 
     template<size_t I> requires (I < 6uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -283,7 +283,7 @@ struct tuple<T0, T1, T2, T3, T4, T5>
     }
 
     template<size_t I> requires (I < 6uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -308,31 +308,31 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6>
     RUZHOUXIE_MAYBE_EMPTY T6 element6;
 
     template<size_t I> requires (I < 7uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
     }
 
     template<size_t I> requires (I < 7uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
     }
 
     template<size_t I> requires (I < 7uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -344,7 +344,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6>
     }
 
     template<size_t I> requires (I < 7uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -371,33 +371,33 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7>
     RUZHOUXIE_MAYBE_EMPTY T7 element7;
 
     template<size_t I> requires (I < 8uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
     }
 
     template<size_t I> requires (I < 8uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
     }
 
     template<size_t I> requires (I < 8uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -410,7 +410,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7>
     }
 
     template<size_t I> requires (I < 8uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -439,35 +439,35 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8>
     RUZHOUXIE_MAYBE_EMPTY T8 element8;
 
     template<size_t I> requires (I < 9uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
     }
 
     template<size_t I> requires (I < 9uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
     }
 
     template<size_t I> requires (I < 9uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -481,7 +481,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8>
     }
 
     template<size_t I> requires (I < 9uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -512,37 +512,37 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
     RUZHOUXIE_MAYBE_EMPTY T9 element9;
 
     template<size_t I> requires (I < 10uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
     }
 
     template<size_t I> requires (I < 10uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
     }
 
     template<size_t I> requires (I < 10uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -557,7 +557,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
     }
 
     template<size_t I> requires (I < 10uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -590,39 +590,39 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     RUZHOUXIE_MAYBE_EMPTY T10 element10;
 
     template<size_t I> requires (I < 11uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
     }
 
     template<size_t I> requires (I < 11uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
     }
 
     template<size_t I> requires (I < 11uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -638,7 +638,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     }
 
     template<size_t I> requires (I < 11uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -673,41 +673,41 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
     RUZHOUXIE_MAYBE_EMPTY T11 element11;
 
     template<size_t I> requires (I < 12uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
     }
 
     template<size_t I> requires (I < 12uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
     }
 
     template<size_t I> requires (I < 12uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -724,7 +724,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
     }
 
     template<size_t I> requires (I < 12uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -761,43 +761,43 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
     RUZHOUXIE_MAYBE_EMPTY T12 element12;
 
     template<size_t I> requires (I < 13uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
     }
 
     template<size_t I> requires (I < 13uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
     }
 
     template<size_t I> requires (I < 13uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -815,7 +815,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
     }
 
     template<size_t I> requires (I < 13uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -854,45 +854,45 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
     RUZHOUXIE_MAYBE_EMPTY T13 element13;
 
     template<size_t I> requires (I < 14uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
     }
 
     template<size_t I> requires (I < 14uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
     }
 
     template<size_t I> requires (I < 14uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -911,7 +911,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
     }
 
     template<size_t I> requires (I < 14uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -952,47 +952,47 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
     RUZHOUXIE_MAYBE_EMPTY T14 element14;
 
     template<size_t I> requires (I < 15uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
-        else if constexpr(I == 14uz) return (element14);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
+        else if constexpr(I == 14uz) return element14;
     }
 
     template<size_t I> requires (I < 15uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
-        else if constexpr(I == 14uz) return (element14);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
+        else if constexpr(I == 14uz) return element14;
     }
 
     template<size_t I> requires (I < 15uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -1012,7 +1012,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
     }
 
     template<size_t I> requires (I < 15uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);
@@ -1055,49 +1055,49 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T1
     RUZHOUXIE_MAYBE_EMPTY T15 element15;
 
     template<size_t I> requires (I < 16uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
-        else if constexpr(I == 14uz) return (element14);
-        else if constexpr(I == 15uz) return (element15);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
+        else if constexpr(I == 14uz) return element14;
+        else if constexpr(I == 15uz) return element15;
     }
 
     template<size_t I> requires (I < 16uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept
     {
-        if constexpr(I == 0uz) return (element0);
-        else if constexpr(I == 1uz) return (element1);
-        else if constexpr(I == 2uz) return (element2);
-        else if constexpr(I == 3uz) return (element3);
-        else if constexpr(I == 4uz) return (element4);
-        else if constexpr(I == 5uz) return (element5);
-        else if constexpr(I == 6uz) return (element6);
-        else if constexpr(I == 7uz) return (element7);
-        else if constexpr(I == 8uz) return (element8);
-        else if constexpr(I == 9uz) return (element9);
-        else if constexpr(I == 10uz) return (element10);
-        else if constexpr(I == 11uz) return (element11);
-        else if constexpr(I == 12uz) return (element12);
-        else if constexpr(I == 13uz) return (element13);
-        else if constexpr(I == 14uz) return (element14);
-        else if constexpr(I == 15uz) return (element15);
+        if constexpr(I == 0uz) return element0;
+        else if constexpr(I == 1uz) return element1;
+        else if constexpr(I == 2uz) return element2;
+        else if constexpr(I == 3uz) return element3;
+        else if constexpr(I == 4uz) return element4;
+        else if constexpr(I == 5uz) return element5;
+        else if constexpr(I == 6uz) return element6;
+        else if constexpr(I == 7uz) return element7;
+        else if constexpr(I == 8uz) return element8;
+        else if constexpr(I == 9uz) return element9;
+        else if constexpr(I == 10uz) return element10;
+        else if constexpr(I == 11uz) return element11;
+        else if constexpr(I == 12uz) return element12;
+        else if constexpr(I == 13uz) return element13;
+        else if constexpr(I == 14uz) return element14;
+        else if constexpr(I == 15uz) return element15;
     }
 
     template<size_t I> requires (I < 16uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<tuple&&, T1>(element1);
@@ -1118,7 +1118,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T1
     }
 
     template<size_t I> requires (I < 16uz)
-    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept
     {
         if constexpr(I == 0uz) return ::ruzhouxie::fwd<const tuple&&, T0>(element0);
         else if constexpr(I == 1uz) return ::ruzhouxie::fwd<const tuple&&, T1>(element1);

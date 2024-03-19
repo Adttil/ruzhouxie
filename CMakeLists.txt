@@ -39,9 +39,15 @@ FetchContent_MakeAvailable(magic_cpp)
 
 include_directories("include")
 
-file(GLOB test_srcs "test/*.cpp")
-add_executable(ruzhouxie_tests ${test_srcs})
-target_link_libraries(ruzhouxie_tests PRIVATE GTest::gtest_main MAGIC_CPP)
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+# add_executable(gcc_test "example/gcctest.cpp")
+
+add_executable(performance_test "example/performance_test.cpp")
+target_link_libraries(performance_test PRIVATE GTest::gtest_main MAGIC_CPP)
+
+# file(GLOB test_srcs "test/*.cpp")
+# add_executable(ruzhouxie_tests ${test_srcs})
+# target_link_libraries(ruzhouxie_tests PRIVATE GTest::gtest_main MAGIC_CPP)
 
 # file(GLOB_RECURSE example_srcs RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "example/*.cpp")
 # foreach(srcfile IN LISTS example_srcs)

@@ -25,9 +25,9 @@ namespace ruzhouxie
     {
         template<auto...I>
         struct child_t
-#ifdef _MSC_VER
+//#ifdef _MSC_VER
         { void operator()(); }//make MSVC happy.
-#endif
+//#endif
         ;
     }
 

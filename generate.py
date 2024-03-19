@@ -1,9 +1,9 @@
 def generate_sequence(n, generate_once, split = ", "):
     if n == 0: 
-	    return ""
+        return ""
     result = generate_once(0)
     for i in range(1, n): 
-	    result += split + generate_once(i)
+        result += split + generate_once(i)
     return result
 
 def generate_tuple_specialization(i):
@@ -14,22 +14,22 @@ def generate_tuple_specialization(i):
     result += '\n'
 
     result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr decltype(auto) get()& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return (element" + str(i) + ");", "\n        else ")
+    result += "    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept\n    {\n        "
+    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return element" + str(i) + ";", "\n        else ")
     result += "\n    }\n\n"
 
     result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return (element" + str(i) + ");", "\n        else ")
+    result += "    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept\n    {\n        "
+    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return element" + str(i) + ";", "\n        else ")
     result += "\n    }\n\n"
 
     result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr decltype(auto) get()&& noexcept\n    {\n        "
+    result += "    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept\n    {\n        "
     result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return ::ruzhouxie::fwd<tuple&&, T" + str(i) + ">(" + "element" + str(i) + ");", "\n        else ")
     result += "\n    }\n\n"
 
     result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept\n    {\n        "
+    result += "    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept\n    {\n        "
     result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return ::ruzhouxie::fwd<const tuple&&, T" + str(i) + ">(" + "element" + str(i) + ");", "\n        else ")
     result += "\n    }\n\n"
 
@@ -41,8 +41,8 @@ def generate_tuple_specialization(i):
 def generate_tuple_specialization_implement(max_element_count):
     result = ""
     for i in range(max_element_count + 1): 
-	    result += generate_tuple_specialization(i)
-	    result += '\n'
+        result += generate_tuple_specialization(i)
+        result += '\n'
     return result
 
 def generate_aggregate_getter_invoker_for(memeber_count):

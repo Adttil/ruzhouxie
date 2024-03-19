@@ -9,6 +9,7 @@
 #include <tuple>
 #include <limits>
 #include <compare>
+#include <cmath>
 #include <functional>
 
 #ifndef NDEBUG
