@@ -24,7 +24,11 @@ namespace ruzhouxie
     namespace detail
     {
         template<auto...I>
-        struct child_t;
+        struct child_t
+#ifdef _MSC_VER
+        { void operator()(); }//make MSVC happy.
+#endif
+        ;
     }
 
     inline namespace functors

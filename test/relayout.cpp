@@ -3,14 +3,14 @@
 
 using namespace ruzhouxie;
 
-struct X
-{
-    template<size_t I, specified<X> Self> requires (I < 3)
-    friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-    {
-        return I;
-    }
-};
+// struct X
+// {
+//     template<size_t I, specified<X> Self> requires (I < 3)
+//     friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
+//     {
+//         return I;
+//     }
+// };
 
 TEST(relayout, _)
 {
@@ -20,7 +20,7 @@ TEST(relayout, _)
     auto t = tuple{1,2};
     t | get_tape<tuple{ array{0uz } }>;
     auto r = array{1,2,3} | to<tuple>();
-    //auto r1 = 3 | repeat<3> | to<tuple>();
+    auto r1 = 3 | repeat<3> | to<tuple>();
     auto rv = 3 | repeat<3>;
     constexpr auto seq = to<tuple>().get_sequence<decltype((rv))>();
     //constexpr auto tseq = decltype(rv)::mapped_layout<seq>(detail::repeat_layout<3>);
