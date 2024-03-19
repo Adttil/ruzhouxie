@@ -18,11 +18,13 @@ TEST(relayout, _)
     MAGIC_CHECK(2, child_count<decltype(3 | repeat<2> | repeat<2>)>);
     3 | get_tape<tuple{ indices_of_whole_view }>;
     auto t = tuple{1,2};
-    constexpr auto a = detail::concat_array(array{1}, tuple{ array{1} } | child<0>);
-    constexpr auto tpl = detail::sequence_add_prefix(tuple{ array{1} }, array{1});
-    constexpr auto seq = tree_maker<array<int, 2>>::get_sequence<decltype((t))>();
     t | get_tape<tuple{ array{0uz } }>;
     auto r = array{1,2,3} | to<tuple>();
     //auto r1 = 3 | repeat<3> | to<tuple>();
+    auto rv = 3 | repeat<3>;
+    constexpr auto seq = to<tuple>().get_sequence<decltype((rv))>();
+    //constexpr auto tseq = decltype(rv)::mapped_layout<seq>(detail::repeat_layout<3>);
+    //auto tape = rv.base() | get_tape<tseq>;
+    auto tape1 = tag_invoke<seq>(get_tape<seq>, rv);
     //MAGIC_CHECK(r | child<1>, 3);
 }
