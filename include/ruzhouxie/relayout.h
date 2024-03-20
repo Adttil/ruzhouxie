@@ -135,18 +135,13 @@ namespace ruzhouxie
         {
             using layout_type = purified<decltype(Layout)>;
 
-            template<typename T>
-            RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
-            {
-                if constexpr (indicesoid<layout_type>)
-                {
-                    return FWD(t) | child<Layout>;
-                }
-                else
-                {
-                    return relayout_view{ FWD(t), constant_t<Layout>{} };
-                }
-            }
+            template<typename V> requires indicesoid<layout_type>
+            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
+                AS_EXPRESSION(FWD(view) | child<Layout>)
+
+            template<typename V> requires (not indicesoid<layout_type>)
+            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
+                AS_EXPRESSION(relayout_view{ FWD(view), constant_t<Layout>{} })
         };
 
         template<size_t N>

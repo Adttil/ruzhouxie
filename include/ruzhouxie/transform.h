@@ -12,14 +12,8 @@
 
 namespace ruzhouxie
 {
-    namespace detail
-    {
-        template<typename V, typename F>
-        struct transform_view;
-    }
-
     template<typename V, typename F>
-    struct detail::transform_view : view_base<V>, wrapper<F>, view_interface<transform_view<V, F>>
+    struct transform_view : detail::view_base<V>, wrapper<F>, view_interface<transform_view<V, F>>
     {
         // RUZHOUXIE_MAYBE_EMPTY V base;
         // RUZHOUXIE_MAYBE_EMPTY F fn;
@@ -223,6 +217,9 @@ namespace ruzhouxie
             return seq;
         }
     };
+
+    template<typename V, typename F>
+    transform_view(V&&, F&&) -> transform_view<V, std::decay_t<F>>;
 }
 // {
 //     namespace detail
@@ -498,12 +495,7 @@ namespace ruzhouxie
         {
             template<typename V, typename F>
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view, F&& fn)const
-            {
-                return transform_view<V, std::decay_t<F>>
-                {
-                    FWD(view), FWD(fn)
-                };
-            }
+                AS_EXPRESSION(transform_view{ FWD(view), FWD(fn) })
         };
     }
 
@@ -525,11 +517,6 @@ namespace ruzhouxie
                         }(std::index_sequence_for<T...>{});
                     }
                 );
-
-                // return detail::zip_transform_view<std::decay_t<Fn>, T...>
-                // {
-                //     {}, FWD(fn), tuple<T...>{ FWD(trees)... }
-                // };
             }
         };
     }
