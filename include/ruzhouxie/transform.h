@@ -4,14 +4,11 @@
 #include "general.h"
 #include "get.h"
 #include "tree_adaptor.h"
-#include "ruzhouxie/macro_define.h"
-#include "ruzhouxie/tuple.h"
 #include "tape.h"
 #include "tree_view.h"
 #include "relayout.h"
 
 #include "macro_define.h"
-#include <utility>
 
 namespace ruzhouxie
 {
@@ -35,19 +32,12 @@ namespace ruzhouxie
             return rzx::as_base<wrapper<F>>(FWD(self)).value();
         }
 
-        template<size_t I, specified<transform_view> Self>
-        RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-            //todo...noexcept
-        {
-            if constexpr (I >= size)
-            {
-                return;
-            }
-            else
-            {
-                return FWD(self).fn()(FWD(self).base() | child<I>);
-            }
-        }
+        template<size_t I, specified<transform_view> Self> requires (I >= child_count<V>)
+        RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self)noexcept{}
+
+        template<size_t I, specified<transform_view> Self> requires (I < child_count<V>)
+        RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
+            AS_EXPRESSION(FWD(self).fn()(FWD(self).base() | child<I>))
 
         template<typename T>
         struct data_type

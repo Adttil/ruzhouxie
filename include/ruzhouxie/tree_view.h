@@ -50,6 +50,26 @@ namespace ruzhouxie
         {
             return detail::universal_view<Self&&>{ FWD(self) };
         }
+
+        static RUZHOUXIE_CONSTEVAL size_t size()noexcept
+        {
+            return child_count<View>;
+        }
+
+        static RUZHOUXIE_CONSTEVAL size_t shape()noexcept
+        {
+            return tree_shape<View>;
+        }
+
+        static RUZHOUXIE_CONSTEVAL size_t tensor_rank()noexcept
+        {
+            return rzx::tensor_rank<View>;
+        }
+
+        static RUZHOUXIE_CONSTEVAL size_t tensor_shape()noexcept
+        {
+            return rzx::tensor_shape<View>;
+        }
     };
 
     
