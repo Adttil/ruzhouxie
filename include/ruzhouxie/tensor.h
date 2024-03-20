@@ -1,6 +1,9 @@
 #ifndef RUZHOUXIE_TENSOR_H
 #define RUZHOUXIE_TENSOR_H
 
+#include "general.h"
+#include "math.h"
+#include "relayout.h"
 #include "transform.h"
 
 #include "macro_define.h"
@@ -30,12 +33,6 @@ namespace ruzhouxie
 
 namespace ruzhouxie
 {
-    template<typename T>
-    RUZHOUXIE_INLINE constexpr auto sqrt(T x)noexcept
-	{
-	    return std::sqrt(x);
-	};
-
     RUZHOUXIE_INLINE constexpr decltype(auto) tree_invoke(auto&& fn, auto&&...args)noexcept
 	{
 	    if constexpr (requires{ fn(FWD(args)...); })

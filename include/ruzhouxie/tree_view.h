@@ -39,6 +39,8 @@ namespace ruzhouxie
 		    {
 		        return FWD(self, base_view);
 		    }
+
+            RUZHOUXIE_INLINE friend constexpr bool operator==(const view_base&, const view_base&) = default;
 	    };
     }
     
@@ -70,6 +72,8 @@ namespace ruzhouxie
         {
             return rzx::tensor_shape<View>;
         }
+
+        RUZHOUXIE_INLINE friend constexpr bool operator==(const view_interface&, const view_interface&) = default;
     };
 
     
@@ -98,6 +102,8 @@ namespace ruzhouxie
         {
             return tree_maker<T>{};
         }
+
+        RUZHOUXIE_INLINE friend constexpr bool operator==(const view&, const view&) = default;
     };
 
     template<typename T>

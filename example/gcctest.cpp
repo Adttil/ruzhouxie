@@ -1,30 +1,35 @@
 #include <iostream>
 
-struct X{
-    int&& v;
-    decltype(auto) foo(){ return (v); }
+struct end_t
+{
+    virtual void foo() = 0;
 };
 
-template<typename T>
-struct Y{
-    T v;
-    auto&& foo() { return (v); }
+end_t end();
+
+template<size_t N>
+struct X 
+{
+    template<size_t I>
+    auto get()
+    {
+        if constexpr(I < N)
+        {
+            return I;
+        }
+        else
+        {
+            return end();
+        }
+    }
 };
 
-template<typename T>
-struct Z{
-    T&& v;
-    decltype(auto) foo() { return (v); }
-};
+struct Y{};
 
 int main()
 {
-    int i = 0;
-    //X x{ std::move(i) }; //ok
-    Y<int&&> x{ std::move(i) }; //error
-    //Z<int> x{ std::move(i) }; //ok
-    //Z<int&&> x{ std::move(i) }; //ok
-    
-    std::cout << x.foo() << "\n";
+    X<0uz> x{};
+    Y y{};
+
     return 0;
 }

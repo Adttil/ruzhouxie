@@ -58,6 +58,12 @@ namespace ruzhouxie
             }
         }
     }
+
+    template<typename T>
+    RUZHOUXIE_INLINE constexpr auto sqrt(T x)noexcept
+	{
+	    return std::sqrt(x);
+	};
 }
 
 #include "macro_undef.h"
