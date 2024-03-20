@@ -80,21 +80,10 @@ namespace ruzhouxie
             constexpr auto input_seq_map = get_view_seq_and_map<Seq>();
 
             using base_tape_type = decltype(FWD(self).base() | get_tape<input_seq_map.seq>);
-
-            //auto input_tape = FWD(self, base) | get_tape<input_seq_map.seq>;
             
             constexpr auto unique_input_tape_seq_and_map = detail::get_unique_seq_and_map<base_tape_type::sequence>();
     
-            //auto uinque_input_tape = make_tape<unique_input_tape_seq_and_map.sequence>(FWD(input_tape, data));
             constexpr auto uinque_input_map = unique_input_tape_seq_and_map.map;
-
-            // const auto result_data = [&]<size_t...I>(std::index_sequence<I...>)
-            // {
-            //     return tuple<decltype(FWD(self, fn)(pass<I>(FWD(uinque_input_tape))))...>
-            //     {
-            //         FWD(self, fn)(pass<I>(FWD(uinque_input_tape)))...
-            //     };
-            // };
 
             constexpr auto result_layouts = get_result_layouts<Seq, input_seq_map.map, uinque_input_map>(
                 std::make_index_sequence<child_count<decltype(Seq)>>{});
@@ -103,12 +92,6 @@ namespace ruzhouxie
             {
                 data_type<base_tape_type>{ FWD(self).base(), get_tape<input_seq_map.seq>, self.fn() }
             };
-            
-            // constexpr auto s = std::make_index_sequence<child_count<decltype(unique_input_tape_seq_and_map.sequence)>>{};
-            // return tape_t<decltype(result_data(s)), result_layouts>
-            // {
-            //     result_data(s)
-            // };
         }
 
     private:
@@ -238,25 +221,9 @@ namespace ruzhouxie
             auto seq = Seq;
             set_result_seq(seq, InputMap, UniqueInputMap);
             return seq;
-            // constexpr auto result_layouts_at = []<size_t J>()
-            // {
-            //     auto indices = Seq | child<J>;
-            //     if constexpr(indices.size() == 0)
-            //     {
-            //         return indices;
-            //     }
-            //     else
-            //     {
-            //         indices[0] = UniqueInputMap[InputMap[indices[0]]];
-            //     }
-            //     return indices;
-            // };
-            // return tuple{ result_layouts_at.template operator()<I>()... };
-        }//(std::make_index_sequence<child_count<decltype(Seq)>>{});
+        }
     };
 }
-
-// namespace ruzhouxie
 // {
 //     namespace detail
 //     {
@@ -527,24 +494,6 @@ namespace ruzhouxie
 {
     namespace detail
     {
-        struct zip_t
-        {
-            // static constexpr auto zip_fn = []<typename...Args>(Args&&...args)
-            // {
-            //     return tuple<Args...>{ FWD(args)... };
-            // };
-
-            template<typename...T>
-            RUZHOUXIE_INLINE constexpr auto operator()(T&&...trees)const
-            {
-                return tuple<T...>{ FWD(trees)...} | transpose<>;
-                // return detail::zip_transform_view<tag_t<zip_fn>, T...>
-                // {
-                //     {}, zip_fn, tuple<T...>{ FWD(trees)... }
-                // };
-            }
-        };
-
         struct transform_t
         {
             template<typename V, typename F>
@@ -558,7 +507,6 @@ namespace ruzhouxie
         };
     }
 
-    inline constexpr detail::zip_t zip{};
     inline constexpr tree_adaptor<detail::transform_t> transform{};
 
     namespace detail

@@ -272,6 +272,21 @@ namespace ruzhouxie
     };
 }
 
+namespace ruzhouxie
+{
+    namespace detail
+    {
+        struct zip_t
+        {
+            template<typename...T>
+            RUZHOUXIE_INLINE constexpr auto operator()(T&&...trees)const
+                AS_EXPRESSION(tuple<T...>{ FWD(trees)...} | transpose<>)
+        };
+    }
+
+    inline constexpr detail::zip_t zip{};
+}
+
 //span
 namespace ruzhouxie
 {
