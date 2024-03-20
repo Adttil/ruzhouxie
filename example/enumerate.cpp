@@ -1,8 +1,6 @@
 #include <ruzhouxie/enumerate.h>
 #include "ruzhouxie/get.h"
 #include "test_tool.h"
-#include <algorithm>
-#include <print>
 
 using namespace ruzhouxie;
 
@@ -19,7 +17,7 @@ int main()
             {
                 auto&& i = i_v | child<0>;
                 auto&& v = i_v | child<1>;
-                std::println("{}, {}\n", i.value, v);
+                std::cout << i.value << ", " << v << '\n';
                 return i_v;
             })
         | to<tuple>()  

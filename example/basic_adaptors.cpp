@@ -1,7 +1,6 @@
 #include "test_tool.h"
 #include <array>
 #include <ruzhouxie\transform.h>
-#include <print>
 //#include <ruzhouxie\constant.h>
 
 namespace rzx = ruzhouxie;
@@ -29,7 +28,7 @@ int main()
 	  	| rzx::transform([](auto i){ return -i; })
 	);
     auto [x, y, z] = r;
-    std::println("{}, {}, {}", x, y, z);
+    std::cout << x << ", " << y << ", " << z << '\n';
 
     std::tuple trs{ Tr{}, Tr{} };
     constexpr auto layout1 = std::array//把[x, y]看作[x, x, y, x, y]的布局
@@ -51,6 +50,6 @@ int main()
 
     MAGIC_SHOW_TYPE(tape.data);
 
-    std::println("{}, {}, {}, {}, {}", a[0], b[0], c[0], d[0], e[0]);
+    std::cout << a[0] << ", " << b[0] << ", " << c[0] << ", " << d[0] << ", " << e[0] << '\n';
 	
 }

@@ -287,7 +287,7 @@ namespace ruzhouxie
             {
                 return 0uz;
             }
-            else if constexpr (requires{ type{ universal_type{ args }...,  {universal_type{}} }; })
+            else if constexpr (requires{ type{ {universal_type{}}, universal_type{args}... }; })
             {
                 return self.template operator() < true > (universal_type{ args }..., universal_type{});
             }

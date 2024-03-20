@@ -48,7 +48,7 @@ struct timer
 	{
 	    auto end = std::chrono::system_clock::now();
 	    auto dur = end - start;
-	    std::cout << '{' << dur << "}====================================";
+	    std::cout << '{' << (dur.count() * double(decltype(dur)::period().num) / decltype(dur)::period().den) << "}====================================";
 	}
 };
 
