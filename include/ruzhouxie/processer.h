@@ -72,9 +72,17 @@ namespace ruzhouxie
     {
         RUZHOUXIE_CONSTEVAL auto sequence_add_prefix(const auto& sequence, const auto& prefix)
         {
-            return [&]<size_t...I>(std::index_sequence<I...>)
+            if constexpr(indicesoid<decltype(sequence)>)
             {
-                return tuple{ detail::concat_array(prefix, sequence | child<I>)... };
+                return detail::concat_array(prefix, sequence);
+            }
+            else if constexpr(terminal<decltype(sequence)>)
+            {
+                return sequence;
+            }
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return make_tuple(sequence_add_prefix(sequence | child<I>, prefix)...);
             }(std::make_index_sequence<child_count<decltype(sequence)>>{});
         }
 
