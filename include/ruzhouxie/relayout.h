@@ -25,6 +25,55 @@ namespace ruzhouxie
     }
 
     template<typename V, auto Layout>
+    struct relayout_view_maker : processer<relayout_view_maker<V, Layout>>
+    {
+        template<auto Indices, auto L, size_t I = child_count<decltype(L)> - 1uz>
+        static RUZHOUXIE_CONSTEVAL auto unmapped_indices()
+        {
+            if constexpr(I >= child_count<decltype(L)>)
+            {
+                return;
+            }
+            else if constexpr(indicesoid<child_type<decltype(L), I>> && equal(L | child<I>, Indices))
+            {
+                return array{ I };   
+            }
+            else if constexpr(concrete<decltype(unmapped_indices<Indices, L | child<I>>())>)
+            {
+                return detail::concat_array(array{ I }, unmapped_indices<Indices, L | child<I>>());
+            }
+            else
+            {
+                return unmapped_indices<Indices, L, I - 1uz>();
+            }
+        }
+
+        template<auto Layout_, auto Trans>
+        static RUZHOUXIE_CONSTEVAL auto unmapped_layout()
+        {
+            if constexpr(indicesoid<decltype(Layout_)>)
+            {
+                return unmapped_indices<Layout_, Trans>();
+            }
+            else return[&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return make_tuple(unmapped_layout<Layout_ | child<I>, Trans>()...);
+            }(std::make_index_sequence<child_count<decltype(Layout_)>>{});
+        }
+
+        template<typename T>
+        static RUZHOUXIE_CONSTEVAL auto get_sequence()
+        {
+            constexpr auto raw_seq = tree_maker<V>::template get_sequence<T>();
+            return unmapped_layout<raw_seq, Layout>();
+        };
+
+        template<typename T, size_t Offset, typename Tape>
+        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
+            AS_EXPRESSION(relayout_view<V, Layout>{ V{ tree_maker<V>{}.template process_tape<T, 0uz>(FWD(tape)) } })
+    };
+
+    template<typename V, auto Layout>
     struct relayout_view : detail::view_base<V>, constant_t<Layout>, view_interface<relayout_view<V, Layout>>
     {
     private:
@@ -123,6 +172,12 @@ namespace ruzhouxie
         template<auto Seq, specified<relayout_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
             AS_EXPRESSION(FWD(self).base() | get_tape<mapped_layout<Seq>(Layout)>)
+
+        template<std::same_as<relayout_view> Self>
+        friend RUZHOUXIE_CONSTEVAL auto tag_invoke(tag_t<make_tree<Self>>)
+        {
+            return relayout_view_maker<V, Layout>{};
+        }
     };
     
     template<typename V, auto Layout>
