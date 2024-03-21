@@ -85,12 +85,9 @@ namespace ruzhouxie
     template<typename T>
     struct view : detail::view_base<T>, view_interface<view<T>>
     {
-        template<size_t I, specified<view> Self> requires (I >= child_count<T>)
-        RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self){}
-
-        template<size_t I, specified<view> Self> requires (I < child_count<T>)
+        template<size_t I, specified<view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-            AS_EXPRESSION(FWD(self).base() | child<I>)
+            AS_EXPRESSION(getter<T>{}.template get<I>(FWD(self).base()))
 
         template<auto Seq, specified<view> Self>
             requires (not std::same_as<decltype(Seq), size_t>)//must have this in msvc, but I don't know why.

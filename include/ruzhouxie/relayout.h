@@ -65,7 +65,7 @@ namespace ruzhouxie
             
             if constexpr (strategy == strategy_t::none)
             {
-                return;
+                return end();
             }
             else if constexpr(strategy == strategy_t::child)
             {

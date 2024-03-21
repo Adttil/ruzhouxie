@@ -21,6 +21,13 @@ namespace ruzhouxie
 
     inline constexpr array<size_t, 0uz> indices_of_whole_view{};
 
+    struct end_t
+    {
+        end_t() = delete;
+    };
+
+    end_t end();
+
     namespace detail
     {
         template<auto...I>
@@ -46,13 +53,13 @@ namespace ruzhouxie
     template<typename T>
     inline constexpr size_t child_count = []<size_t N = 0uz>(this auto&& self)
     {
-        if constexpr (requires{ { getter<purified<T>>{}.template get<N>(std::declval<T>()) } -> concrete; })
+        if constexpr (std::same_as<decltype(getter<purified<T>>{}.template get<N>(std::declval<T>())), end_t>)
         {
-            return self.template operator()<N + 1uz>();
+            return N;
         }
         else
         {
-            return N;
+            return self.template operator()<N + 1uz>();
         }
     }();
     
@@ -177,7 +184,7 @@ namespace ruzhouxie
     struct invalid_getter 
     {
         template<size_t I, typename T>
-        RUZHOUXIE_INLINE constexpr void get(T&& t)const{}
+        end_t get(T&& t)const;
     };
 
     namespace detail::tag_invoke_getter_ns
@@ -196,20 +203,18 @@ namespace ruzhouxie
 
     struct array_getter
     {
-        template<size_t I, typename T> requires (I < std::extent_v<purified<T>>)
-            RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(FWD(t)[I])
-    };
-
-    struct member_getter
-    {
         template<size_t I, typename T>
-        RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(FWD(t).template get<I>())
-    };
-
-    struct adl_getter
-    {
-        template<size_t I, typename T>
-        RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(get<I>(FWD(t)))
+        RUZHOUXIE_INLINE constexpr auto get(T&& t)const noexcept
+        {
+            if constexpr(I >= std::extent_v<purified<T>>)
+            {
+                return end();
+            }
+            else
+            {
+                return FWD(t)[I];
+            }
+        }
     };
 
     struct tuple_like_getter
@@ -246,7 +251,6 @@ namespace ruzhouxie
         template<size_t I, typename T>
         RUZHOUXIE_INLINE constexpr decltype(auto) get(T&& t)const
             noexcept(choose<I, T&&>().nothrow)
-            requires(choose<I, T&&>().strategy != none)
         {
             constexpr strategy_t strategy = choose<I, T&&>().strategy;
             if constexpr (strategy == strategy_t::member)
@@ -257,6 +261,10 @@ namespace ruzhouxie
             {
                 using std::get;
                 return get<I>(FWD(t));
+            }
+            else
+            {
+                return end();
             }
         }
     };
@@ -301,13 +309,18 @@ namespace ruzhouxie
             }
         }();
 
-        template<size_t I, aggregated T> requires (I < aggregate_member_count<T>)
+        template<size_t I, aggregated T>
         constexpr decltype(auto) get(T&& t)const noexcept
         {
             constexpr size_t n = aggregate_member_count<T>;
-
+            if constexpr(I >= n)
+            {
+                return end();
+            }
+            else
+            {
 #include "generate/aggregate_getter_invoker.code"
-
+            }
         };
     };
 

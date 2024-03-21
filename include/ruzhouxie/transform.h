@@ -27,7 +27,7 @@ namespace ruzhouxie
         }
 
         template<size_t I, specified<transform_view> Self> requires (I >= child_count<V>)
-        RUZHOUXIE_INLINE friend constexpr void tag_invoke(tag_t<child<I>>, Self&& self)noexcept{}
+        friend end_t tag_invoke(tag_t<child<I>>, Self&& self){ return end(); }
 
         template<size_t I, specified<transform_view> Self> requires (I < child_count<V>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
@@ -60,9 +60,9 @@ namespace ruzhouxie
                 , data(get_data(std::move(base_tape), fn))
             {}
 
-            template<size_t I, specified<data_type> Self> requires (I < child_count<result_data_type>)
+            template<size_t I, specified<data_type> Self>
             RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-                AS_EXPRESSION(FWD(self, data) | child<I>)
+                AS_EXPRESSION(getter<result_data_type>{}.template get<I>(FWD(self, data)))
 
             
         };
