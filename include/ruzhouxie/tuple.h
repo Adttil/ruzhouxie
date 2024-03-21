@@ -98,13 +98,19 @@ namespace ruzhouxie
 namespace ruzhouxie
 {
 #include "generate/tuple_specialization.code"
+
+	template<typename...T>
+    tuple(T...) -> tuple<std::decay_t<T>...>;
 }
+
+template<typename...T>
+struct std::tuple_size<ruzhouxie::tuple<T...>> : std::tuple_size<std::tuple<T...>> {};
+
+template<size_t I, typename...T>
+struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
 
 namespace ruzhouxie
 {
-    template<typename...T>
-    tuple(T...) -> tuple<std::decay_t<T>...>;
-
     template<typename...Args>
     RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
 	    AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... })
@@ -115,35 +121,50 @@ namespace ruzhouxie
 	    return { FWD(args)... };
 	}
 
+	template<typename T>
+	concept tuplike = requires{ std::tuple_size<purified<T>>::value; };
+
+	template<size_t I, tuplike T>
+	RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
+		AS_EXPRESSION(FWD(tpl).template get<I>())
+	
+	template<size_t I, tuplike T> requires (not requires{ std::declval<T>().template get<I>(); })
+	RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
+		AS_EXPRESSION(get<I>(FWD(tpl)))
+
+	// template<size_t I, tuplike T> 
+	// requires (not requires{ std::declval<T>().template get<I>(); })
+	// 	&& (not requires{ get<I>(std::declval<T>()); })
+	// RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
+	// 	AS_EXPRESSION(std::get<I>(FWD(tpl)))
+
     constexpr auto tuple_cat()
 	{
 	    return tuple{};
 	}
 
-    template<typename Tpl>
-    constexpr auto tuple_cat(Tpl&& tpl)
+    template<tuplike T>
+    constexpr auto tuple_cat(T&& tpl)
 	{
-	    return FWD(tpl);
+	    return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return make_tuple(tuplike_get<I>(FWD(tpl))...);
+		}(std::make_index_sequence<std::tuple_size_v<purified<T>>>{});
 	}
 
-    template<typename Tpl1, typename Tpl2>
+    template<tuplike Tpl1, tuplike Tpl2>
     constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
-		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
 	{
 	    constexpr size_t s1 = std::tuple_size_v<purified<Tpl1>>;
 	    constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
-	    return[&]<size_t...i, size_t...j>(std::index_sequence<i...>, std::index_sequence<j...>)
+	    return[&]<size_t...I, size_t...J>(std::index_sequence<I...>, std::index_sequence<J...>)
 		{
-		    return tuple<purified<decltype(FWD(tpl1).template get<i>())>..., purified<decltype(FWD(tpl2).template get<j>())>...>
-			{
-			    FWD(tpl1).template get<i>()..., FWD(tpl2).template get<j>()...
-			};
+		    return make_tuple(tuplike_get<I>(FWD(tpl1))..., tuplike_get<J>(FWD(tpl2))...);
 		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
 	}
 
-    template<typename Tpl1, typename Tpl2, typename...Rest>
+    template<tuplike Tpl1, tuplike Tpl2, tuplike...Rest>
     constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
-		//noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<Elems1>..., std::is_nothrow_copy_constructible<Elems2>...>)
 	{
 	    return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
 	}
@@ -174,11 +195,7 @@ namespace ruzhouxie
 }
 
 
-template<typename...T>
-struct std::tuple_size<ruzhouxie::tuple<T...>> : std::tuple_size<std::tuple<T...>> {};
 
-template<size_t I, typename...T>
-struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
 
 #include "macro_undef.h"
 #endif
