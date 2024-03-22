@@ -386,10 +386,10 @@ namespace ruzhouxie::detail
 	    return concat_to_tuple(concat_to_tuple(FWD(t1), FWD(t2)), FWD(rest)...);
 	}
 
-    template<auto Indices, typename V> requires std::integral<decltype(Indices)> || indicesoid<decltype(Indices)>
+    template<auto Indices, typename V> requires std::integral<purified<decltype(Indices)>> || indicesoid<decltype(Indices)>
     RUZHOUXIE_CONSTEVAL auto normalize_indices()
     {
-        if constexpr(std::integral<decltype(Indices)>)
+        if constexpr(std::integral<purified<decltype(Indices)>>)
         {
             return array{ normalize_index(Indices, child_count<V>) };
         }
@@ -405,7 +405,7 @@ namespace ruzhouxie::detail
     template<auto Layout, typename V>
     RUZHOUXIE_CONSTEVAL auto normalize_layout()
     {
-        if constexpr(indicesoid<decltype(Layout)> || std::integral<decltype(Layout)>)
+        if constexpr(indicesoid<decltype(Layout)> || std::integral<purified<decltype(Layout)>>)
         {
             return normalize_indices<Layout, V>();
         }
