@@ -247,9 +247,12 @@ namespace ruzhouxie
     template<typename Impl>
     struct relayouter
     {
-        template<typename View, specified<Impl> Self>
-        RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, View&& view)
-            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<purified<Self>::relayout(default_layout<View>)>{} })
+        template<typename V, specified<Impl> Self>
+        RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, V&& view)
+            AS_EXPRESSION(relayout_view{ 
+                FWD(view),
+                constant_t<detail::normalize_layout<purified<Self>::relayout(default_layout<V>), V>()>{} 
+            })
     };
 }
 
