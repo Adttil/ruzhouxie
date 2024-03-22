@@ -550,13 +550,14 @@ namespace ruzhouxie
         template<typename T>
         static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> choose()
         {
-            if constexpr (requires{ tag_invoke<Sequence>(get_tape<Sequence>, std::declval<T>()); })
+            constexpr auto seq = normalize_layout<Sequence, T>();
+            if constexpr (requires{ tag_invoke<seq>(get_tape<seq>, std::declval<T>()); })
             {
-                return { strategy_t::tag_invoke, noexcept(tag_invoke<Sequence>(get_tape<Sequence>, std::declval<T>())) };
+                return { strategy_t::tag_invoke, noexcept(tag_invoke<seq>(get_tape<seq>, std::declval<T>())) };
             }
             else if constexpr(branched<T>)
             {
-                return { strategy_t::branched, noexcept(detail::get_tuple_tape<Sequence>(std::declval<T>())) };
+                return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
             }
             else
             {
@@ -571,17 +572,18 @@ namespace ruzhouxie
             requires(choose<T>().strategy != strategy_t::none)
         {
             constexpr strategy_t strategy = choose<T>().strategy;
+            constexpr auto seq = normalize_layout<Sequence, T>();
             if constexpr (strategy == strategy_t::tag_invoke)
             {
-                return tag_invoke<Sequence>(get_tape<Sequence>, FWD(t));
+                return tag_invoke<seq>(get_tape<seq>, FWD(t));
             }
             else if constexpr(strategy == strategy_t::branched)
             {
-                return detail::get_tuple_tape<Sequence>(FWD(t));
+                return detail::get_tuple_tape<seq>(FWD(t));
             }
             else if constexpr(strategy == strategy_t::terminal)
             {
-                return tape_t<T&&, Sequence>{ FWD(t) };
+                return tape_t<T&&, seq>{ FWD(t) };
             }
             else
             {

@@ -385,6 +385,35 @@ namespace ruzhouxie::detail
 	{
 	    return concat_to_tuple(concat_to_tuple(FWD(t1), FWD(t2)), FWD(rest)...);
 	}
+
+    template<auto Indices, typename V> requires std::integral<decltype(Indices)> || indicesoid<decltype(Indices)>
+    RUZHOUXIE_CONSTEVAL auto normalize_indices()
+    {
+        if constexpr(std::integral<decltype(Indices)>)
+        {
+            return array{ normalize_index(Indices, child_count<V>) };
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return array<size_t, Indices.size()>
+            {
+                normalize_index(Indices[I], child_count<child_type<V, detail::array_take<I>(Indices)>>)...
+            };
+        }(std::make_index_sequence<Indices.size()>{});
+    }
+
+    template<auto Layout, typename V>
+    RUZHOUXIE_CONSTEVAL auto normalize_layout()
+    {
+        if constexpr(indicesoid<decltype(Layout)> || std::integral<decltype(Layout)>)
+        {
+            return normalize_indices<Layout, V>();
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(normalize_layout<Layout | child<I>, V>()...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
 }
 
 #include "macro_undef.h"
