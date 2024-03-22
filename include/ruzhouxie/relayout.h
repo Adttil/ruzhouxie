@@ -178,6 +178,8 @@ namespace ruzhouxie
         {
             return relayout_view_maker<V, Layout>{};
         }
+
+        RUZHOUXIE_INLINE friend constexpr bool operator==(const relayout_view&, const relayout_view&) = default;
     };
     
     template<typename V, auto Layout>

@@ -9,7 +9,7 @@ namespace ruzhouxie
     template<auto value>
     struct constant_t : std::integral_constant<purified<decltype(value)>, value> 
 	{
-		
+		RUZHOUXIE_INLINE friend constexpr bool operator==(const constant_t&, const constant_t&) = default;
 	};
 
     template<auto value1, auto value2>

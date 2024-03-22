@@ -8,6 +8,37 @@
 
 #include "macro_define.h"
 
+namespace ruzhouxie::detail
+{
+	template<size_t NRow, size_t NColumn>
+	RUZHOUXIE_CONSTEVAL auto rmat_layout()
+	{
+		return []<size_t...I>(std::index_sequence<I...>)
+		{
+			auto row_layout = []<size_t I_, size_t...J>(std::index_sequence<J...>)
+			{
+				return tuple{ array{ I_ * NColumn + J }... };
+			};
+
+			return make_tuple(row_layout.template operator()<I>(std::make_index_sequence<NColumn>{})...);
+		}(std::make_index_sequence<NRow>{});
+	}
+
+	template<size_t NRow, size_t NColumn>
+	RUZHOUXIE_CONSTEVAL auto cmat_layout()
+	{
+		return []<size_t...I>(std::index_sequence<I...>)
+		{
+			auto row_layout = []<size_t I_, size_t...J>(std::index_sequence<J...>)
+			{
+				return tuple{ array{ I_ + J * NRow }... };
+			};
+
+			return make_tuple(row_layout.template operator()<I>(std::make_index_sequence<NColumn>{})...);
+		}(std::make_index_sequence<NRow>{});
+	}
+}
+
 namespace ruzhouxie
 {
     using defalut_value_t = double;
@@ -16,13 +47,10 @@ namespace ruzhouxie
     using vec = view<array<T, Dim>>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
-    using rmat = view<array<vec<NColumn, T>, NRow>>;
+    using rmat = relayout_view<array<T, NColumn * NRow>, detail::rmat_layout<NRow, NColumn>()>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
-    using cmat = view<relayout_view<
-	    array<array<T, NRow>, NColumn>,
-	    transpose<0uz, 1uz>.relayout(default_layout<array<array<T, NRow>, NColumn>>)
-		>>;
+    using cmat = relayout_view<array<T, NColumn * NRow>, detail::cmat_layout<NRow, NColumn>()>;
 
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
     using mat = rmat<NRow, NColumn>;
@@ -93,9 +121,10 @@ namespace ruzhouxie
 		}
 	}
 
-    RUZHOUXIE_INLINE constexpr decltype(auto) mat_mul_vec(auto&& _mat, auto&& vec)
+	template<typename M, typename V>
+    RUZHOUXIE_INLINE constexpr decltype(auto) mat_mul_vec(M&& _mat, V&& vec)
 	{
-	    return FWD(_mat) | transform([&](auto&& row) { return dot(row, vec); });
+	    return zip_transform([](auto&& row, auto&& vec) { return dot(row, vec); }, FWD(_mat), FWD(vec) | repeat<child_count<M>>);
 	}
 
     RUZHOUXIE_INLINE constexpr decltype(auto) vec_mul_mat(auto&& _vec, auto&& _mat)
