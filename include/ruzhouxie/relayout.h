@@ -196,7 +196,7 @@ namespace ruzhouxie
 
             template<typename V> requires (not indicesoid<layout_type>)
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-                AS_EXPRESSION(relayout_view{ FWD(view), constant_t<Layout>{} })
+                AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, V>()>{} })
         };
 
         template<size_t N>
