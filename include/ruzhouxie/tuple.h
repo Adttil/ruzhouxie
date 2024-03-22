@@ -121,54 +121,6 @@ namespace ruzhouxie
 	    return { FWD(args)... };
 	}
 
-	template<typename T>
-	concept tuplike = requires{ std::tuple_size<purified<T>>::value; };
-
-	template<size_t I, tuplike T>
-	RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
-		AS_EXPRESSION(FWD(tpl).template get<I>())
-	
-	template<size_t I, tuplike T> requires (not requires{ std::declval<T>().template get<I>(); })
-	RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
-		AS_EXPRESSION(get<I>(FWD(tpl)))
-
-	// template<size_t I, tuplike T> 
-	// requires (not requires{ std::declval<T>().template get<I>(); })
-	// 	&& (not requires{ get<I>(std::declval<T>()); })
-	// RUZHOUXIE_INLINE constexpr auto tuplike_get(T&& tpl)
-	// 	AS_EXPRESSION(std::get<I>(FWD(tpl)))
-
-    constexpr auto tuple_cat()
-	{
-	    return tuple{};
-	}
-
-    template<tuplike T>
-    constexpr auto tuple_cat(T&& tpl)
-	{
-	    return [&]<size_t...I>(std::index_sequence<I...>)
-		{
-			return make_tuple(tuplike_get<I>(FWD(tpl))...);
-		}(std::make_index_sequence<std::tuple_size_v<purified<T>>>{});
-	}
-
-    template<tuplike Tpl1, tuplike Tpl2>
-    constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2)
-	{
-	    constexpr size_t s1 = std::tuple_size_v<purified<Tpl1>>;
-	    constexpr size_t s2 = std::tuple_size_v<purified<Tpl2>>;
-	    return[&]<size_t...I, size_t...J>(std::index_sequence<I...>, std::index_sequence<J...>)
-		{
-		    return make_tuple(tuplike_get<I>(FWD(tpl1))..., tuplike_get<J>(FWD(tpl2))...);
-		}(std::make_index_sequence<s1>{}, std::make_index_sequence<s2>{});
-	}
-
-    template<tuplike Tpl1, tuplike Tpl2, tuplike...Rest>
-    constexpr auto tuple_cat(Tpl1&& tpl1, Tpl2&& tpl2, Rest&&...rest)
-	{
-	    return tuple_cat(tuple_cat(FWD(tpl1), FWD(tpl2)), FWD(rest)...);
-	}
-
     template<typename T, typename...Elems>
     RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
 	{

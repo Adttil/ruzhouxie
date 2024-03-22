@@ -128,7 +128,7 @@ namespace ruzhouxie
         {
             return []<size_t...I>(std::index_sequence<I...>)
             {
-                return tuple_cat(child_sequence<I, V>()...);
+                return detail::concat_to_tuple(child_sequence<I, V>()...);
             }(std::make_index_sequence<std::tuple_size_v<Tuple>>{});
         }
 

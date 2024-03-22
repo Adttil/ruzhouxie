@@ -348,8 +348,8 @@ namespace ruzhouxie
                 map[I] = child_count<decltype(Cur)>;
                 return get_unique_seq_and_set_map<
                     Seq, I + 1uz,
-                    tuple_cat(Cur, tuple{ I }),
-                    tuple_cat(CurLayouts, tuple<purified<decltype(Seq | child<I>)>>{ Seq | child<I> })
+                    concat_to_tuple(Cur, tuple{ I }),
+                    concat_to_tuple(CurLayouts, tuple<purified<decltype(Seq | child<I>)>>{ Seq | child<I> })
                 >(map);
             }
         }
@@ -464,7 +464,7 @@ namespace ruzhouxie::detail
             {
                 get_child_sequence_and_set_map<I, Seq | child<J>>(count, map | child<J>)... 
             };
-            return tuple_cat(args | child<J>...);
+            return concat_to_tuple(args | child<J>...);
         }(std::make_index_sequence<child_count<decltype(Seq)>>{});
     }
 

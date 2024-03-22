@@ -174,7 +174,7 @@ namespace ruzhouxie
             {
                 constexpr size_t index = (Seq | child<I>)[0];
                 map[index] = child_count<decltype(Cur)>;
-                return get_input_seq_and_map_impl<Seq, I + 1uz, tuple_cat(Cur, tuple{ array{ index } })>(map);
+                return get_input_seq_and_map_impl<Seq, I + 1uz, detail::concat_to_tuple(Cur, tuple{ array{ index } })>(map);
             }
         }
 
@@ -376,7 +376,7 @@ namespace ruzhouxie
 //             {
 //                 constexpr size_t index = (Seq | child<I>)[0];
 //                 map[index] = child_count<decltype(Cur)>;
-//                 return get_input_seq_and_map_impl<Seq, I + 1uz, tuple_cat(Cur, tuple{ array{ index } })>(map);
+//                 return get_input_seq_and_map_impl<Seq, I + 1uz, detail::concat_to_tuple(Cur, tuple{ array{ index } })>(map);
 //             }
 //         }
 //
@@ -426,8 +426,8 @@ namespace ruzhouxie
 //                 map[I] = child_count<decltype(Cur)>;
 //                 return get_unique_input_indices_and_map_impl<
 //                     InputLayoutsZip, I + 1uz,
-//                     tuple_cat(Cur, tuple{ I }),
-//                     tuple_cat(CurLayouts, tuple<purified<decltype(InputLayoutsZip | child<I>)>>{ InputLayoutsZip | child<I> })
+//                     detail::concat_to_tuple(Cur, tuple{ I }),
+//                     detail::concat_to_tuple(CurLayouts, tuple<purified<decltype(InputLayoutsZip | child<I>)>>{ InputLayoutsZip | child<I> })
 //                 >(map);
 //             }
 //         }

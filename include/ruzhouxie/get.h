@@ -355,5 +355,37 @@ namespace ruzhouxie
     };
 }
 
+namespace ruzhouxie::detail
+{
+    constexpr auto concat_to_tuple()
+	{
+	    return tuple{};
+	}
+
+    template<typename T>
+    constexpr auto concat_to_tuple(T&& t)
+	{
+	    return [&]<size_t...I>(std::index_sequence<I...>)
+		{
+			return make_tuple(FWD(t) | child<I>...);
+		}(std::make_index_sequence<child_count<T>>{});
+	}
+
+    template<typename T1, typename T2>
+    constexpr auto concat_to_tuple(T1&& t1, T2&& t2)
+	{
+	    return[&]<size_t...I, size_t...J>(std::index_sequence<I...>, std::index_sequence<J...>)
+		{
+		    return make_tuple(FWD(t1) | child<I>..., FWD(t2) | child<J>...);
+		}(std::make_index_sequence<child_count<T1>>{}, std::make_index_sequence<child_count<T2>>{});
+	}
+
+    template<typename T1, typename T2, typename...Rest>
+    constexpr auto concat_to_tuple(T1&& t1, T2&& t2, Rest&&...rest)
+	{
+	    return concat_to_tuple(concat_to_tuple(FWD(t1), FWD(t2)), FWD(rest)...);
+	}
+}
+
 #include "macro_undef.h"
 #endif
