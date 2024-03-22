@@ -31,9 +31,9 @@ int main()
     std::cout << x << ", " << y << ", " << z << '\n';
 
     std::tuple trs{ Tr{}, Tr{} };
-    constexpr auto layout1 = std::array//把[x, y]看作[x, x, y, x, y]的布局
+    constexpr auto layout1 = rzx::tuple//把[x, y]看作[x, x, y, x, y]的布局
     {
-        rzx::array{0uz}, rzx::array{1uz}, rzx::array{0uz}, rzx::array{1uz}, rzx::array{1uz}
+        0uz, 1uz, 0uz, 1uz, 1uz
     };
 
     std::puts("==================");
