@@ -65,7 +65,7 @@ namespace ruzhouxie
 	{
 	    if constexpr (requires{ fn(FWD(args)...); })
 		{
-		    return fn(FWD(args)...);;
+		    return fn(FWD(args)...);
 		}
 	    else
 		{
@@ -94,22 +94,21 @@ namespace ruzhouxie
 	}
 
 
-    RUZHOUXIE_INLINE constexpr decltype(auto) dot(auto&& l, auto&& r)noexcept
+    inline constexpr auto dot = [](auto&& l, auto&& r)
 	{
 	    auto mul = zip_transform(std::multiplies<>{}, FWD(l), FWD(r));
 	    return [&]<size_t...I>(std::index_sequence<I...>)
 		{
 		    return (... + (mul | child<I>));
 		}(std::make_index_sequence<child_count<decltype(mul)>>{});
-	}
+	};
 
-    RUZHOUXIE_INLINE constexpr decltype(auto) len_sq(auto&& vector)noexcept
+    inline constexpr auto len_sq = [](auto&& vector)
 	{
 	    return dot(FWD(vector), FWD(vector));
-	}
+	};
 
-    template<typename Vec>
-    RUZHOUXIE_INLINE constexpr decltype(auto) len(Vec&& vector)noexcept
+    inline constexpr auto len = []<typename Vec>(Vec&& vector)
 	{
 	    if constexpr(child_count<Vec> == 1uz)
 		{
@@ -119,28 +118,22 @@ namespace ruzhouxie
 		{
 		    return sqrt(len_sq(vector));
 		}
-	}
+	};
 
-	template<typename M, typename V>
-    RUZHOUXIE_INLINE constexpr decltype(auto) mat_mul_vec(M&& _mat, V&& vec)
+    inline constexpr auto mat_mul_vec = []<typename M, typename V>(M&& mat, V&& vec)
 	{
-	    return zip_transform([](auto&& row, auto&& vec) { return dot(row, vec); }, FWD(_mat), FWD(vec) | repeat<child_count<M>>);
-	}
+	    return zip_transform(dot, FWD(mat), FWD(vec) | repeat<child_count<M>>);
+	};
 
-    RUZHOUXIE_INLINE constexpr decltype(auto) vec_mul_mat(auto&& _vec, auto&& _mat)
+    inline constexpr auto vec_mul_mat = [](auto&& _vec, auto&& _mat)
 	{
 	    return mat_mul_vec(FWD(_mat) | transpose<>, FWD(_vec));
-	}
+	};
 
-    RUZHOUXIE_INLINE constexpr auto mat_mul(auto&& l, auto&& r)
+    inline constexpr auto mat_mul = [](auto&& l, auto&& r)
 	{
-	    return FWD(l) | transform([&](auto&& l_row) { return vec_mul_mat(FWD(l_row), r); });
-	}
-
-    RUZHOUXIE_INLINE constexpr auto quat_to_mat()
-	{
-		
-	}
+		return zip_transform(vec_mul_mat, FWD(l), FWD(r) | repeat<child_count<decltype(l)>>);
+	};
 }
 
 namespace ruzhouxie

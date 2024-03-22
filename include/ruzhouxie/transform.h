@@ -509,7 +509,7 @@ namespace ruzhouxie
             RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&&...trees)const
             {
                 return zip(FWD(trees)...) | transform(
-                    [=](auto&& zip_args)->decltype(auto)
+                    [fn = FWD(fn)](auto&& zip_args)->decltype(auto)
                     {
                         return [&]<size_t...I>(std::index_sequence<I...>)->decltype(auto)
                         {

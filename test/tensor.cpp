@@ -44,4 +44,7 @@ TEST(tensor, _)
 
     constexpr mat<2, 2> cmul = +mat_mul(cm1, cm1);
     MAGIC_CHECK(cmul, mat<2, 2>{ 7, 10, 15, 22 });
+
+    constexpr mat<2, 2> emul = +(m1 * m1);
+    MAGIC_CHECK(emul, mat<2, 2>{ 1, 4, 9, 16 });
 }

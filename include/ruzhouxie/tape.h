@@ -273,9 +273,9 @@ namespace ruzhouxie
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
-                return relayout_view<decltype(as_const(self.data)), layout>
+                return relayout_view<decltype(std::as_const(self.data)), layout>
                 {
-                    as_const(self.data)
+                    std::as_const(self.data)
                 };
             }
             else
@@ -318,9 +318,9 @@ namespace ruzhouxie
             }
             else if constexpr(strategy == strategy_t::relayout_not_last)
             {
-                return relayout_view<decltype(as_const(self.data)), layout>
+                return relayout_view<decltype(std::as_const(self.data)), layout>
                 {
-                    as_const(self.data)
+                    std::as_const(self.data)
                 };
             }
             else
@@ -458,7 +458,6 @@ namespace ruzhouxie::detail
         }
         else return[&]<size_t...J>(std::index_sequence<J...>)
         {
-            static_assert(sizeof...(J) > 0, "invalid sequence.");
             //To ensure the order of evaluation.
             auto args = tuple<purified<decltype(get_child_sequence_and_set_map<I, Seq | child<J>>(count, map | child<J>))>...>
             {
