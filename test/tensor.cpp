@@ -18,6 +18,10 @@ TEST(tensor, _)
 
     MAGIC_CHECK(plus, mat<2, 2>{ 2, 4, 6, 8 });
 
+    MAGIC_CHECK((vec<2, float>{1,2}), vec<2, int>{ 1,2 });
+
+    MAGIC_CHECK(false, vec<2, float>{1,2} != vec<2, int>{ 1,2 });
+
     // MAGIC_CHECK(7, mul | child<0, 0>);
     // MAGIC_CHECK(10, mul | child<0, 1>);
     // MAGIC_CHECK(15, mul | child<1, 0>);

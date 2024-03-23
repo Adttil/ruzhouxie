@@ -152,5 +152,41 @@ namespace ruzhouxie
     }
 }
 
+namespace ruzhouxie 
+{
+    template<typename T>
+    concept tree_view = std::derived_from<purified<T>, view_interface<purified<T>>>;
+
+    template<size_t I = 0uz, typename L, typename R>
+    RUZHOUXIE_INLINE constexpr bool tree_equal(const L& l, const R& r)noexcept
+    {
+		if constexpr(terminal<L>)
+		{
+			return l == r;
+		}
+        else if constexpr(I >= child_count<L>)
+		{
+			return true;
+		}
+		else
+		{ 
+			if (not tree_equal(l | child<I>, r | child<I>))
+			{
+				return false;
+			}
+			else
+			{
+				return tree_equal<I + 1uz>(l, r);
+			}
+		}
+    }
+
+	template<typename L, typename R> requires tree_view<L> || tree_view<R>
+    RUZHOUXIE_INLINE constexpr bool operator==(const L& l, const R& r)noexcept
+    {
+        return tree_equal(l, r);
+    }
+}
+
 #include "macro_undef.h"
 #endif
