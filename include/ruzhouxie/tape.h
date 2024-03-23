@@ -544,15 +544,38 @@ namespace ruzhouxie::detail
 
     namespace get_tape_t_ns
     {
-        // template<typename T>
-        // bool is_independence_group()
-        // {
+        constexpr inline auto seq_of_whole_view = tuple{ indices_of_whole_view };
 
-        //     if constexpr(requires { tag_invoke<indices_of_whole_view>(get_tape<indices_of_whole_view>, std::declval<T>()); } )
-        //     {
-        //         return false;
-        //     }
-        // }
+        template<>
+        struct detail::get_tape_t_ns::get_tape_t<seq_of_whole_view>
+        {
+            template<typename T>
+            RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t)const noexcept
+            {
+                    return tape_t<T&&, seq_of_whole_view>{ FWD(t) };
+            }
+        };
+
+        template<typename T>
+        RUZHOUXIE_CONSTEVAL bool is_independence_group()
+        {
+            if constexpr(terminal<T>)
+            {
+                return true;
+            }
+            else if constexpr(requires { requires std::same_as<purified<T>, view<typename purified<T>::base_type>>; })
+            {
+                return is_independence_group<decltype(std::declval<T>().base())>();
+            }
+            else if constexpr(requires { tag_invoke<seq_of_whole_view>(get_tape<seq_of_whole_view>, std::declval<T>()); } )
+            {
+                return false;
+            }
+            else return[]<size_t...I>(std::index_sequence<I...>)
+            {
+                return (... && is_independence_group<child_type<T, I>>());
+            }(std::make_index_sequence<child_count<T>>{});
+        }
     }
 }
 
@@ -571,7 +594,8 @@ namespace ruzhouxie
             {
                 return { strategy_t::tag_invoke, noexcept(tag_invoke<seq>(get_tape<seq>, std::declval<T>())) };
             }
-            else if constexpr(branched<T>)
+            //else if constexpr(branched<T>)
+            else if constexpr(not is_independence_group<T>())
             {
                 return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
             }
