@@ -31,10 +31,7 @@ namespace ruzhouxie
 
         template<size_t I, specified<transform_view> Self> requires (I < child_count<V>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-            noexcept(noexcept(FWD(self).fn()(FWD(self).base() | child<I>)))
-        {
-            return FWD(self).fn()(FWD(self).base() | child<I>);
-        }
+        AS_EXPRESSION(FWD(self).fn()(FWD(self).base() | child<I>))
 
         template<typename T>
         struct data_type
@@ -65,12 +62,7 @@ namespace ruzhouxie
 
             template<size_t I, specified<data_type> Self>
             RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
-                noexcept(noexcept(getter<result_data_type>{}.template get<I>(FWD(self, data))))
-            {
-                return getter<result_data_type>{}.template get<I>(FWD(self, data));
-            }
-
-            
+            AS_EXPRESSION(getter<result_data_type>{}.template get<I>(FWD(self, data)))
         };
 
         template<auto Seq, specified<transform_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
@@ -236,10 +228,7 @@ namespace ruzhouxie
         {
             template<typename V, typename F>
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view, F&& fn)const
-            noexcept(noexcept(transform_view{ FWD(view), FWD(fn) }))
-            {
-                return transform_view{ FWD(view), FWD(fn) };
-            }
+            AS_EXPRESSION(transform_view{ FWD(view), FWD(fn) })
         };
     }
 
