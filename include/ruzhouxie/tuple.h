@@ -111,15 +111,13 @@ struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std
 
 namespace ruzhouxie
 {
-    template<typename...Args>
-    RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
-	    AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... })
+    inline constexpr auto make_tuple = []<typename...Args>(Args&&...args)
+	AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... });
 
-    template<typename...Args>
-    RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
+    inline constexpr auto fwd_as_tuple = []<typename...Args>(Args&&...args)noexcept
 	{
-	    return { FWD(args)... };
-	}
+	    return tuple<Args&&...>{ FWD(args)... };
+	};
 
     template<typename T, typename...Elems>
     RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
