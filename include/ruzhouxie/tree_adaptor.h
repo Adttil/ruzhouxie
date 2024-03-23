@@ -57,18 +57,18 @@ namespace ruzhouxie
             Fn fn;
             tuple<Args...> args;
 
-            template<typename V, size_t...I>
-            RUZHOUXIE_INLINE constexpr auto impl(V&& view, std::index_sequence<I...>)const
-                AS_EXPRESSION(fn(FWD(view), args.template get<I>()...))
+            template<typename V, size_t...I, typename Self>
+            RUZHOUXIE_INLINE constexpr auto impl(this Self&& self, V&& view, std::index_sequence<I...>)
+                AS_EXPRESSION(self.fn(FWD(view), FWD(self, args).template get<I>()...))
 
-            template<typename V>
-            RUZHOUXIE_INLINE constexpr auto operator()(V&& view)const 
-                noexcept(noexcept(impl(FWD(view), std::index_sequence_for<Args...>{})))
+            template<typename V, typename Self>
+            RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, V&& view)
+                noexcept(noexcept(FWD(self).impl(FWD(view), std::index_sequence_for<Args...>{})))
                 ->decltype(auto)
                 //Here must use "std::declval<V>()" in MSVC.
-                requires requires{ impl(std::declval<V>(), std::index_sequence_for<Args...>{});}
+                requires requires{ std::declval<Self>().impl(std::declval<V>(), std::index_sequence_for<Args...>{});}
             {
-                return impl(FWD(view), std::index_sequence_for<Args...>{});
+                return FWD(self).impl(FWD(view), std::index_sequence_for<Args...>{});
             }
         };
 
