@@ -236,7 +236,10 @@ namespace ruzhouxie
         {
             template<typename V, typename F>
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view, F&& fn)const
-                AS_EXPRESSION(transform_view{ FWD(view), FWD(fn) })
+            noexcept(noexcept(transform_view{ FWD(view), FWD(fn) }))
+            {
+                return transform_view{ FWD(view), FWD(fn) };
+            }
         };
     }
 
@@ -248,6 +251,7 @@ namespace ruzhouxie
         {
             template<typename Fn, typename...T>
             RUZHOUXIE_INLINE constexpr auto operator()(Fn&& fn, T&&...trees)const
+            noexcept(noexcept(zip(FWD(trees)...)))
             {
                 return zip(FWD(trees)...) | transform(
                     [fn = FWD(fn)](auto&& zip_args)->decltype(auto)
