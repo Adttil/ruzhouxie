@@ -22,6 +22,39 @@ namespace ruzhouxie
             child,
             relayout
         };
+
+        template<auto Indices, typename TLayout>
+        RUZHOUXIE_CONSTEVAL auto mapped_indices(const TLayout& layout)
+        {
+            if constexpr(indicesoid<TLayout>)
+            {
+                return detail::concat_array(layout, Indices);
+            }
+            else if constexpr(Indices.size() == 0uz)
+            {
+                return layout;
+            }
+            else
+            {
+                return mapped_indices<detail::array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
+            }
+        }
+
+        template<auto Layout, typename Trans>
+        RUZHOUXIE_CONSTEVAL auto mapped_layout(const Trans& trans)
+        {
+            if constexpr(indicesoid<decltype(Layout)>)
+            {
+                return mapped_indices<Layout>(trans);
+            }
+            else return[&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return tuple<decltype(mapped_layout<Layout | child<I>>(trans))...>
+                {
+                    mapped_layout<Layout | child<I>>(trans)...
+                };
+            }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+        }
     }
 
     template<typename V, auto Layout>
@@ -76,6 +109,8 @@ namespace ruzhouxie
     template<typename V, auto Layout>
     struct relayout_view : detail::view_base<V>, constant_t<Layout>, view_interface<relayout_view<V, Layout>>
     {
+        using base_type = V;
+        static constexpr auto layout = Layout;
     private:
         template<size_t I, specified<relayout_view> Self>
         static RUZHOUXIE_CONSTEVAL choice_t<detail::relayout_view_child_Strategy> child_Choose()
@@ -134,44 +169,9 @@ namespace ruzhouxie
             }
         }
 
-    private:
-        template<auto Indices, typename TLayout>
-        static RUZHOUXIE_CONSTEVAL auto mapped_indices(const TLayout& layout)
-        {
-            if constexpr(indicesoid<TLayout>)
-            {
-                return detail::concat_array(layout, Indices);
-            }
-            else if constexpr(Indices.size() == 0uz)
-            {
-                return layout;
-            }
-            else
-            {
-                return mapped_indices<detail::array_drop<1uz>(Indices)>(layout | child<Indices[0uz]>);
-            }
-        }
-
-        template<auto Layout_, typename Trans>
-        static RUZHOUXIE_CONSTEVAL auto mapped_layout(const Trans& trans)
-        {
-            if constexpr(indicesoid<decltype(Layout_)>)
-            {
-                return mapped_indices<Layout_>(trans);
-            }
-            else return[&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return tuple<decltype(mapped_layout<Layout_ | child<I>>(trans))...>
-                {
-                    mapped_layout<Layout_ | child<I>>(trans)...
-                };
-            }(std::make_index_sequence<child_count<decltype(Layout_)>>{});
-        }
-
-    public:
         template<auto Seq, specified<relayout_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(FWD(self).base() | get_tape<mapped_layout<Seq>(Layout)>)
+            AS_EXPRESSION(FWD(self).base() | get_tape<detail::mapped_layout<Seq>(Layout)>)
 
         template<std::same_as<relayout_view> Self>
         friend RUZHOUXIE_CONSTEVAL auto tag_invoke(tag_t<make_tree<Self>>)
@@ -185,6 +185,9 @@ namespace ruzhouxie
     template<typename V, auto Layout>
     relayout_view(V&&, constant_t<Layout>) -> relayout_view<V, Layout>;
     
+    template<typename T>
+    concept relayout_view_instantiated = std::same_as<purified<T>, relayout_view<typename purified<T>::base_type, purified<T>::layout>>;
+
     namespace detail
     {
         template<auto Layout>
@@ -194,11 +197,18 @@ namespace ruzhouxie
 
             template<typename V> requires indicesoid<layout_type>
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-                AS_EXPRESSION(FWD(view) | child<Layout>)
+            AS_EXPRESSION(FWD(view) | child<Layout>)
 
-            template<typename V> requires (not indicesoid<layout_type>)
+            template<typename V> requires (not indicesoid<layout_type>) && (not relayout_view_instantiated<V>)
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-                AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, V>()>{} })
+            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, V>()>{} })
+
+            template<relayout_view_instantiated V> requires (not indicesoid<layout_type>) 
+            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
+            AS_EXPRESSION(relayout_view{ 
+                FWD(view).base(),
+                constant_t<detail::mapped_layout<normalize_layout<Layout, V>()>(purified<V>::layout)>{}
+            })
         };
 
         template<size_t N>
