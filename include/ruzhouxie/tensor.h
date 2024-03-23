@@ -55,7 +55,7 @@ namespace ruzhouxie
     template<size_t NRow, size_t NColumn = NRow, typename T = defalut_value_t>
     using mat = rmat<NRow, NColumn>;
 
-    template<typename T>
+    template<typename T = defalut_value_t>
     using quat = view<array<T, 4>>;
 }
 
@@ -63,7 +63,8 @@ namespace ruzhouxie
 {
     RUZHOUXIE_INLINE constexpr decltype(auto) tree_invoke(auto&& fn, auto&&...args)noexcept
 	{
-	    if constexpr (requires{ fn(FWD(args)...); })
+		//if constexpr (requires{ fn(FWD(args)...); })
+	    if constexpr ((... || terminal<decltype(args)>))
 		{
 		    return fn(FWD(args)...);
 		}

@@ -2,6 +2,7 @@
 #include <ruzhouxie\constant.h>
 #include <ruzhouxie\tensor.h>
 #include <glm\glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <random>
 #include <vector>
 #include <chrono>
@@ -109,13 +110,15 @@ void glm_test()
 	    m[2][2] = random();
 	    m[3][2] = random();
 
-	    m[0][3] = zero;
-	    m[1][3] = zero;
-	    m[2][3] = zero;
-	    m[3][3] = one;
+	    m[0][3] = ::zero;
+	    m[1][3] = ::zero;
+	    m[2][3] = ::zero;
+	    m[3][3] = ::one;
 	}
 
 	{
+		glm::quat q1{glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))};
+		glm::mat4_cast(q1);
 	    std::cout << "glm\n";
 	    timer t{};
 	    for (size_t i = 0; i < N; ++i)

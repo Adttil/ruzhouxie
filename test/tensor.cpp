@@ -1,10 +1,20 @@
+#include <random>
 #include <ruzhouxie/tensor.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 #include "test_tool.h"
+
 
 using namespace ruzhouxie;
 
-template<auto>
-struct foo_t{};
+inline std::mt19937 gen{ 0 };
+
+inline float random() 
+{
+    static std::uniform_real_distribution<float> dis(-1, 1);
+    return dis(gen);
+}
 
 TEST(tensor, _)
 {
@@ -52,3 +62,88 @@ TEST(tensor, _)
     constexpr mat<2, 2> emul = +(m1 * m1);
     MAGIC_CHECK(emul, mat<2, 2>{ 1, 4, 9, 16 });
 }
+
+TEST(tensor, glm)
+{
+    gen.seed(233);
+    glm::mat4 r{ 1.0f };
+    
+    for(size_t i = 0; i < 100000000; ++i)
+    {
+        glm::mat4 m;
+        {
+            m[0][0] = random();
+            m[1][0] = random();
+            m[2][0] = random();
+            m[3][0] = random();
+        
+            m[0][1] = random();
+            m[1][1] = random();
+            m[2][1] = random();
+            m[3][1] = random();
+        
+            m[0][2] = random();
+            m[1][2] = random();
+            m[2][2] = random();
+            m[3][2] = random();
+        
+            m[0][3] = 0;
+            m[1][3] = 0;
+            m[2][3] = 0;
+            m[3][3] = 1;
+        }
+        r = r * m;
+    }
+
+    std::cout << "glm: \n";
+    for(int i = 0; i < 4; ++i)
+    {
+        for(int j = 0; j < 4; ++j)
+        {
+            std::cout << r[j][i] << ", ";
+        }
+    }
+    std::cout << '\n';
+}
+
+TEST(tensor, rzx)
+{
+    gen.seed(233);
+    mat<4, 4, float> r{ 
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    
+    for(size_t i = 0; i < 100000000; ++i)
+    {
+        mat<4, 4, float> m;
+        (m | child<0, 0>) = random();
+		(m | child<0, 1>) = random();
+		(m | child<0, 2>) = random();
+		(m | child<0, 3>) = random();
+		(m | child<1, 0>) = random();
+		(m | child<1, 1>) = random();
+		(m | child<1, 2>) = random();
+		(m | child<1, 3>) = random();
+		(m | child<2, 0>) = random();
+		(m | child<2, 1>) = random();
+		(m | child<2, 2>) = random();
+		(m | child<2, 3>) = random();
+
+		(m | child<3, 0>) = 0;
+		(m | child<3, 1>) = 0;
+		(m | child<3, 2>) = 0;
+		(m | child<3, 3>) = 1;
+        r = +mat_mul(r, m);
+    }
+    
+    std::cout << "rzx: \n";
+    for(auto i : r.base())
+    {
+        std::cout << i << ", ";
+    }
+    std::cout << '\n';
+}
+

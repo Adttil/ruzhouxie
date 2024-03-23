@@ -85,6 +85,8 @@ namespace ruzhouxie
     template<typename T>
     struct view : detail::view_base<T>, view_interface<view<T>>
     {
+        using base_type = T;
+
         template<size_t I, specified<view> Self>
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, Self&& self)
             AS_EXPRESSION(getter<T>{}.template get<I>(FWD(self).base()))

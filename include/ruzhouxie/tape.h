@@ -11,6 +11,9 @@
 
 namespace ruzhouxie
 {
+    template<typename T>
+    struct view;
+
     template<typename T, auto Layout>
     struct relayout_view;
     
@@ -537,6 +540,19 @@ namespace ruzhouxie::detail
         {
             get_children_tapes<Seq>(FWD(view))
         };
+    }
+
+    namespace get_tape_t_ns
+    {
+        // template<typename T>
+        // bool is_independence_group()
+        // {
+
+        //     if constexpr(requires { tag_invoke<indices_of_whole_view>(get_tape<indices_of_whole_view>, std::declval<T>()); } )
+        //     {
+        //         return false;
+        //     }
+        // }
     }
 }
 
