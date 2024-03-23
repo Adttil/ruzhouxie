@@ -123,8 +123,8 @@ namespace ruzhouxie
     inline constexpr auto mat_mul_vec = []<typename M, typename V>(M&& mat, V&& vec)
 	{
 		//Compilation is too slow
-	    //return zip_transform(dot, FWD(mat), FWD(vec) | repeat<child_count<M>>);
-		return FWD(mat) | transform([vec = wrapper<V>{ FWD(vec) }](auto&& row){ return dot(FWD(row), vec.value()); });
+	    return zip_transform(dot, FWD(mat), FWD(vec) | repeat<child_count<M>>);
+		//return FWD(mat) | transform([vec = FWD(vec)](auto&& row){ return dot(FWD(row), vec); });
 	};
 
     inline constexpr auto vec_mul_mat = [](auto&& _vec, auto&& _mat)
