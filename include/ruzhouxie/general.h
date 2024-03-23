@@ -157,7 +157,7 @@ namespace ruzhouxie
 	{
 	    T raw_value;
 
-	    constexpr decltype(auto) value(this auto&& self)noexcept
+	    constexpr auto&& value(this auto&& self)noexcept
 		{
 		    return FWD(self, raw_value);
 		}
