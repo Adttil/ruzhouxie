@@ -104,6 +104,31 @@ namespace ruzhouxie
 		}(std::make_index_sequence<child_count<decltype(mul)>>{});
 	};
 
+	inline constexpr auto cross = []<typename L, typename R>(L&& l, R&& r)
+	{
+		if constexpr(child_count<L> == 2uz && child_count<R> == 2uz)
+		{
+			return child<0uz>(l) * child<1uz>(r) - child<1uz>(l) * child<0uz>(r);
+		}
+		else if constexpr(child_count<L> == 3uz && child_count<R> == 3uz)
+		{
+			constexpr auto layout = tuple
+			{
+				tuple{ array{ 0uz, 1uz }, array{ 1uz, 2uz }, array{ 1uz, 1uz }, array{ 0uz, 2uz } },
+				tuple{ array{ 0uz, 2uz }, array{ 1uz, 0uz }, array{ 1uz, 2uz }, array{ 0uz, 0uz } },
+				tuple{ array{ 0uz, 0uz }, array{ 1uz, 1uz }, array{ 1uz, 0uz }, array{ 0uz, 1uz } }
+			};
+			return tuple<L, R>{ FWD(l), FWD(r) } | relayout<layout> | transform([](auto&& args)
+			{
+				return child<0uz>(args) * child<1uz>(args) - child<2uz>(args) * child<3uz>(args);
+			});
+		}
+		else
+		{
+			static_assert(child_count<L> == 2uz && child_count<R> == 2uz);
+		}
+	};
+
     inline constexpr auto len_sq = [](auto&& vector)
 	{
 	    return dot(FWD(vector), FWD(vector));

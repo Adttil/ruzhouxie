@@ -147,3 +147,12 @@ TEST(tensor, rzx)
     std::cout << '\n';
 }
 
+TEST(vec_cross, d3)
+{
+    vec<3> a{1, 2, 3};
+    vec<3> b{3, 4, 5};
+
+    vec<3> r = +cross(a, b);
+
+    MAGIC_CHECK(r, vec<3>{ -2, 4, -2 });
+}
