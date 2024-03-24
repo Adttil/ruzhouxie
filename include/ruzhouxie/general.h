@@ -162,6 +162,9 @@ namespace ruzhouxie
 		    return FWD(self, raw_value);
 		}
 	};
+
+	template<typename T>
+	wrapper(T&&) -> wrapper<T>;
 }
 
 namespace ruzhouxie

@@ -547,7 +547,7 @@ namespace ruzhouxie::detail
         constexpr inline auto seq_of_whole_view = tuple{ indices_of_whole_view };
 
         template<>
-        struct detail::get_tape_t_ns::get_tape_t<seq_of_whole_view>
+        struct get_tape_t<seq_of_whole_view>
         {
             template<typename T>
             RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t)const noexcept
