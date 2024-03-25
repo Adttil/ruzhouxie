@@ -241,10 +241,10 @@ namespace ruzhouxie
     template<typename V, typename F>
     invoke_view(V&&, F&&) -> invoke_view<V, F>;
 
-    constexpr inline auto invoke = [](auto&& view, auto&& fn)
+    constexpr inline auto invoke = tree_adaptor{ [](auto&& view, auto&& fn)
     {
         return invoke_view{ FWD(view), FWD(fn) };
-    };
+    }};
 }
 
 #include "macro_undef.h"

@@ -83,6 +83,9 @@ namespace ruzhouxie
             };
         }
     };
+
+    template<typename Fn>
+    tree_adaptor(Fn&&) -> tree_adaptor<std::decay_t<Fn>>;
 }
 
 #include "macro_undef.h"
