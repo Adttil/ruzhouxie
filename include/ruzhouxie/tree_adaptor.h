@@ -79,7 +79,7 @@ namespace ruzhouxie
             return tree_adaptor_closure
             {
                 //Requires on lambda have some many different behaviors in different compilers.
-                closure_fn<std::decay_t<Args>...>{ rzx::as_base<Fn>(FWD(self)), { FWD(args)... } }
+                closure_fn<Args...>{ rzx::as_base<Fn>(FWD(self)), { FWD(args)... } }
             };
         }
     };
