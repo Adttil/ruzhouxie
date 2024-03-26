@@ -1,6 +1,6 @@
 #include "test_tool.h"
 #include <array>
-#include <ruzhouxie\transform.h>
+#include <ruzhouxie\tensor.h>
 //#include <ruzhouxie\constant.h>
 
 namespace rzx = ruzhouxie;

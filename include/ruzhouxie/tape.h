@@ -427,6 +427,19 @@ namespace ruzhouxie
 
 namespace ruzhouxie::detail
 {
+    template<typename TLayout, size_t N>
+    RUZHOUXIE_CONSTEVAL auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
+    {
+        if constexpr(indicesoid<TLayout>)
+        {
+            return detail::concat_array(prefix, layout);
+        }
+        else return[&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(layout_add_prefix(layout | child<I>, prefix)...);
+        }(std::make_index_sequence<child_count<TLayout>>{});
+    }
+
     template<typename TSeq>
     static RUZHOUXIE_CONSTEVAL auto init_children_tapes_map()
     {
@@ -516,7 +529,7 @@ namespace ruzhouxie::detail
             }
             else
             {
-                return detail::concat_array(array{ Seq[0] }, ChildTapeSeqs | child<Seq[0], Map>); 
+                return detail::layout_add_prefix(ChildTapeSeqs | child<Seq[0], Map>, array{ Seq[0] });
             }
         }
         else return[]<size_t...I>(std::index_sequence<I...>)

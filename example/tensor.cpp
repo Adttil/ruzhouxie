@@ -41,7 +41,8 @@ int main()
     
 
     //auto mat = std::array{ X{ 1, 2.0 }, X{ 3, 4.0 } };
-    auto mat = rzx::mat<2, 2>{ 1.0, 2.0, 3.0, 4.0 };
+    constexpr auto mat = rzx::mat<2, 2>{ 1.0, 2.0, 3.0, 4.0 };
+    constexpr rzx::mat<2, 2> rr = +rzx::mat_mul(mat, mat);
     using mat_t = decltype(mat);
         // rzx::mat<2, 2>{ rzx::array{ 1.0, 2.0 }, rzx::array{ 3.0, 4.0 } };
     auto vec = rzx::array{ 1.0, 2.0 };
