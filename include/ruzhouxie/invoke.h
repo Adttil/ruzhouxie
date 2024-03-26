@@ -236,32 +236,11 @@ namespace ruzhouxie
             }(std::make_index_sequence<child_count<decltype(UniqueInSeqZip)>>{});
         }
 
-        template<auto Seq, typename Self>
-        struct data_type
+        template<auto out_tape_seq, typename BaseTape, typename FnTape>
+        struct data_type// : constant_t<out_tape_seq>
         {
-            //static constexpr auto adapt_seq = detail::sequence_adapt_truncate<Seq, F>();
-            //static constexpr auto flat_seq = detail::sequence_flatten(adapt_seq);
-            static constexpr auto adapt_flat_seq = detail::sequence_adapat_to_leaf<Seq, F>();
-
-            static constexpr auto in_tape_seq_and_map = get_in_tape_seq_and_map<adapt_flat_seq>();
-            static constexpr auto in_tape_seq = in_tape_seq_and_map.sequence;
-            static constexpr auto out_tape_seq = detail::mapped_layout<Seq>(in_tape_seq_and_map.map);
-
-            RUZHOUXIE_INLINE static constexpr auto init_base_tape(auto&& self)
-            {
-                return FWD(self).base() | get_tape<in_tape_seq>;
-            }
-
-            RUZHOUXIE_INLINE static constexpr auto init_fn_tape(auto&& self)
-            {
-                return FWD(self).fn_tree() | get_tape<in_tape_seq>;
-            }
-
-            purified<decltype(init_base_tape(std::declval<Self>()))> base_tape;
-            purified<decltype(init_fn_tape(std::declval<Self>()))> fn_tape;
-
-            static constexpr auto base_tape_seq = purified<decltype(base_tape)>::sequence;
-            static constexpr auto fn_tape_seq = purified<decltype(fn_tape)>::sequence;
+            static constexpr auto base_tape_seq = BaseTape::sequence;
+            static constexpr auto fn_tape_seq = FnTape::sequence;
  
             static constexpr auto in_tape_seq_zip = detail::sequence_zip(base_tape_seq, fn_tape_seq);
  
@@ -272,66 +251,50 @@ namespace ruzhouxie
      
             static constexpr auto result_vec_seq = detail::mapped_layout<out_tape_seq>(unique_in_map);
 
-            purified<decltype(get_result_vec<unique_in_seq_zip>(init_base_tape(std::declval<Self>()), init_fn_tape(std::declval<Self>())))>
-                result_vec = get_result_vec<unique_in_seq_zip>(std::move(base_tape), std::move(fn_tape));
+            using result_vec_t = decltype(get_result_vec<unique_in_seq_zip>(std::declval<BaseTape>(), std::declval<FnTape>()));
             
-            using result_vec_t = decltype(result_vec);
-
-            purified<decltype(std::declval<result_vec_t&>() | get_tape<result_vec_seq>)> result_tape
-                = result_vec | get_tape<result_vec_seq>;
-
-            //static constexpr auto sequence = result_vec_seq;
-            static constexpr auto sequence = purified<decltype(result_tape)>::sequence;
-
-            RUZHOUXIE_INLINE constexpr data_type(Self&& self)
-                : base_tape(init_base_tape(FWD(self)))
-                , fn_tape(init_fn_tape(FWD(self)))
-                //, result_vec()
-                //, result_tape(result_vec | get_tape<result_vec_seq>)
-            {}
-
-            data_type(data_type&&) = delete;
-
-            template<size_t I, specified<data_type> S>
-            RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, S&& self)
-            AS_EXPRESSION(getter<purified<decltype(FWD(self, result_tape, data))>>{}.template get<I>(FWD(self, result_tape, data)))
+            using result_tape_t = decltype(std::declval<result_vec_t>() | get_tape<result_vec_seq>);
+            
+            static constexpr auto sequence = result_vec_seq;
+            //static constexpr auto sequence = result_tape_t::sequence;
+            constant_t<out_tape_seq> foo;
+            BaseTape base_tape;
+            FnTape fn_tape;
+            result_vec_t result_vec =  get_result_vec<unique_in_seq_zip>(std::move(base_tape), std::move(fn_tape));
+            result_tape_t result_tape = std::move(result_vec) | get_tape<result_vec_seq>;
 
             // template<size_t I, specified<data_type> S>
             // RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, S&& self)
-            // AS_EXPRESSION(getter<purified<decltype(FWD(self, result_vec))>>{}.template get<I>(FWD(self, result_vec)))
+            // AS_EXPRESSION(getter<purified<decltype(FWD(self, result_tape, data))>>{}.template get<I>(FWD(self, result_tape, data)))
+
+            template<size_t I, specified<data_type> S>
+            RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<child<I>>, S&& self)
+            AS_EXPRESSION(getter<purified<decltype(FWD(self, result_vec))>>{}.template get<I>(FWD(self, result_vec)))
         };
+
+        template<auto out_tape_seq, typename BaseTape, typename FnTape>
+        data_type(constant_t<out_tape_seq>, BaseTape&&, FnTape&&) -> data_type<out_tape_seq, std::decay_t<BaseTape>, std::decay_t<FnTape>>;
 
         template<auto Seq, specified<invoke_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
         RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
         {
-            using data_t = data_type<Seq, Self&&>;
+            //return tape_t<Self&&, Seq>{ FWD(self) };
+            constexpr auto adapt_flat_seq = detail::sequence_adapat_to_leaf<Seq, F>();
+            constexpr auto in_tape_seq_and_map = get_in_tape_seq_and_map<adapt_flat_seq>();
+            constexpr auto in_tape_seq = in_tape_seq_and_map.sequence;
+            constexpr auto out_tape_seq = detail::mapped_layout<Seq>(in_tape_seq_and_map.map);
+
+            using data_t = decltype(data_type{ 
+                constant_t<out_tape_seq>{}, 
+                FWD(self).base() | get_tape<in_tape_seq>,
+                FWD(self).fn_tree() | get_tape<in_tape_seq>
+            });
             constexpr auto sequence = data_t::sequence;
-            return tape_t<data_t, sequence>{ data_t{ FWD(self) } };
-
-            // constexpr auto adapt_seq = detail::sequence_adapt_truncate<Seq, F>();
-            
-            // constexpr auto flat_seq = detail::sequence_flatten(adapt_seq);
-            // constexpr auto flat_seq_map = detail::sequence_flatten_map<decltype(adapt_seq)>();
-            // constexpr auto in_tape_seq = detail::mapped_layout<Seq>(flat_seq_map);
-
-            // auto base_tape = FWD(self).base() | get_tape<flat_seq>;
-            // auto fn_tape = FWD(self).fn_tree() | get_tape<flat_seq>;
-
-            // constexpr auto base_tape_seq = base_tape.sequence;
-            // constexpr auto fn_tape_seq = fn_tape.sequence;
-
-            // constexpr auto in_tape_seq_zip = detail::sequence_zip(base_tape_seq, fn_tape_seq);
-
-            // constexpr auto unique_in_seq_and_map = detail::get_unique_seq_and_map<in_tape_seq_zip>();
-            // constexpr auto unique_in_seq_zip = unique_in_seq_and_map.sequence;
-              
-            // constexpr auto unique_in_map = detail::index_array_to_sequence(unique_in_seq_and_map.map);
-            
-            // constexpr auto result_vec_seq = detail::mapped_layout<in_tape_seq>(unique_in_map);
-
-            // auto result_vec = get_result_vec<unique_in_seq_zip>(FWD(base_tape), FWD(fn_tape));
-
-            // return result_vec | get_tape<result_vec_seq>;
+            return tape_t<data_t, sequence>{ data_type{ 
+                constant_t<out_tape_seq>{}, 
+                FWD(self).base() | get_tape<in_tape_seq>,
+                FWD(self).fn_tree() | get_tape<in_tape_seq>
+            } };
         }
     };
 
