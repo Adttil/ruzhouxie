@@ -608,10 +608,10 @@ namespace ruzhouxie
                 return { strategy_t::tag_invoke, noexcept(tag_invoke<seq>(get_tape<seq>, std::declval<T>())) };
             }
             //else if constexpr(branched<T>)
-            else if constexpr(not is_independence_group<T>())
-            {
-                return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
-            }
+            // else if constexpr(not is_independence_group<T>())
+            // {
+            //     return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
+            // }
             else
             {
                 return { strategy_t::terminal, true };
@@ -630,10 +630,10 @@ namespace ruzhouxie
             {
                 return tag_invoke<seq>(get_tape<seq>, FWD(t));
             }
-            else if constexpr(strategy == strategy_t::branched)
-            {
-                return detail::get_tuple_tape<seq>(FWD(t));
-            }
+            // else if constexpr(strategy == strategy_t::branched)
+            // {
+            //     return detail::get_tuple_tape<seq>(FWD(t));
+            // }
             else if constexpr(strategy == strategy_t::terminal)
             {
                 return tape_t<T&&, seq>{ FWD(t) };

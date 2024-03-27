@@ -123,7 +123,7 @@ void glm_test()
 	    timer t{};
 	    for (size_t i = 0; i < N; ++i)
 		{
-            m = m * m * m;
+            m = m * m;// * m;
 			//data[i - 2] = data[i - 1] * data[i];
 			// auto&& r = m * m[3];
 			// m[0][0] = r[0];
@@ -174,7 +174,8 @@ void rzx_test()
 			//m = mat_mul(m, m);
 
 			//[[msvc::flatten]]
-		    m = +mat_mul(mat_mul(m, m), m);
+			//m = +mat_mul(mat_mul(m, m), m);
+		    m = +mat_mul(m, m);
 
 			//m | child<0> = mat_mul_vec(m, m | component<3, 1>)/* | to<tuple>()*/;
 			/*m | child<0, 3> = r | child<0>;
@@ -216,7 +217,7 @@ void rzx2_test()
 			//m = mat_mul(m, m);
 
 			//[[msvc::flatten]]
-		    m = +mat_mul(mat_mul(m, m), m);
+		    m = +mat_mul(m, m);
 
 			//m | child<0> = mat_mul_vec(m, m | component<3, 1>)/* | to<tuple>()*/;
 			/*m | child<0, 3> = r | child<0>;

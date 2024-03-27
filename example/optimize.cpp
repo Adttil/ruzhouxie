@@ -42,7 +42,7 @@ struct X : Base<X>
 
 int main()
 {
-    std::cout << rzx::child_count<decltype(rzx::tuple{} | rzx::transform(std::negate<>{}))> << '\n';
+    //std::cout << rzx::child_count<decltype(rzx::tuple{} | rzx::transform(std::negate<>{}))> << '\n';
 
     std::array<std::array<int, 2>, 2> result = +(233 | rzx::repeat<2> | rzx::transform(neg) |  rzx::repeat<2>);
 
