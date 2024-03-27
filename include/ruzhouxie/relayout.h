@@ -229,18 +229,7 @@ namespace ruzhouxie
 {
     namespace detail
     {
-        template<typename TLayout, size_t N>
-        RUZHOUXIE_CONSTEVAL auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
-        {
-            if constexpr(indicesoid<TLayout>)
-            {
-                return detail::concat_array(prefix, layout);
-            }
-            else return[&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return make_tuple(layout_add_prefix(layout | child<I>, prefix)...);
-            }(std::make_index_sequence<child_count<TLayout>>{});
-        }
+        
     }
 
     template<typename T>
@@ -376,6 +365,107 @@ namespace ruzhouxie
     
     template<size_t Begin, size_t Count>
     inline constexpr tree_adaptor_closure<detail::span_t<Begin, Count>> span{};
+}
+
+//combine
+namespace ruzhouxie
+{
+    namespace detail
+    {
+        struct combine_t
+        {
+            template<typename V>
+            static constexpr decltype(auto) get_base(V&& view)noexcept
+            {
+                if constexpr(relayout_view_instantiated<V>)
+                {
+                    return FWD(view).base();
+                }
+                else
+                {
+                    return FWD(view);
+                }
+            }
+
+            template<typename V>
+            static constexpr auto get_layout()noexcept
+            {
+                if constexpr(relayout_view_instantiated<V>)
+                {
+                    return purified<V>::layout;
+                }
+                else
+                {
+                    return default_layout<V>;
+                }
+            }
+
+            template<typename...T>
+            static constexpr tuple<T...> pass_tuple(T&&...args)
+            {
+                return { FWD(args)... };
+            }
+
+            template<typename...V>
+            RUZHOUXIE_INLINE constexpr auto operator()(V&&...view)const
+            {
+                if constexpr(not (false || ... || relayout_view_instantiated<V>))
+                {
+                    return tuple<V...>{ FWD(view)... };
+                }
+                else return [&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    constexpr auto layout = make_tuple(layout_add_prefix(get_layout<V>(), array{ I })...);
+                    return relayout_view{ pass_tuple(get_base(FWD(view))...), constant_t<layout>{} };
+                }(std::index_sequence_for<V...>{});
+            }
+        };
+    }
+    
+    inline constexpr detail::combine_t combine{};
+}
+
+//grouped_cartesian
+namespace ruzhouxie
+{
+    namespace detail
+    {
+        template<typename V>
+        constexpr inline auto vector_layout = []<size_t...I>(std::index_sequence<I...>)
+        {
+            return tuple{ array{I}... };
+        }(std::make_index_sequence<child_count<V>>{});
+
+        template<typename L1, typename L2>
+        RUZHOUXIE_CONSTEVAL auto layout_grouped_cartesian(const L1& layout1, const L2& layout2)
+        {
+            if constexpr(indicesoid<L1>)
+            {
+                return [&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    return make_tuple(make_tuple(
+                        detail::concat_array(array{ 0uz }, layout1), 
+                        detail::concat_array(array{ 1uz }, layout2 | child<I>)
+                        )...);
+                }(std::make_index_sequence<child_count<L2>>{});
+            }
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return make_tuple(layout_grouped_cartesian(layout1 | child<I>, layout2)...);
+            }(std::make_index_sequence<child_count<L1>>{});
+        }
+
+        struct grouped_cartesian_t
+        {
+            template<typename V1, typename V2>
+            RUZHOUXIE_INLINE constexpr auto operator()(V1&& view1, V2 view2)const
+            {
+                return tuple<V1, V2>{ FWD(view1), FWD(view2) } | relayout<layout_grouped_cartesian(vector_layout<V1>, vector_layout<V2>)>;
+            }
+        };
+    }
+    
+    inline constexpr detail::grouped_cartesian_t grouped_cartesian{};
 }
 
 #include "macro_undef.h"

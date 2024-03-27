@@ -4,7 +4,8 @@
 #include "general.h"
 #include "math.h"
 #include "relayout.h"
-#include "transform.h"
+//#include "transform.h"
+#include "invoke2.h"
 
 #include "macro_define.h"
 
@@ -160,9 +161,16 @@ namespace ruzhouxie
 
     inline constexpr auto mat_mul = [](auto&& l, auto&& r)
 	{
+		return grouped_cartesian_transform(dot, FWD(l), FWD(r) | transpose<>);
+		// constexpr array<array<array<size_t, 0uz>, tensor_shape<decltype(r)>[1uz]>, child_count<decltype(l)>> layout{};
+
+		// return invoke(
+		// 	grouped_cartesian(FWD(l), FWD(r) | transpose<>),
+		// 	[](auto&& x){ return dot(child<0uz>(FWD(x)), child<1uz>(FWD(x))); } | relayout<layout>
+		// );
 		//Compilation is too slow
 		//return zip_transform(vec_mul_mat, FWD(l), FWD(r) | repeat<child_count<L>>);
-		return FWD(l) | transform([r = wrapper{ FWD(r) }](auto&& l_row){ return vec_mul_mat(FWD(l_row), r.value()); });
+		//return FWD(l) | transform([r = wrapper{ FWD(r) }](auto&& l_row){ return vec_mul_mat(FWD(l_row), r.value()); });
 	};
 }
 
