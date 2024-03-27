@@ -637,6 +637,7 @@ namespace ruzhouxie
             else if constexpr(strategy == strategy_t::terminal)
             {
                 return tape_t<T&&, seq>{ FWD(t) };
+                //return tape_t<T&, seq>{ t };
             }
             else
             {

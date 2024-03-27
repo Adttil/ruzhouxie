@@ -367,6 +367,64 @@ namespace ruzhouxie
     inline constexpr tree_adaptor_closure<detail::span_t<Begin, Count>> span{};
 }
 
+//combine
+namespace ruzhouxie
+{
+    namespace detail
+    {
+        struct combine_t
+        {
+            template<typename V>
+            static constexpr decltype(auto) get_base(V&& view)noexcept
+            {
+                if constexpr(relayout_view_instantiated<V>)
+                {
+                    return FWD(view).base();
+                }
+                else
+                {
+                    return FWD(view);
+                }
+            }
+
+            template<typename V>
+            static constexpr auto get_layout()noexcept
+            {
+                if constexpr(relayout_view_instantiated<V>)
+                {
+                    return purified<V>::layout;
+                }
+                else
+                {
+                    return default_layout<V>;
+                }
+            }
+
+            template<typename...T>
+            static constexpr tuple<T...> pass_tuple(T&&...args)
+            {
+                return { FWD(args)... };
+            }
+
+            template<typename...V>
+            RUZHOUXIE_INLINE constexpr auto operator()(V&&...view)const
+            {
+                if constexpr(not (false || ... || relayout_view_instantiated<V>))
+                {
+                    return tuple<V...>{ FWD(view)... };
+                }
+                else return [&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    constexpr auto layout = make_tuple(layout_add_prefix(get_layout<V>(), array{ I })...);
+                    return relayout_view{ pass_tuple(get_base(FWD(view))...), constant_t<layout>{} };
+                }(std::index_sequence_for<V...>{});
+            }
+        };
+    }
+    
+    inline constexpr detail::combine_t combine{};
+}
+
 //grouped_cartesian
 namespace ruzhouxie
 {
