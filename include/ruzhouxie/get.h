@@ -411,8 +411,40 @@ namespace ruzhouxie::detail
         }
         else return []<size_t...I>(std::index_sequence<I...>)
         {
-            return make_tuple(normalize_layout<Layout | child<I>, V>()...);
+            constexpr auto child_relayout = make_tuple(normalize_layout<Layout | child<I>, V>()...);
+            constexpr size_t n = child_count<decltype(child_relayout.template get<0uz>())>;
+
+            if constexpr(n > 0uz
+                && (... && indicesoid<decltype(child_relayout.template get<I>())>)
+                && (... && (n == child_count<decltype(child_relayout.template get<I>())>))
+            )
+            {
+                constexpr auto prefix = array_take<n - 1uz>(child_relayout.template get<0uz>());
+                if constexpr((... && (prefix == array_take<n - 1uz>(child_relayout.template get<I>())))
+                    && (... && ((child_relayout.template get<I>())[n - 1uz] == I))
+                )
+                {
+                    return prefix;
+                }
+                else
+                {
+                    return child_relayout;
+                }
+            }
+            else
+            {
+                return child_relayout;
+            }
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<auto Seq, typename V>
+    RUZHOUXIE_CONSTEVAL auto normalize_sequence()
+    {
+        return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return make_tuple(normalize_layout<Seq | child<I>, V>()...);
+        }(std::make_index_sequence<child_count<decltype(Seq)>>{});
     }
 }
 

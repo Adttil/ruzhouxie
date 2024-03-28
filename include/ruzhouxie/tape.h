@@ -601,9 +601,9 @@ namespace ruzhouxie
         template<typename T>
         static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> choose()
         {
-            constexpr auto seq = normalize_layout<Sequence, T>();
+            constexpr auto seq = normalize_sequence<Sequence, T>();
             //This requires con not use "seq" in clang.
-            if constexpr (requires{ tag_invoke<normalize_layout<Sequence, T>()>(get_tape<normalize_layout<Sequence, T>()>, std::declval<T>()); })
+            if constexpr (requires{ tag_invoke<normalize_sequence<Sequence, T>()>(get_tape<normalize_sequence<Sequence, T>()>, std::declval<T>()); })
             {
                 return { strategy_t::tag_invoke, noexcept(tag_invoke<seq>(get_tape<seq>, std::declval<T>())) };
             }
@@ -625,7 +625,7 @@ namespace ruzhouxie
             requires(choose<T>().strategy != strategy_t::none)
         {
             constexpr strategy_t strategy = choose<T>().strategy;
-            constexpr auto seq = normalize_layout<Sequence, T>();
+            constexpr auto seq = normalize_sequence<Sequence, T>();
             if constexpr (strategy == strategy_t::tag_invoke)
             {
                 return tag_invoke<seq>(get_tape<seq>, FWD(t));

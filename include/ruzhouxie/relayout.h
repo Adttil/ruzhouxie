@@ -19,6 +19,7 @@ namespace ruzhouxie
         enum class relayout_view_child_Strategy
         {
             none,
+            indices,
             child,
             relayout
         };
@@ -118,6 +119,17 @@ namespace ruzhouxie
             using strategy_t = detail::relayout_view_child_Strategy;
             using layout_type = purified<decltype(Layout)>;
 
+            if constexpr(indicesoid<layout_type>)
+            {
+                if constexpr(I < child_count<child_type<V, Layout>>)
+                {
+                    return { strategy_t::indices, noexcept(std::declval<Self>().base() | child<Layout> | child<I>) };
+                }
+                else
+                {
+                    return { strategy_t::none, true };
+                }
+            }
             if constexpr(I >= child_count<layout_type>)
             {
                 return { strategy_t::none, true };
@@ -150,6 +162,10 @@ namespace ruzhouxie
             if constexpr (strategy == strategy_t::none)
             {
                 return end();
+            }
+            else if constexpr(strategy == strategy_t::indices)
+            {
+                return FWD(self).base() | child<Layout> | child<I>;
             }
             else if constexpr(strategy == strategy_t::child)
             {
