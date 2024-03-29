@@ -16,7 +16,7 @@ namespace ruzhouxie
 {
     namespace detail 
     {
-        enum class relayout_view_child_Strategy
+        enum class relayout_view_child_strategy
         {
             none,
             indices,
@@ -114,9 +114,9 @@ namespace ruzhouxie
         static constexpr auto layout = Layout;
     private:
         template<size_t I, specified<relayout_view> Self>
-        static RUZHOUXIE_CONSTEVAL choice_t<detail::relayout_view_child_Strategy> child_Choose()
+        static RUZHOUXIE_CONSTEVAL choice_t<detail::relayout_view_child_strategy> child_choose()
         {
-            using strategy_t = detail::relayout_view_child_Strategy;
+            using strategy_t = detail::relayout_view_child_strategy;
             using layout_type = purified<decltype(Layout)>;
 
             if constexpr(indicesoid<layout_type>)
@@ -154,10 +154,10 @@ namespace ruzhouxie
     public:
         template<size_t I, specified<relayout_view> Self>
         RUZHOUXIE_INLINE friend constexpr decltype(auto) tag_invoke(tag_t<child<I>>, Self&& self)
-            noexcept(child_Choose<I, Self>().nothrow)
+            noexcept(child_choose<I, Self>().nothrow)
         {
-            using strategy_t = detail::relayout_view_child_Strategy;
-            constexpr strategy_t strategy = child_Choose<I, Self>().strategy;
+            using strategy_t = detail::relayout_view_child_strategy;
+            constexpr strategy_t strategy = child_choose<I, Self>().strategy;
             
             if constexpr (strategy == strategy_t::none)
             {
@@ -186,8 +186,10 @@ namespace ruzhouxie
         }
 
         template<auto Seq, specified<relayout_view> Self> requires(not std::same_as<decltype(Seq), size_t>)
-        RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self)
-            AS_EXPRESSION(FWD(self).base() | get_tape<detail::mapped_layout<Seq>(Layout)>)
+        RUZHOUXIE_INLINE friend constexpr auto tag_invoke(tag_t<get_tape<Seq>>, Self&& self) AS_EXPRESSION
+        (
+            FWD(self).base() | get_tape<detail::mapped_layout<Seq>(Layout)>
+        )
 
         template<std::same_as<relayout_view> Self>
         friend RUZHOUXIE_CONSTEVAL auto tag_invoke(tag_t<make_tree<Self>>)
@@ -224,7 +226,7 @@ namespace ruzhouxie
     template<auto Layout>
     struct detail::relayout_t
     {
-        using layout_type = purified<decltype(Layout)>;
+    private:
         using strategy_t = relayout_strategy_t;
 
         template<typename V>
@@ -266,6 +268,7 @@ namespace ruzhouxie
             }
         }
 
+    public:
         template<typename V>
         RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
             noexcept(choose<V>().nothrow)
@@ -313,11 +316,6 @@ namespace ruzhouxie
 
 namespace ruzhouxie
 {
-    namespace detail
-    {
-        
-    }
-
     template<typename T>
     constexpr auto default_layout = []()
     {
@@ -335,11 +333,14 @@ namespace ruzhouxie
     struct relayouter
     {
         template<typename V, specified<Impl> Self>
-        RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, V&& view)
-            AS_EXPRESSION(relayout_view{ 
+        RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, V&& view) AS_EXPRESSION
+        (
+            relayout_view
+            { 
                 FWD(view),
                 constant_t<detail::normalize_layout<purified<Self>::relayout(default_layout<V>), tree_shape_t<V>>()>{} 
-            })
+            }
+        )
     };
 }
 
