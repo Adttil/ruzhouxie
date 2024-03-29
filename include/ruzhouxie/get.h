@@ -139,18 +139,23 @@ namespace ruzhouxie
         }
     }();
 
+    struct leaf_tag_t{};
+
     template<typename T>
     inline constexpr auto tree_shape = []
     {
         if constexpr (terminal<T>)
         {
-            return array{ '{', '}' };
+            return leaf_tag_t{};
         }
         else return[]<size_t...I>(std::index_sequence<I...>)
         {
-            return detail::concat_array<array{ '{' }, tree_shape<child_type<T, I>>..., array{ '}' }>();
+            return make_tuple(tree_shape<child_type<T, I>>...);
         }(std::make_index_sequence<child_count<T>>{});
     }();
+
+    template<typename T>
+    using tree_shape_t = purified<decltype(tree_shape<T>)>;
 
     template<typename T>
     inline constexpr size_t tensor_rank = []
