@@ -206,36 +206,106 @@ namespace ruzhouxie
 
     namespace detail
     {
-        template<auto Layout>
-        struct relayout_t
+        enum struct relayout_strategy_t
         {
-            using layout_type = purified<decltype(Layout)>;
-
-            template<typename V> requires indicesoid<layout_type>
-            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-            AS_EXPRESSION(FWD(view) | child<Layout>)
-
-            template<typename V> requires (not indicesoid<layout_type>) && (not relayout_view_instantiated<V>)
-            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, tree_shape_t<V>>()>{} })
-
-            template<relayout_view_instantiated V> requires (not indicesoid<layout_type>) 
-            RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-            AS_EXPRESSION(relayout_view{ 
-                FWD(view).base(),
-                constant_t<detail::mapped_layout<normalize_layout<Layout, tree_shape_t<V>>()>(purified<V>::layout)>{}
-            })
+            none,
+            child,
+            normal,
+            composite
         };
 
+        template<auto Layout>
+        struct relayout_t;
+    }
+    
+    template<auto Layout>
+    inline constexpr tree_adaptor_closure<detail::relayout_t<Layout>> relayout{};
+    
+    template<auto Layout>
+    struct detail::relayout_t
+    {
+        using layout_type = purified<decltype(Layout)>;
+        using strategy_t = relayout_strategy_t;
+
+        template<typename V>
+        static RUZHOUXIE_CONSTEVAL choice_t<strategy_t> choose()
+        {
+            using shape_t = tree_shape_t<V>;
+            constexpr auto normalized_layout = normalize_layout<Layout, shape_t>();
+            if constexpr(indicesoid<decltype(normalized_layout)>)
+            {
+                if constexpr(requires{ view{ detail::simplify_fwd_tree(std::declval<V>()) | child<normalize_layout<Layout, shape_t>()> }; })
+                {
+                    return { strategy_t::child, noexcept(view{ detail::simplify_fwd_tree(std::declval<V>()) | child<normalized_layout> }) };
+                }
+                else
+                {
+                    return { strategy_t::none };
+                }
+            }
+            else if constexpr(relayout_view_instantiated<V>)
+            {
+                using base_shape_t = tree_shape_t<typename purified<V>::base_type>;
+                constexpr auto composite_layout = normalize_layout<detail::mapped_layout<normalized_layout>(purified<V>::layout), base_shape_t>();
+                if constexpr(requires{ detail::simplify_fwd_tree(std::declval<V>().base()) | relayout<normalize_layout<detail::mapped_layout<normalize_layout<Layout, shape_t>()>(purified<V>::layout), base_shape_t>()>; })
+                {
+                    return { strategy_t::composite, noexcept(detail::simplify_fwd_tree(std::declval<V>().base()) | relayout<composite_layout>) };
+                }
+                else
+                {
+                    return { strategy_t::none };
+                }
+            }
+            else if constexpr(requires{ relayout_view{ detail::simplify_fwd_tree(std::declval<V>()), constant_t<normalize_layout<Layout, shape_t>()>{} }; })
+            {
+                return { strategy_t::normal, noexcept(relayout_view{ detail::simplify_fwd_tree(std::declval<V>()), constant_t<normalized_layout>{} }) };
+            }
+            else
+            {
+                return { strategy_t::none };
+            }
+        }
+
+        template<typename V>
+        RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
+            noexcept(choose<V>().nothrow)
+            requires(choose<V>().strategy != strategy_t::none)
+        {
+            using shape_t = tree_shape_t<V>;
+            constexpr auto normalized_layout = normalize_layout<Layout, shape_t>();
+
+            constexpr strategy_t strategy = choose<V>().strategy;
+
+            if constexpr(strategy == strategy_t::child)
+            {
+                return rzx::view{ detail::simplify_fwd_tree(FWD(view)) | child<normalized_layout> };
+            }
+            else if constexpr(strategy == strategy_t::composite)
+            {
+                using base_shape_t = tree_shape_t<typename purified<V>::base_type>;
+                constexpr auto composite_layout = normalize_layout<detail::mapped_layout<normalized_layout>(purified<V>::layout), base_shape_t>();
+                return detail::simplify_fwd_tree(FWD(view).base()) | relayout<composite_layout>;
+            }
+            else if constexpr(strategy == strategy_t::normal)
+            {
+                return relayout_view{ detail::simplify_fwd_tree(FWD(view)), constant_t<normalized_layout>{} };
+            }
+            else
+            {
+                static_assert(strategy == strategy_t::child, "Should not reach.");
+            }
+        }
+    };
+
+    
+    namespace detail
+    {
         template<size_t N>
         inline constexpr auto repeat_layout = []<size_t...I>(std::index_sequence<I...>)
         {
             return tuple{ array<size_t, I - I>{}... };
         }(std::make_index_sequence<N>{});
-    };
-      
-    template<auto Layout>
-    inline constexpr tree_adaptor_closure<detail::relayout_t<Layout>> relayout{};
+    }
 
     template<size_t N>
     inline constexpr auto repeat = relayout<detail::repeat_layout<N>>;

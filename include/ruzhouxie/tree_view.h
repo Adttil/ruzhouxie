@@ -109,6 +109,22 @@ namespace ruzhouxie
     template<typename T>
     concept view_instantiated = std::same_as<purified<T>, view<typename purified<T>::base_type>>;
 
+    namespace detail 
+    {
+        template<typename V>
+        RUZHOUXIE_INLINE constexpr auto&& simplify_fwd_tree(V&& view)noexcept
+        {
+            if constexpr(view_instantiated<V>)
+            {
+                return FWD(view).base();
+            }
+            else
+            {
+                return FWD(view);
+            }
+        }
+    }
+
     namespace detail
     {
         struct as_ref_t
