@@ -16,8 +16,10 @@ namespace ruzhouxie
     struct processer 
     {
         template<typename V>
-        RUZHOUXIE_INLINE constexpr auto operator()(this const P& self, V&& view)
-            AS_EXPRESSION(self.template process_tape<V&&, 0uz>(FWD(view) | get_tape<P::template get_sequence<V&&>()>))
+        RUZHOUXIE_INLINE constexpr auto operator()(this const P& self, V&& view) AS_EXPRESSION
+        (
+            self.template process_tape<V&&, 0uz>(FWD(view) | get_tape<P::template get_sequence<V&&>()>)
+        )
     };
 }
 
@@ -45,8 +47,10 @@ namespace ruzhouxie
     struct detail::make_tree_t
     {
         template<typename V>
-        RUZHOUXIE_INLINE constexpr auto operator()(V&& view)const
-            AS_EXPRESSION(Tree{ tree_maker<Tree>{}(FWD(view)) })
+        RUZHOUXIE_INLINE constexpr auto operator()(V&& view)const AS_EXPRESSION
+        (
+            Tree{ tree_maker<Tree>{}(FWD(view)) }
+        )
     };
 }
 
@@ -62,8 +66,10 @@ namespace ruzhouxie
         template<typename Tree>
         struct tag_invoke_tree_maker
         {
-            RUZHOUXIE_INLINE constexpr auto operator()(auto&& view)const
-                AS_EXPRESSION(tag_invoke<Tree>(make_tree<Tree>, FWD(view)))
+            RUZHOUXIE_INLINE constexpr auto operator()(auto&& view)const AS_EXPRESSION
+            (
+                tag_invoke<Tree>(make_tree<Tree>, FWD(view))
+            )
         };
     }
     using detail::tag_invoke_tree_maker_ns::tag_invoke_tree_maker;
@@ -85,15 +91,6 @@ namespace ruzhouxie
                 return make_tuple(sequence_add_prefix(sequence | child<I>, prefix)...);
             }(std::make_index_sequence<child_count<decltype(sequence)>>{});
         }
-
-        // template<size_t Offset>
-        // RUZHOUXIE_CONSTEVAL auto sequence_drop(const auto& prefix)
-        // {
-        //     return [&]<size_t...I>(std::index_sequence<I...>)
-        //     {
-        //         return tuple{ array_drop<Offset>(prefix, sequence | child<I>)... };
-        //     }(std::make_index_sequence<child_count<decltype(sequence)>>{});
-        // }
     }
 
     template<typename T>
@@ -106,8 +103,10 @@ namespace ruzhouxie
         };
 
         template<typename V, size_t Offset, typename Tape>
-        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
-            AS_EXPRESSION(static_cast<T>(access<Offset>(FWD(tape))))
+        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const AS_EXPRESSION
+        (
+            static_cast<T>(access<Offset>(FWD(tape)))
+        )
     };
 
     template<typename Tuple>
@@ -143,15 +142,20 @@ namespace ruzhouxie
         }
 
         template<typename T, size_t Offset, size_t I, typename Tape>
-        RUZHOUXIE_INLINE static constexpr auto child_process_tape(Tape&& tape)
-        AS_EXPRESSION(std::tuple_element_t<I, Tuple>{
-            tree_maker<std::tuple_element_t<I, Tuple>>{}
-                .template process_tape<child_type<T, I>, child_tape_offset<T, Offset, I>()>(FWD(tape))
-        })
+        RUZHOUXIE_INLINE static constexpr auto child_process_tape(Tape&& tape) AS_EXPRESSION
+        (
+            std::tuple_element_t<I, Tuple>
+            {
+                tree_maker<std::tuple_element_t<I, Tuple>>{}
+                    .template process_tape<child_type<T, I>, child_tape_offset<T, Offset, I>()>(FWD(tape))
+            }
+        )
 
         template<typename T, size_t Offset, typename Tape, size_t...I>
-        RUZHOUXIE_INLINE constexpr auto process_tape_Impl(Tape&& tape, std::index_sequence<I...>)const
-            AS_EXPRESSION(Tuple{ child_process_tape<T, Offset, I>(FWD(tape))... })
+        RUZHOUXIE_INLINE constexpr auto process_tape_Impl(Tape&& tape, std::index_sequence<I...>)const AS_EXPRESSION
+        (
+            Tuple{ child_process_tape<T, Offset, I>(FWD(tape))... }
+        )
 
     public:
         template<typename T, size_t Offset, typename Tape>
@@ -169,7 +173,7 @@ namespace ruzhouxie
     template<typename Tree>
     struct tree_maker_trait
     {
-        static RUZHOUXIE_CONSTEVAL auto choose_default_tree_maker() noexcept
+        static RUZHOUXIE_CONSTEVAL auto choose_default_tree_maker()
         {
             if constexpr(requires{ tag_invoke<Tree>(make_tree<Tree>); })
             {
@@ -246,8 +250,10 @@ namespace ruzhouxie
         }
 
         template<typename T, size_t Offset, typename Tape>
-        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const
-            AS_EXPRESSION(tree_maker<tree_tuple_type<T, Tpl>>{}.template process_tape<T, Offset>(FWD(tape)))
+        RUZHOUXIE_INLINE constexpr auto process_tape(Tape&& tape)const AS_EXPRESSION
+        (
+            tree_maker<tree_tuple_type<T, Tpl>>{}.template process_tape<T, Offset>(FWD(tape))
+        )
     };
 
 
