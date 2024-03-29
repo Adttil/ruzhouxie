@@ -129,13 +129,6 @@ namespace ruzhouxie::detail
 
 namespace ruzhouxie
 {
-    // enum class access_mode
-    // {
-    //     unknown,
-    //     pass,
-    //     once
-    // };
-
     template<typename Data, auto Sequence>
     struct tape_t
     {
@@ -441,7 +434,7 @@ namespace ruzhouxie::detail
     }
 
     template<typename TSeq>
-    static RUZHOUXIE_CONSTEVAL auto init_children_tapes_map()
+    RUZHOUXIE_CONSTEVAL auto init_children_tapes_map()
     {
         if constexpr(indicesoid<TSeq>)
         {
@@ -484,7 +477,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t ChildCount, auto Seq>
-    static RUZHOUXIE_CONSTEVAL auto get_children_sequnces_and_map()
+    RUZHOUXIE_CONSTEVAL auto get_children_sequnces_and_map()
     {
         auto map = init_children_tapes_map<decltype(Seq)>();
         auto counts = array<size_t, ChildCount>{};
@@ -502,12 +495,18 @@ namespace ruzhouxie::detail
     }
 
     template<auto Seqs, typename V, size_t...I>
-    RUZHOUXIE_INLINE static constexpr auto get_children_tapes_impl(V&& view, std::index_sequence<I...>)
-        AS_EXPRESSION(tape_data_tie{ FWD(view) | child<I> | get_tape<Seqs | child<I>>... })
+    RUZHOUXIE_INLINE constexpr auto get_children_tapes_impl(V&& view, std::index_sequence<I...>) AS_EXPRESSION
+    (
+        tape_data_tie{ FWD(view) | child<I> | get_tape<Seqs | child<I>>... }
+    )
 
     template<auto Seq, typename V>
-    RUZHOUXIE_INLINE static constexpr auto get_children_tapes(V&& view)
-        AS_EXPRESSION(get_children_tapes_impl<get_children_sequnces_and_map<child_count<V>, Seq>().sequences>(FWD(view), std::make_index_sequence<child_count<V>>{}))
+    RUZHOUXIE_INLINE constexpr auto get_children_tapes(V&& view) AS_EXPRESSION
+    (
+        get_children_tapes_impl<get_children_sequnces_and_map<child_count<V>, Seq>().sequences>(
+            FWD(view), std::make_index_sequence<child_count<V>>{}
+        )
+    )
 
     template<auto Seqs, typename V>
     RUZHOUXIE_CONSTEVAL auto get_children_tapes_seq()
@@ -608,10 +607,10 @@ namespace ruzhouxie
                 return { strategy_t::tag_invoke, noexcept(tag_invoke<seq>(get_tape<seq>, std::declval<T>())) };
             }
             //else if constexpr(branched<T>)
-            // else if constexpr(not is_independence_group<T>())
-            // {
-            //     return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
-            // }
+            else if constexpr(not is_independence_group<T>())
+            {
+                return { strategy_t::branched, noexcept(detail::get_tuple_tape<seq>(std::declval<T>())) };
+            }
             else
             {
                 return { strategy_t::terminal, true };
@@ -630,14 +629,13 @@ namespace ruzhouxie
             {
                 return tag_invoke<seq>(get_tape<seq>, FWD(t));
             }
-            // else if constexpr(strategy == strategy_t::branched)
-            // {
-            //     return detail::get_tuple_tape<seq>(FWD(t));
-            // }
+            else if constexpr(strategy == strategy_t::branched)
+            {
+                return detail::get_tuple_tape<seq>(FWD(t));
+            }
             else if constexpr(strategy == strategy_t::terminal)
             {
                 return tape_t<T&&, seq>{ FWD(t) };
-                //return tape_t<T&, seq>{ t };
             }
             else
             {
