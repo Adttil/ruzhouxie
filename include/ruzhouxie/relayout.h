@@ -545,10 +545,14 @@ namespace ruzhouxie
         struct grouped_cartesian_t
         {
             template<typename V1, typename V2>
-            RUZHOUXIE_INLINE constexpr auto operator()(V1&& view1, V2 view2)const
-            {
-                return tuple<V1, V2>{ FWD(view1), FWD(view2) } | relayout<layout_grouped_cartesian(vector_layout<V1>, vector_layout<V2>)>;
-            }
+            RUZHOUXIE_INLINE constexpr auto operator()(V1&& view1, V2 view2)const AS_EXPRESSION
+            (
+                relayout_view
+                {
+                    combine(FWD(view1), FWD(view2)),
+                    constant_t<layout_grouped_cartesian(vector_layout<V1>, vector_layout<V2>)>{}
+                }
+            )
         };
     }
     
