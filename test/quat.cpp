@@ -32,7 +32,7 @@ TEST(quaternion, rzx)
         float x = random();
         float y = random();
         float z = random();
-        m = +mat_mul(m, quat_to_mat3(quat<float>{ w, x, y, z }));
+        m = +mat_mul(m, quat<float>{ w, x, y, z } | quat_to_mat3);
     }
     
     std::cout << "rzx: \n";
