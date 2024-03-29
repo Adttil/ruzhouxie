@@ -498,7 +498,7 @@ namespace ruzhouxie
             {
                 if constexpr(not (false || ... || relayout_view_instantiated<V>))
                 {
-                    return tuple<V...>{ FWD(view)... };
+                    return rzx::view{ tuple<V...>{  FWD(view)... } };
                 }
                 else return [&]<size_t...I>(std::index_sequence<I...>)
                 {
