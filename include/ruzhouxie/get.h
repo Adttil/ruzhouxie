@@ -77,8 +77,10 @@ namespace ruzhouxie
     struct detail::child_t<I>
     {
         template<typename T>
-        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-            AS_EXPRESSION(getter<purified<T>>{}.template get<normalize_index(I, child_count<T>)>(FWD(t)))
+        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const AS_EXPRESSION
+        (
+            getter<purified<T>>{}.template get<normalize_index(I, child_count<T>)>(FWD(t))
+        )
         
         template<typename T> requires (I.size() == 0uz)
         RUZHOUXIE_INLINE constexpr T&& operator()(T&& t)const noexcept
@@ -88,21 +90,28 @@ namespace ruzhouxie
 
     private:
         template<typename T, size_t...J>
-        RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) 
-            AS_EXPRESSION(FWD(t) | child<I[J]...>)
+        RUZHOUXIE_INLINE static constexpr auto impl(T&& t, std::index_sequence<J...>) AS_EXPRESSION
+        (
+            FWD(t) | child<I[J]...>
+        )
 
     public:    
         template<typename T> requires (I.size() > 0uz)
-        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-            AS_EXPRESSION(impl(FWD(t), std::make_index_sequence<I.size()>{}))
+        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const AS_EXPRESSION
+        (
+            impl(FWD(t), std::make_index_sequence<I.size()>{})
+        )
     };
 
-    template<std::integral auto I, std::integral auto...Rest> requires(sizeof...(Rest) > 0)
+    template<auto I, std::integral auto...Rest> 
+        requires (std::integral<decltype(I)> || indicesoid<decltype(I)>) && (sizeof...(Rest) > 0)
     struct detail::child_t<I, Rest...>
     {
         template<typename T> 
-        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const
-            AS_EXPRESSION(FWD(t) | child<I> | child<Rest...>)
+        RUZHOUXIE_INLINE constexpr auto operator()(T&& t)const AS_EXPRESSION
+        (
+            FWD(t) | child<I> | child<Rest...>
+        )
     };
 
     template<typename T, auto...I>
@@ -196,7 +205,10 @@ namespace ruzhouxie
         struct tag_invoke_getter
         {
             template<size_t I, typename T>
-            RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION(tag_invoke<I>(child<I>, FWD(t)))
+            RUZHOUXIE_INLINE constexpr auto get(T&& t)const AS_EXPRESSION
+            (
+                tag_invoke<I>(child<I>, FWD(t))
+            )
         };
     }
     using detail::tag_invoke_getter_ns::tag_invoke_getter;
@@ -297,7 +309,7 @@ namespace ruzhouxie
             }
             else if constexpr (requires{ type{ {universal_type{}}, universal_type{args}... }; })
             {
-                return self.template operator() < true > (universal_type{ args }..., universal_type{});
+                return self.template operator()<true>(universal_type{ args }..., universal_type{});
             }
             else if constexpr (had_success)
             {
@@ -305,7 +317,7 @@ namespace ruzhouxie
             }
             else
             {
-                return self.template operator() < false > (universal_type{ args }..., universal_type{});
+                return self.template operator()<false>(universal_type{ args }..., universal_type{});
             }
         }();
 
