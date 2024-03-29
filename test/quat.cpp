@@ -26,14 +26,13 @@ TEST(quaternion, rzx)
         0.0f, 0.0f, 1.0f
     };
     
-    for(size_t i = 0; i < 100000000; ++i)
+    for(size_t i = 0; i < 10000'0000; ++i)
     {
         float w = random();
         float x = random();
         float y = random();
         float z = random();
-        mat<3, 3, float> qm = +quat_to_mat3(quat<float>{ w, x, y, z });
-        m = +mat_mul(m, qm);
+        m = +mat_mul(m, quat_to_mat3(quat<float>{ w, x, y, z }));
     }
     
     std::cout << "rzx: \n";
@@ -48,7 +47,7 @@ TEST(quaternion, glm)
     gen.seed(233);
     glm::mat3 m{ 1.0f };
     
-    for(size_t i = 0; i < 100000000; ++i)
+    for(size_t i = 0; i < 10000'0000; ++i)
     {
         float w = random();
         float x = random();
