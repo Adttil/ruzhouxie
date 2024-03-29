@@ -147,6 +147,53 @@ TEST(tensor, rzx)
     std::cout << '\n';
 }
 
+TEST(tensor, rzx_tuple)
+{
+    gen.seed(233);
+    using mat_t = tuple
+    <
+        tuple<float, float, float, float>,
+        tuple<float, float, float, float>,
+        tuple<float, float, float, float>,
+        tuple<float, float, float, float>
+    >;
+    mat_t r{ 
+        { 1.0f, 0.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f, 1.0f }
+    };
+    
+    for(size_t i = 0; i < 100000000; ++i)
+    {
+        mat<4, 4, float> m;
+        (m | child<0, 0>) = random();
+		(m | child<0, 1>) = random();
+		(m | child<0, 2>) = random();
+		(m | child<0, 3>) = random();
+		(m | child<1, 0>) = random();
+		(m | child<1, 1>) = random();
+		(m | child<1, 2>) = random();
+		(m | child<1, 3>) = random();
+		(m | child<2, 0>) = random();
+		(m | child<2, 1>) = random();
+		(m | child<2, 2>) = random();
+		(m | child<2, 3>) = random();
+
+		(m | child<3, 0>) = 0;
+		(m | child<3, 1>) = 0;
+		(m | child<3, 2>) = 0;
+		(m | child<3, 3>) = 1;
+        r = +mat_mul(r, m);
+    }
+    
+    std::cout << "rzx_tuple: \n";
+
+    std::cout << child<0,0>(r) << ", "  << child<0,1>(r);
+
+    std::cout << '\n';
+}
+
 TEST(vec_cross, d3)
 {
     vec<3> a{1, 2, 3};
