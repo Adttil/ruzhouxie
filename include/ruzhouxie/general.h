@@ -143,14 +143,8 @@ namespace ruzhouxie
 	    bool nothrow = false;
 	};
 
-    template<typename...Fn>
-    struct overload : Fn...
-	{
-	    using Fn::operator()...;
-	};
-
-    template<typename...Fn>
-    overload(Fn...) -> overload<std::decay_t<Fn>...>;
+	template<typename T, std::convertible_to<bool> B>
+	choice_t(T&&, B&&) -> choice_t<std::decay<T>>;
 
     template<typename T>
     struct wrapper
@@ -171,19 +165,9 @@ namespace ruzhouxie
 {
 
     template<size_t I>
-    inline constexpr auto&& arg_at(auto&&...args)noexcept
+    RUZHOUXIE_INLINE constexpr auto&& arg_at(auto&&...args)noexcept
 	{
 	    return std::get<I>(std::forward_as_tuple(FWD(args)...));
-	}
-
-    inline constexpr auto&& first_arg(auto&&...args)noexcept
-	{
-	    return std::get<0>(std::forward_as_tuple(FWD(args)...));
-	}
-
-    inline constexpr auto&& last_arg(auto&&...args)noexcept
-	{
-	    return std::get<sizeof...(args) - 1>(std::forward_as_tuple(FWD(args)...));
 	}
 
     RUZHOUXIE_INLINE constexpr bool equal(auto&& x, auto&& y) 
