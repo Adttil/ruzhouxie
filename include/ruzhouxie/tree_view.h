@@ -10,13 +10,10 @@
 //view_interface
 namespace ruzhouxie
 {
-    template<typename T>
-    struct view;
-
     namespace detail
     {
         template<typename View>
-        struct universal_view
+        struct convert_wrapper
         {
             View raw_view;
 
@@ -50,7 +47,7 @@ namespace ruzhouxie
         template<typename Self>
         RUZHOUXIE_INLINE constexpr auto operator+(this Self&& self)noexcept
         {
-            return detail::universal_view<Self&&>{ FWD(self) };
+            return detail::convert_wrapper<Self&&>{ FWD(self) };
         }
 
         static RUZHOUXIE_CONSTEVAL size_t size()noexcept
@@ -76,7 +73,8 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE friend constexpr bool operator==(const view_interface&, const view_interface&) = default;
     };
 
-    
+    template<typename T>
+    concept tree_view = std::derived_from<purified<T>, view_interface<purified<T>>>;
 }
 
 //view
@@ -108,57 +106,38 @@ namespace ruzhouxie
     template<typename T>
     view(T&&) -> view<T>;
 
-    // template<typename T>
-    // struct tree_maker_trait<view<T>>
-    // {
-    //     struct type : processer<type>
-    //     {
-    //         static constexpr tree_maker<T> maker{};
-
-    //         template<typename U>
-    //         static RUZHOUXIE_CONSTEVAL auto get_sequence()
-    //         {
-    //             return tree_maker<T>::template get_sequence<U>();
-    //         }
-
-    //         template<typename U, size_t Offset, typename Tape>
-    //         constexpr auto process_tape(Tape&& tape)const
-    //         {
-    //             return view<T>{ maker.template process_tape<U, Offset>(FWD(tape)) };
-    //         }
-    //     };
-    // };
+    template<typename T>
+    concept view_instantiated = std::same_as<purified<T>, view<typename purified<T>::base_type>>;
 
     namespace detail
     {
         struct as_ref_t
         {
-            template<typename T>
-            RUZHOUXIE_INLINE constexpr decltype(auto) operator()(T&& t) const
+            template<typename T> requires (not view_instantiated<T>)
+            RUZHOUXIE_INLINE constexpr T& operator()(T& t) const noexcept
             {
-                if constexpr (std::is_rvalue_reference_v<T&&>)
-                {
-                    return view<T&&>{ FWD(t) };
-                }
-                else
-                {
-                    return t;
-                }
+                return t;
             }
+            
+            template<typename T> requires std::is_rvalue_reference_v<T&&> && (not view_instantiated<T>)
+            RUZHOUXIE_INLINE constexpr auto operator()(T&& t) const AS_EXPRESSION
+            (
+                view<T&&>{ FWD(t) }
+            )
+
+            template<view_instantiated T>
+            RUZHOUXIE_INLINE constexpr auto operator()(T&& t) const AS_EXPRESSION
+            (
+                (*this)(FWD(t).base())
+            )
         };
     };
 
-    inline namespace functors
-    {
-        inline constexpr tree_adaptor_closure<detail::as_ref_t> as_ref{};
-    }
+    inline constexpr tree_adaptor_closure<detail::as_ref_t> as_ref{};
 }
 
 namespace ruzhouxie 
 {
-    template<typename T>
-    concept tree_view = std::derived_from<purified<T>, view_interface<purified<T>>>;
-
     template<size_t I = 0uz, typename L, typename R>
     RUZHOUXIE_INLINE constexpr bool tree_equal(const L& l, const R& r)noexcept
     {
@@ -186,7 +165,7 @@ namespace ruzhouxie
 	template<typename L, typename R> requires tree_view<L> || tree_view<R>
     RUZHOUXIE_INLINE constexpr bool operator==(const L& l, const R& r)noexcept
     {
-        return tree_equal(l, r);
+        return rzx::tree_equal(l, r);
     }
 }
 
