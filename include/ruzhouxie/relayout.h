@@ -498,12 +498,12 @@ namespace ruzhouxie
             {
                 if constexpr(not (false || ... || relayout_view_instantiated<V>))
                 {
-                    return rzx::view{ tuple<V...>{  FWD(view)... } };
+                    return rzx::view{ tuple<V...>{ detail::simplify_fwd_tree(FWD(view))... } };
                 }
                 else return [&]<size_t...I>(std::index_sequence<I...>)
                 {
                     constexpr auto layout = make_tuple(layout_add_prefix(get_layout<V>(), array{ I })...);
-                    return relayout_view{ pass_tuple(get_base(FWD(view))...), constant_t<layout>{} };
+                    return relayout_view{ pass_tuple(detail::simplify_fwd_tree(get_base(FWD(view)))...), constant_t<layout>{} };
                 }(std::index_sequence_for<V...>{});
             }
         };
