@@ -217,13 +217,13 @@ namespace ruzhouxie
 
             template<typename V> requires (not indicesoid<layout_type>) && (not relayout_view_instantiated<V>)
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
-            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, V>()>{} })
+            AS_EXPRESSION(relayout_view{ FWD(view), constant_t<normalize_layout<Layout, tree_shape_t<V>>()>{} })
 
             template<relayout_view_instantiated V> requires (not indicesoid<layout_type>) 
             RUZHOUXIE_INLINE constexpr auto operator()(V&& view) const
             AS_EXPRESSION(relayout_view{ 
                 FWD(view).base(),
-                constant_t<detail::mapped_layout<normalize_layout<Layout, V>()>(purified<V>::layout)>{}
+                constant_t<detail::mapped_layout<normalize_layout<Layout, tree_shape_t<V>>()>(purified<V>::layout)>{}
             })
         };
 
@@ -268,7 +268,7 @@ namespace ruzhouxie
         RUZHOUXIE_INLINE constexpr auto operator()(this Self&& self, V&& view)
             AS_EXPRESSION(relayout_view{ 
                 FWD(view),
-                constant_t<detail::normalize_layout<purified<Self>::relayout(default_layout<V>), V>()>{} 
+                constant_t<detail::normalize_layout<purified<Self>::relayout(default_layout<V>), tree_shape_t<V>>()>{} 
             })
     };
 }
