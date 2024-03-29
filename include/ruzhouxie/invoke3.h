@@ -290,11 +290,11 @@ namespace ruzhouxie
     constexpr inline auto tree_zip_transform = []<typename F, typename...V>(F&& fn, V&&...views)
     {
         return zip(FWD(views)...) | transform(
-                    [fn = FWD(fn)](auto&& zip_args)->decltype(auto)
+                    [fn = wrapper{ FWD(fn) }](auto&& zip_args)->decltype(auto)
                     {
                         return [&]<size_t...I>(std::index_sequence<I...>)->decltype(auto)
                         {
-                            return fn(FWD(zip_args) | child<I> ...);
+                            return fn.value()(FWD(zip_args) | child<I> ...);
                         }(std::index_sequence_for<V...>{});
                     }
                 );
@@ -310,8 +310,15 @@ namespace ruzhouxie
                 constexpr auto arg_layout = layout_grouped_cartesian(vector_layout<V1>, vector_layout<V2>);
                 constexpr array<array<array<size_t, 0uz>, child_count<V1>>, child_count<V2>> fn_layout{};
                 return invoke(
-                    relayout_view{ combine(FWD(view1), FWD(view2)), constant_t<arg_layout>{} },
-                    relayout_view{ [fn = wrapper{ FWD(fn) }](auto&& args){ return fn.value()(child<0uz>(args), child<1uz>(args)); }, constant_t<fn_layout>{} }
+                    grouped_cartesian(FWD(view1), FWD(view2)),
+                    relayout_view
+                    { 
+                        [fn = wrapper{ FWD(fn) }](auto&& args)
+                        {
+                            return fn.value()(child<0uz>(args), child<1uz>(args));
+                        }, 
+                        constant_t<fn_layout>{} 
+                    }
                 );
             }
         };
