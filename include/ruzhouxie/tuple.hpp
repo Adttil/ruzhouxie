@@ -12,10 +12,10 @@
 
 namespace ruzhouxie
 {
-    template<typename...T>
+    template<class...T>
     struct tuple;
 
-    template<typename T, typename...Rest>
+    template<class T, class...Rest>
     struct tuple<T, Rest...>
 	{
 	    RUZHOUXIE_MAYBE_EMPTY T              first;
@@ -42,23 +42,23 @@ namespace ruzhouxie
 {
 #include "code_generate/tuple_specialization.code"
 
-	template<typename...T>
+	template<class...T>
     tuple(T...) -> tuple<std::decay_t<T>...>;
 }
 
-template<typename...T>
+template<class...T>
 struct std::tuple_size<ruzhouxie::tuple<T...>> : std::integral_constant<std::size_t, sizeof...(T)> {};
 
-template<size_t I, typename...T>
+template<size_t I, class...T>
 struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
 
 namespace ruzhouxie
 {
-	template<typename...Args>
+	template<class...Args>
     RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
 	AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... });
 
-	template<typename...Args>
+	template<class...Args>
     RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
 	{
 	    return { FWD(args)... };

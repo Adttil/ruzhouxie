@@ -22,13 +22,13 @@ namespace ruzhouxie::detail
         { []<class F>(adaptor_closure<F>&)->F*{}(t) } -> std::same_as<std::remove_cvref_t<T>*>;
     };
 
-    template<typename ClosureLeft, typename ClosureRight>
+    template<class ClosureLeft, class ClosureRight>
     struct pipeline : adaptor_closure<pipeline<ClosureLeft, ClosureRight>>
     {
         RUZHOUXIE_MAYBE_EMPTY ClosureLeft  left;
         RUZHOUXIE_MAYBE_EMPTY ClosureRight right;
 
-        template<typename T, typename Self>
+        template<class T, class Self>
         constexpr auto operator()(this Self&& self, T&& val)
         AS_EXPRESSION(
             FWD(self, right)(FWD(self, left)(FWD(val)))

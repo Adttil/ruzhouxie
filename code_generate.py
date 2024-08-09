@@ -41,7 +41,7 @@ def generate_tuple_specialization(i):
 '''
 
 def generate_tuple_specialization(i):
-    result = "template<" + generate_sequence(i, lambda i : "typename T" + str(i)) + ">\n"
+    result = "template<" + generate_sequence(i, lambda i : "class T" + str(i)) + ">\n"
     result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
 
     result += generate_sequence(i, lambda i : "    RUZHOUXIE_MAYBE_EMPTY T" + str(i) + " e" + str(i) + ";\n" , "")
