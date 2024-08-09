@@ -12,22 +12,16 @@ namespace ruzhouxie
 {
     template<class F> 
     struct adaptor_closure{};
-
-    namespace detail
-    {
-        template <class F>
-        F* derived_from_adaptor_closure(adaptor_closure<F>&); // not defined
-    }
-
-    template <class T>
-    concept adaptor_closuroid = requires(std::remove_cvref_t<T>& t) 
-    {
-        { detail::derived_from_adaptor_closure(t) } -> std::same_as<std::remove_cvref_t<T>*>;
-    };
 }
 
 namespace ruzhouxie::detail
-{
+{        
+    template<class T>
+    concept adaptor_closuroid = requires(std::remove_cvref_t<T>& t) 
+    {
+        { []<class F>(adaptor_closure<F>&)->F*{}(t) } -> std::same_as<std::remove_cvref_t<T>*>;
+    };
+
     template<typename ClosureLeft, typename ClosureRight>
     struct pipeline : adaptor_closure<pipeline<ClosureLeft, ClosureRight>>
     {
@@ -46,14 +40,14 @@ namespace ruzhouxie::detail
 
 namespace ruzhouxie
 {
-    template<adaptor_closuroid L, adaptor_closuroid R>
+    template<detail::adaptor_closuroid L, detail::adaptor_closuroid R>
     constexpr auto operator|(L&& l, R&& r)
     AS_EXPRESSION(
         detail::pipeline<std::decay_t<L>, std::decay_t<R>>{ {}, FWD(l), FWD(r) }
     )
 
-    template<class L, adaptor_closuroid R>
-    requires (not adaptor_closuroid<L>)
+    template<class L, detail::adaptor_closuroid R>
+    requires (not detail::adaptor_closuroid<L>)
     constexpr auto operator|(L&& l, R&& r)
     AS_EXPRESSION(
         FWD(r)(FWD(l))
