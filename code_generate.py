@@ -6,6 +6,7 @@ def generate_sequence(n, generate_once, split = ", "):
         result += split + generate_once(i)
     return result
 
+'''
 def generate_tuple_specialization(i):
     result = "template<" + generate_sequence(i, lambda i : "typename T" + str(i)) + ">\n"
     result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
@@ -37,7 +38,25 @@ def generate_tuple_specialization(i):
 
     result += "};\n"
     return result
+'''
 
+def generate_tuple_specialization(i):
+    result = "template<" + generate_sequence(i, lambda i : "typename T" + str(i)) + ">\n"
+    result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
+
+    result += generate_sequence(i, lambda i : "    RUZHOUXIE_MAYBE_EMPTY T" + str(i) + " e" + str(i) + ";\n" , "")
+    result += '\n'
+
+    result += "    template<size_t I, specified<tuple> Self> requires (I < " + str(i) + "uz)\n"
+    result += "    RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept\n    {\n        "
+    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return FWD(self, " + "e" + str(i) + ");", "\n        else ")
+    result += "\n    }\n\n"
+
+    result += "    friend constexpr bool operator==(const tuple&, const tuple&) = default;\n"
+
+    result += "};\n"
+    return result
+    
 def generate_tuple_specialization_implement(max_element_count):
     result = ""
     for i in range(max_element_count + 1): 
@@ -62,8 +81,8 @@ def generate_aggregate_getter_invoker(max_memeber_count):
     return generate_sequence(max_memeber_count, lambda i : generate_aggregate_getter_invoker_for(i + 1), "else ")
 
 
-with open("include/ruzhouxie/generate/tuple_specialization.code", 'w') as file:
+with open("include/ruzhouxie/code_generate/tuple_specialization.code", 'w') as file:
     file.write(generate_tuple_specialization_implement(16))
 
-with open("include/ruzhouxie/generate/aggregate_getter_invoker.code", 'w') as file:
+with open("include/ruzhouxie/code_generate/aggregate_getter_invoker.code", 'w') as file:
     file.write(generate_aggregate_getter_invoker(64))

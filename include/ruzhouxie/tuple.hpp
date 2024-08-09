@@ -21,76 +21,76 @@ namespace ruzhouxie
 	    RUZHOUXIE_MAYBE_EMPTY T              first;
 	    RUZHOUXIE_MAYBE_EMPTY tuple<Rest...> rest;
 
-		/*template<size_t I> requires (I <= sizeof...(Rest))
-	    RUZHOUXIE_INLINE constexpr auto&& get(this auto&& self) noexcept
+		template<size_t I, specified<tuple> Self> requires (I <= sizeof...(Rest))
+	    RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
 		{
 		    if constexpr (I)
 			{
-			    return FWD(self, rest).get<I - 1>();
+			    return get<I - 1>(FWD(self, rest));
 			}
 		    else
 			{
 			    return FWD(self, first);
 			}
-		}*/
+		}
 
 		//now structure binding is not support get with deducing this in vs17.8.1.
 
-	    template<size_t I>
-		    requires (I <= sizeof...(Rest))
-	    RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
-		{
-		    if constexpr (I)
-			{
-			    return rest.template get<I - 1>();
-			}
-		    else
-			{
-			    return (first);
-			}
-		}
+	    // template<size_t I>
+		//     requires (I <= sizeof...(Rest))
+	    // RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
+		// {
+		//     if constexpr (I)
+		// 	{
+		// 	    return rest.template get<I - 1>();
+		// 	}
+		//     else
+		// 	{
+		// 	    return (first);
+		// 	}
+		// }
 
-	    template<size_t I>
-		    requires (I <= sizeof...(Rest))
-	    RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
-		{
-		    if constexpr (I)
-			{
-			    return rest.template get<I - 1>();
-			}
-		    else
-			{
-			    return (first);
-			}
-		}
+	    // template<size_t I>
+		//     requires (I <= sizeof...(Rest))
+	    // RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
+		// {
+		//     if constexpr (I)
+		// 	{
+		// 	    return rest.template get<I - 1>();
+		// 	}
+		//     else
+		// 	{
+		// 	    return (first);
+		// 	}
+		// }
 
-	    template<size_t I>
-		    requires (I <= sizeof...(Rest))
-	    RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
-		{
-		    if constexpr (I)
-			{
-			    return std::move(rest).template get<I - 1>();
-			}
-		    else
-			{
-			    return fwd<tuple&&, T>(first);
-			}
-		}
+	    // template<size_t I>
+		//     requires (I <= sizeof...(Rest))
+	    // RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
+		// {
+		//     if constexpr (I)
+		// 	{
+		// 	    return std::move(rest).template get<I - 1>();
+		// 	}
+		//     else
+		// 	{
+		// 	    return fwd<tuple&&, T>(first);
+		// 	}
+		// }
 
-	    template<size_t I>
-		    requires (I <= sizeof...(Rest))
-	    RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
-		{
-		    if constexpr (I)
-			{
-			    return std::move(rest).template get<I - 1>();
-			}
-		    else
-			{
-			    return fwd<const tuple&&, T>(first);
-			}
-		}
+	    // template<size_t I>
+		//     requires (I <= sizeof...(Rest))
+	    // RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
+		// {
+		//     if constexpr (I)
+		// 	{
+		// 	    return std::move(rest).template get<I - 1>();
+		// 	}
+		//     else
+		// 	{
+		// 	    return fwd<const tuple&&, T>(first);
+		// 	}
+		// }
 
 	    friend constexpr bool operator==(const tuple&, const tuple&) = default;
 	};
