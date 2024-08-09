@@ -1,5 +1,5 @@
-# ruzhouxie::**make_tuple**
-在标头[`<ruzhouxie/tuple.hpp>`]()定义
+# ruzhouxie::`make_tuple`
+在标头[<ruzhouxie/tuple.hpp>](../tuple.md)定义
 ```cpp
 template< class... Types >
 constexpr ruzhouxie::tuple<VTypes...> make_tuple( Types&&... args );
@@ -15,4 +15,4 @@ constexpr ruzhouxie::tuple<VTypes...> make_tuple( Types&&... args );
 ## 参阅
 ||||
 | --- | --- | --- |
-| [`fwd_as_tuple`](fwd_as_tuple.md) | 创建转发引用的 tuple | `函数模板` |
+| [**fwd_as_tuple**](fwd_as_tuple.md) | 创建转发引用的 tuple | `函数模板` |

@@ -1,5 +1,5 @@
-# ruzhouxie::**fwd_as_tuple**
-在标头[`<ruzhouxie/tuple.hpp>`]()定义
+# ruzhouxie::`fwd_as_tuple`
+在标头[<ruzhouxie/tuple.hpp>](../tuple.md)定义
 ```cpp
 template< class... Types >
 constexpr ruzhouxie::tuple<Types&&...> fwd_as_tuple( Types&&... args );
@@ -14,4 +14,4 @@ constexpr ruzhouxie::tuple<Types&&...> fwd_as_tuple( Types&&... args );
 ## 参阅
 ||||
 | --- | --- | --- |
-| [`make_tuple`](make_tuple.md) | 创建一个 tuple 对象，其类型根据各实参类型定义 | `函数模板` |
+| [**make_tuple**](make_tuple.md) | 创建一个 tuple 对象，其类型根据各实参类型定义 | `函数模板` |

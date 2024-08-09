@@ -5,6 +5,7 @@ using namespace ruzhouxie;
 
 TEST(tuple, get)
 {
+    std::tuple<int> t{1};
     auto tpl = tuple{ 1, 3.14, std::string{"wow"} };
 
     MAGIC_CHECK(get<0>(tpl), 1);
