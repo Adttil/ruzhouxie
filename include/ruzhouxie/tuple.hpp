@@ -105,19 +105,21 @@ namespace ruzhouxie
 }
 
 template<typename...T>
-struct std::tuple_size<ruzhouxie::tuple<T...>> : std::tuple_size<std::tuple<T...>> {};
+struct std::tuple_size<ruzhouxie::tuple<T...>> : std::integral_constant<size_t, sizeof...(T)> {};
 
 template<size_t I, typename...T>
 struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
 
 namespace ruzhouxie
 {
-    inline constexpr auto make_tuple = []<typename...Args>(Args&&...args)
+	template<typename...Args>
+    RUZHOUXIE_INLINE constexpr auto make_tuple(Args&&...args)
 	AS_EXPRESSION(tuple<std::decay_t<Args>...>{ FWD(args)... });
 
-    inline constexpr auto fwd_as_tuple = []<typename...Args>(Args&&...args)noexcept
+	template<typename...Args>
+    RUZHOUXIE_INLINE constexpr tuple<Args&&...> fwd_as_tuple(Args&&...args)noexcept
 	{
-	    return tuple<Args&&...>{ FWD(args)... };
+	    return { FWD(args)... };
 	};
 
     template<typename T, typename...Elems>
