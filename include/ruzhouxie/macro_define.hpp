@@ -46,9 +46,9 @@
 #define FWD(...) CONCAT(FWD_, GET_LENGTH(__VA_ARGS__))(__VA_ARGS__)
 #define FWD_0()
 #define FWD_1(_0) static_cast<decltype(_0)&&>(_0)
-#define FWD_2(_0, _1) ::ruzhouxie::fwd<decltype(_0), decltype(_0._1)>(_0._1)
-#define FWD_3(_0, _1, _2) ::ruzhouxie::fwd<decltype(_0), decltype(_0._1), decltype(_0._1._2)>(_0._1._2)
-#define FWD_4(_0, _1, _2, _3) ::ruzhouxie::fwd<decltype(_0), decltype(_0._1), decltype(_0._1._2), decltype(_0._1._2._3)>(_0._1._2._3)
+#define FWD_2(_0, _1) static_cast<::ruzhouxie::fwd_type<decltype((_0._1)), decltype(_0), decltype(_0._1)>>(_0._1)
+#define FWD_3(_0, _1, _2) static_cast<::ruzhouxie::fwd_type<decltype((_0._1._2)), decltype(_0), decltype(_0._1), decltype(_0._1._2)>>(_0._1._2)
+#define FWD_4(_0, _1, _2, _3) static_cast<::ruzhouxie::fwd_type<decltype((_0._1._2._3)), decltype(_0), decltype(_0._1), decltype(_0._1._2), decltype(_0._1._2._3)>>(_0._1._2._3)
 
 #define FWDLIKE(...) CONCAT(FWDLIKE_, GET_LENGTH(__VA_ARGS__))(__VA_ARGS__)
 #define FWDLIKE_0()

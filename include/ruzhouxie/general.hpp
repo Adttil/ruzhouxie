@@ -87,25 +87,15 @@ namespace ruzhouxie
     template<size_t I, class...T>
     using type_at = std::tuple_element_t<I, std::tuple<T...>>;
 
+	template<class T, class...U>
+	using fwd_type = std::conditional_t< (... && std::is_rvalue_reference_v<U&&>),
+			    						 std::remove_reference_t<T>&&,
+			    						 std::remove_reference_t<T>& >;
+
     template<class...T>
     RUZHOUXIE_INTRINSIC constexpr decltype(auto) fwd(auto&& arg) noexcept
 	{
-	    if constexpr (readonly<decltype(arg)>)
-		{
-		    using type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
-			    const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
-			    const std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&
-			>;
-		    return static_cast<type>(arg);
-		}
-	    else
-		{
-		    using type = std::conditional_t<(... && std::is_rvalue_reference_v<T&&>),
-			    std::remove_reference_t<type_at<sizeof...(T) - 1, T...>>&&,
-			    type_at<sizeof...(T) - 1, T...>&
-			>;
-		    return static_cast<type>(arg);
-		}
+		return static_cast<fwd_type<decltype(arg), T...>>(arg);
 	}
 
     template<class TBase>
