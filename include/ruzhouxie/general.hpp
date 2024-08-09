@@ -11,14 +11,16 @@
 #include "macro_define.hpp"
 
 #if !defined(__cpp_size_t_suffix) || __cpp_size_t_suffix <= 202006L
-constexpr size_t operator""uz(unsigned long long x)
+constexpr std::size_t operator""uz(unsigned long long x)
 {
-    return static_cast<size_t>(x);
+    return static_cast<std::size_t>(x);
 }
 #endif
 
 namespace ruzhouxie
 {
+	using std::size_t;
+
     namespace rzx = ::ruzhouxie;
 
     inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();

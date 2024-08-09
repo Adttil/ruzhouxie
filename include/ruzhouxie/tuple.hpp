@@ -105,7 +105,7 @@ namespace ruzhouxie
 }
 
 template<typename...T>
-struct std::tuple_size<ruzhouxie::tuple<T...>> : std::integral_constant<size_t, sizeof...(T)> {};
+struct std::tuple_size<ruzhouxie::tuple<T...>> : std::integral_constant<std::size_t, sizeof...(T)> {};
 
 template<size_t I, typename...T>
 struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
