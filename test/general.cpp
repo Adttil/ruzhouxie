@@ -107,7 +107,7 @@ TEST(general, fwd)
         int&& c;
     };
 
-    int i1, i2;
+    int i1{}, i2{};
 
     A a{ i1, i1, std::move(i2) };
     A& r = a;
