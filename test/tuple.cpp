@@ -13,6 +13,17 @@ TEST(tuple, get)
     MAGIC_CHECK(tpl, tuple{ 1, 3.14, std::string{"wow"} });
 }
 
+TEST(tuple, structure_binding)
+{
+    auto tpl = tuple{ 1, 3.14, std::string{"wow"} };
+
+    auto&&[x, y, z] = tpl;
+    MAGIC_CHECK(x, 1);
+    MAGIC_CHECK(y, 3.14);
+    MAGIC_CHECK(z, "wow");
+    MAGIC_CHECK((tuple{x, y, z}), tuple{ 1, 3.14, std::string{"wow"} });
+}
+
 TEST(tuple_category, object)
 {
     auto tpl = rzx::tuple{ 1 };
