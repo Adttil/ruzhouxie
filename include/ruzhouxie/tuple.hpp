@@ -34,64 +34,6 @@ namespace ruzhouxie
 			}
 		}
 
-		//now structure binding is not support get with deducing this in vs17.8.1.
-
-	    // template<size_t I>
-		//     requires (I <= sizeof...(Rest))
-	    // RUZHOUXIE_INLINE constexpr decltype(auto) get() & noexcept
-		// {
-		//     if constexpr (I)
-		// 	{
-		// 	    return rest.template get<I - 1>();
-		// 	}
-		//     else
-		// 	{
-		// 	    return (first);
-		// 	}
-		// }
-
-	    // template<size_t I>
-		//     requires (I <= sizeof...(Rest))
-	    // RUZHOUXIE_INLINE constexpr decltype(auto) get()const& noexcept
-		// {
-		//     if constexpr (I)
-		// 	{
-		// 	    return rest.template get<I - 1>();
-		// 	}
-		//     else
-		// 	{
-		// 	    return (first);
-		// 	}
-		// }
-
-	    // template<size_t I>
-		//     requires (I <= sizeof...(Rest))
-	    // RUZHOUXIE_INLINE constexpr decltype(auto) get() && noexcept
-		// {
-		//     if constexpr (I)
-		// 	{
-		// 	    return std::move(rest).template get<I - 1>();
-		// 	}
-		//     else
-		// 	{
-		// 	    return fwd<tuple&&, T>(first);
-		// 	}
-		// }
-
-	    // template<size_t I>
-		//     requires (I <= sizeof...(Rest))
-	    // RUZHOUXIE_INLINE constexpr decltype(auto) get()const&& noexcept
-		// {
-		//     if constexpr (I)
-		// 	{
-		// 	    return std::move(rest).template get<I - 1>();
-		// 	}
-		//     else
-		// 	{
-		// 	    return fwd<const tuple&&, T>(first);
-		// 	}
-		// }
-
 	    friend constexpr bool operator==(const tuple&, const tuple&) = default;
 	};
 }
@@ -121,34 +63,7 @@ namespace ruzhouxie
 	{
 	    return { FWD(args)... };
 	};
-
-    template<typename T, typename...Elems>
-    RUZHOUXIE_INLINE constexpr auto locate_elem_type(const tuple<Elems...>&, const auto& fn)
-	{
-	    return locate_type<T, Elems...>(fn);
-	}
-
-    template<typename...T, typename V>
-    constexpr bool tuple_contain(const tuple<T...>& tpl, const V& value)
-	{
-	    return [&]<size_t...I>(std::index_sequence<I...>)
-		{
-		    return (false || ... || rzx::equal(tpl.template get<I>(), value));
-		}(std::index_sequence_for<T...>{});
-	}
-
-    template<size_t N, typename...Elems>
-    constexpr auto tuple_drop(const tuple<Elems...>& tpl)
-	{
-	    return [&]<size_t...I>(std::index_sequence<I...>)
-		{
-		    return make_tuple(tpl.template get<I + N>()...);
-		}(std::make_index_sequence<sizeof...(Elems) - N>{});
-	}
 }
-
-
-
 
 #include "macro_undef.hpp"
 #endif
