@@ -19,7 +19,6 @@ namespace ruzhouxie
 #else// For freestanding implementation which maybe do not has std::array.
 
 #include "general.hpp"
-#include <concepts>
 
 #include "macro_define.hpp"
 
