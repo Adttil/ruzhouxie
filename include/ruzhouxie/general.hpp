@@ -153,11 +153,11 @@ namespace ruzhouxie
 namespace ruzhouxie
 {
 
-    // template<size_t I>
-    // RUZHOUXIE_INLINE constexpr auto&& arg_at(auto&&...args)noexcept
-	// {
-	//     return std::get<I>(std::forward_as_tuple(FWD(args)...));
-	// }
+    template<size_t I>
+    constexpr auto&& arg_at(auto&&...args)noexcept
+	{
+	    return std::get<I>(std::forward_as_tuple(FWD(args)...));
+	}
 
     // RUZHOUXIE_INLINE constexpr bool equal(auto&& x, auto&& y) 
 	//     noexcept(not requires{ FWD(x) == FWD(y); } || requires{ requires noexcept(FWD(x) == FWD(y)); })
