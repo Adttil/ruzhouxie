@@ -6,40 +6,6 @@ def generate_sequence(n, generate_once, split = ", "):
         result += split + generate_once(i)
     return result
 
-'''
-def generate_tuple_specialization(i):
-    result = "template<" + generate_sequence(i, lambda i : "typename T" + str(i)) + ">\n"
-    result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
-
-    result += generate_sequence(i, lambda i : "    RUZHOUXIE_MAYBE_EMPTY T" + str(i) + " element" + str(i) + ";\n" , "")
-    result += '\n'
-
-    result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr auto&& get()& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return element" + str(i) + ";", "\n        else ")
-    result += "\n    }\n\n"
-
-    result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr auto&& get()const& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return element" + str(i) + ";", "\n        else ")
-    result += "\n    }\n\n"
-
-    result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr auto&& get()&& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return ::ruzhouxie::fwd<tuple&&, T" + str(i) + ">(" + "element" + str(i) + ");", "\n        else ")
-    result += "\n    }\n\n"
-
-    result += "    template<size_t I> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE constexpr auto&& get()const&& noexcept\n    {\n        "
-    result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return ::ruzhouxie::fwd<const tuple&&, T" + str(i) + ">(" + "element" + str(i) + ");", "\n        else ")
-    result += "\n    }\n\n"
-
-    result += "    friend constexpr bool operator==(const tuple&, const tuple&) = default;\n"
-
-    result += "};\n"
-    return result
-'''
-
 def generate_tuple_specialization(i):
     result = "template<" + generate_sequence(i, lambda i : "class T" + str(i)) + ">\n"
     result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
