@@ -44,11 +44,11 @@ def generate_tuple_specialization(i):
     result = "template<" + generate_sequence(i, lambda i : "class T" + str(i)) + ">\n"
     result += "struct tuple<" + generate_sequence(i, lambda i : "T" + str(i)) + ">\n{\n"
 
-    result += generate_sequence(i, lambda i : "    RUZHOUXIE_MAYBE_EMPTY T" + str(i) + " e" + str(i) + ";\n" , "")
+    result += generate_sequence(i, lambda i : "    RUZHOUXIE(no_unique_address) T" + str(i) + " e" + str(i) + ";\n" , "")
     result += '\n'
 
     result += "    template<size_t I, derived_from<tuple> Self> requires (I < " + str(i) + "uz)\n"
-    result += "    RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept\n    {\n        "
+    result += "    friend constexpr auto&& get(Self&& self) noexcept\n    {\n        "
     result += generate_sequence(i, lambda i : "if constexpr(I == " + str(i) + "uz) return FWD(self, " + "e" + str(i) + ");", "\n        else ")
     result += "\n    }\n\n"
 

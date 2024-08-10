@@ -1,14 +1,11 @@
 #undef RUZHOUXIE_MACRO_DEFINE_H
 
-#undef RUZHOUXIE_DEBUG_TAPE
-
-#undef RUZHOUXIE_MAYBE_EMPTY
-#undef RUZHOUXIE_INLINE
-#undef RUZHOUXIE_INLINE_CALLS
-#undef RUZHOUXIE_INTRINSIC
-
 #undef CONCAT_IMPL
 #undef CONCAT
+
+#undef RUZHOUXIE
+#undef RUZHOUXIE_no_unique_address
+#undef RUZHOUXIE_consteval
 
 #undef GET_N
 #undef GET_N_0

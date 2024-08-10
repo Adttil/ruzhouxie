@@ -25,8 +25,8 @@ namespace ruzhouxie::detail
     template<class ClosureLeft, class ClosureRight>
     struct pipeline : adaptor_closure<pipeline<ClosureLeft, ClosureRight>>
     {
-        RUZHOUXIE_MAYBE_EMPTY ClosureLeft  left;
-        RUZHOUXIE_MAYBE_EMPTY ClosureRight right;
+        RUZHOUXIE(no_unique_address) ClosureLeft  left;
+        RUZHOUXIE(no_unique_address) ClosureRight right;
 
         template<class T, class Self>
         constexpr auto operator()(this Self&& self, T&& val)

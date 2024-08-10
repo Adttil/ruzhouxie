@@ -21,6 +21,8 @@ namespace ruzhouxie
 #include "general.hpp"
 #include <concepts>
 
+#include "macro_define.hpp"
+
 namespace ruzhouxie
 {
     // This simple array is only for this library. 
@@ -115,7 +117,7 @@ struct std::tuple_element<I, ruzhouxie::array<T, N>>{
 namespace ruzhouxie::detail
 {
     template<size_t N, class A>
-    RUZHOUXIE_CONSTEVAL auto array_take(const A& arr)
+    RUZHOUXIE(consteval) auto array_take(const A& arr)
     {
         using type = A::value_type;
         array<type, N> result{};
@@ -127,7 +129,7 @@ namespace ruzhouxie::detail
     }
 
     template<size_t N, class A>
-    RUZHOUXIE_CONSTEVAL auto array_drop(const A& arr)
+    RUZHOUXIE(consteval) auto array_drop(const A& arr)
     {
         using type = A::value_type;
         array<type, std::tuple_size_v<A> - N> result{};
@@ -139,7 +141,7 @@ namespace ruzhouxie::detail
     }
 
     template<class A1, class A2>
-    RUZHOUXIE_CONSTEVAL auto concat_2_array(const A1& arr1, const A2& arr2)
+    RUZHOUXIE(consteval) auto concat_2_array(const A1& arr1, const A2& arr2)
     {
         using type1 = A1::value_type;
         using type2 = A2::value_type;
@@ -160,7 +162,7 @@ namespace ruzhouxie::detail
     }
 
     template<class A, class...Rest>
-    RUZHOUXIE_CONSTEVAL auto concat_array(const A& arr, const Rest&...rest)
+    RUZHOUXIE(consteval) auto concat_array(const A& arr, const Rest&...rest)
     {
         if constexpr (sizeof...(rest) == 0)
         {

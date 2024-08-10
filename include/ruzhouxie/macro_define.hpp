@@ -1,38 +1,22 @@
 #ifndef RUZHOUXIE_MACRO_DEFINE_H
 #define RUZHOUXIE_MACRO_DEFINE_H
 
-#ifdef _MSC_VER
-
-#define RUZHOUXIE_MAYBE_EMPTY [[msvc::no_unique_address]]
-#define RUZHOUXIE_INLINE [[msvc::forceinline]]
-#define RUZHOUXIE_INLINE_LAMBDA
-#define RUZHOUXIE_INTRINSIC [[msvc::intrinsic]]
-#define RUZHOUXIE_CONSTEVAL constexpr
-
-#else
-
-#ifdef __clang__
-
-#define RUZHOUXIE_MAYBE_EMPTY [[msvc::no_unique_address]] [[no_unique_address]]
-#define RUZHOUXIE_INLINE [[clang::always_inline]]
-#define RUZHOUXIE_INLINE_LAMBDA [[clang::always_inline]]
-#define RUZHOUXIE_INTRINSIC
-#define RUZHOUXIE_CONSTEVAL consteval
-
-#else
-
-#define RUZHOUXIE_MAYBE_EMPTY [[no_unique_address]]
-#define RUZHOUXIE_INLINE
-#define RUZHOUXIE_INLINE_LAMBDA
-#define RUZHOUXIE_INTRINSIC
-#define RUZHOUXIE_CONSTEVAL consteval
-
-#endif
-
-#endif
-
 #define CONCAT_IMPL(A, B) A##B
 #define CONCAT(A, B) CONCAT_IMPL(A, B)
+
+#define RUZHOUXIE(x) RUZHOUXIE_##x
+
+#define RUZHOUXIE_no_unique_address [[no_unique_address]] [[msvc::no_unique_address]]
+
+#ifdef _MSC_VER
+
+#define RUZHOUXIE_consteval constexpr
+
+#else
+
+#define RUZHOUXIE_CONSTEVAL consteval
+
+#endif
 
 #define GET_N(N, ...) CONCAT(GET_N_, N)(__VA_ARGS__)
 #define GET_N_0(_0, ...) _0
