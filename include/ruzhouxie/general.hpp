@@ -60,6 +60,9 @@ namespace ruzhouxie
     template<auto...>
     concept constevaluable = true;
 
+	template<class T, class U>
+    concept derived_from = std::derived_from<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+
     template<class T, class U>
     concept is = std::same_as<U, T> || std::derived_from<T, U>;
 

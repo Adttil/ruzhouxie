@@ -21,7 +21,7 @@ namespace ruzhouxie
 	    RUZHOUXIE_MAYBE_EMPTY T              first;
 	    RUZHOUXIE_MAYBE_EMPTY tuple<Rest...> rest;
 
-		template<size_t I, specified<tuple> Self> requires (I <= sizeof...(Rest))
+		template<size_t I, derived_from<tuple> Self> requires (I <= sizeof...(Rest))
 	    RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
 		{
 		    if constexpr (I)

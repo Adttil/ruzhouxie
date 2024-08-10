@@ -2,7 +2,7 @@ template<>
 struct tuple<>
 {
 
-    template<size_t I, specified<tuple> Self> requires (I < 0uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 0uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         
@@ -16,7 +16,7 @@ struct tuple<T0>
 {
     RUZHOUXIE_MAYBE_EMPTY T0 e0;
 
-    template<size_t I, specified<tuple> Self> requires (I < 1uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 1uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -31,7 +31,7 @@ struct tuple<T0, T1>
     RUZHOUXIE_MAYBE_EMPTY T0 e0;
     RUZHOUXIE_MAYBE_EMPTY T1 e1;
 
-    template<size_t I, specified<tuple> Self> requires (I < 2uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 2uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -48,7 +48,7 @@ struct tuple<T0, T1, T2>
     RUZHOUXIE_MAYBE_EMPTY T1 e1;
     RUZHOUXIE_MAYBE_EMPTY T2 e2;
 
-    template<size_t I, specified<tuple> Self> requires (I < 3uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 3uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -67,7 +67,7 @@ struct tuple<T0, T1, T2, T3>
     RUZHOUXIE_MAYBE_EMPTY T2 e2;
     RUZHOUXIE_MAYBE_EMPTY T3 e3;
 
-    template<size_t I, specified<tuple> Self> requires (I < 4uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 4uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -88,7 +88,7 @@ struct tuple<T0, T1, T2, T3, T4>
     RUZHOUXIE_MAYBE_EMPTY T3 e3;
     RUZHOUXIE_MAYBE_EMPTY T4 e4;
 
-    template<size_t I, specified<tuple> Self> requires (I < 5uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 5uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -111,7 +111,7 @@ struct tuple<T0, T1, T2, T3, T4, T5>
     RUZHOUXIE_MAYBE_EMPTY T4 e4;
     RUZHOUXIE_MAYBE_EMPTY T5 e5;
 
-    template<size_t I, specified<tuple> Self> requires (I < 6uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 6uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -136,7 +136,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6>
     RUZHOUXIE_MAYBE_EMPTY T5 e5;
     RUZHOUXIE_MAYBE_EMPTY T6 e6;
 
-    template<size_t I, specified<tuple> Self> requires (I < 7uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 7uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -163,7 +163,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7>
     RUZHOUXIE_MAYBE_EMPTY T6 e6;
     RUZHOUXIE_MAYBE_EMPTY T7 e7;
 
-    template<size_t I, specified<tuple> Self> requires (I < 8uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 8uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -192,7 +192,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8>
     RUZHOUXIE_MAYBE_EMPTY T7 e7;
     RUZHOUXIE_MAYBE_EMPTY T8 e8;
 
-    template<size_t I, specified<tuple> Self> requires (I < 9uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 9uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -223,7 +223,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
     RUZHOUXIE_MAYBE_EMPTY T8 e8;
     RUZHOUXIE_MAYBE_EMPTY T9 e9;
 
-    template<size_t I, specified<tuple> Self> requires (I < 10uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 10uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -256,7 +256,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     RUZHOUXIE_MAYBE_EMPTY T9 e9;
     RUZHOUXIE_MAYBE_EMPTY T10 e10;
 
-    template<size_t I, specified<tuple> Self> requires (I < 11uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 11uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -291,7 +291,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
     RUZHOUXIE_MAYBE_EMPTY T10 e10;
     RUZHOUXIE_MAYBE_EMPTY T11 e11;
 
-    template<size_t I, specified<tuple> Self> requires (I < 12uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 12uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -328,7 +328,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
     RUZHOUXIE_MAYBE_EMPTY T11 e11;
     RUZHOUXIE_MAYBE_EMPTY T12 e12;
 
-    template<size_t I, specified<tuple> Self> requires (I < 13uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 13uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -367,7 +367,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
     RUZHOUXIE_MAYBE_EMPTY T12 e12;
     RUZHOUXIE_MAYBE_EMPTY T13 e13;
 
-    template<size_t I, specified<tuple> Self> requires (I < 14uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 14uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -408,7 +408,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
     RUZHOUXIE_MAYBE_EMPTY T13 e13;
     RUZHOUXIE_MAYBE_EMPTY T14 e14;
 
-    template<size_t I, specified<tuple> Self> requires (I < 15uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 15uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
@@ -451,7 +451,7 @@ struct tuple<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T1
     RUZHOUXIE_MAYBE_EMPTY T14 e14;
     RUZHOUXIE_MAYBE_EMPTY T15 e15;
 
-    template<size_t I, specified<tuple> Self> requires (I < 16uz)
+    template<size_t I, derived_from<tuple> Self> requires (I < 16uz)
     RUZHOUXIE_INLINE friend constexpr auto&& get(Self&& self) noexcept
     {
         if constexpr(I == 0uz) return FWD(self, e0);
