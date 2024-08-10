@@ -1,5 +1,5 @@
-#ifndef RUZHOUXIE_MATH_H
-#define RUZHOUXIE_MATH_H
+#ifndef RUZHOUXIE_MATH_HPP
+#define RUZHOUXIE_MATH_HPP
 
 #include <cmath>
 

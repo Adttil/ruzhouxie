@@ -1,5 +1,5 @@
-#ifndef RUZHOUXIE_ARRAY_H
-#define RUZHOUXIE_ARRAY_H
+#ifndef RUZHOUXIE_ARRAY_HPP
+#define RUZHOUXIE_ARRAY_HPP
 
 #include <cstddef>
 #include <tuple>

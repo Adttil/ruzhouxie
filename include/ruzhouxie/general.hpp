@@ -1,5 +1,5 @@
-#ifndef RUZHOUXIE_GENERAL_H
-#define RUZHOUXIE_GENERAL_H
+#ifndef RUZHOUXIE_GENERAL_HPP
+#define RUZHOUXIE_GENERAL_HPP
 
 #include <concepts>
 #include <cstddef>
