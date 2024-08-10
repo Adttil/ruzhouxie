@@ -14,7 +14,7 @@
 
 #else
 
-#define RUZHOUXIE_CONSTEVAL consteval
+#define RUZHOUXIE_consteval consteval
 
 #endif
 
