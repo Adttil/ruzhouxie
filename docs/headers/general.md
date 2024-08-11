@@ -9,6 +9,7 @@
 ## 类型
 ||||
 |-|-|-|
-|[**size_t**](../utility/size_t.md)| 即[**`std::size_t`**]()。 | `类型别名` |
-|[**custom_t**](../utility/custom_t.md)| 定制点的指示器类型。 | `类` |
-|[**fwd_type**](../utility/fwd_type.md)| 子级完美转发应返回的类型。 | `类模板` |
+|[**size_t**](../utility/size_t.md)| 即[**`std::size_t`**]() | `类型别名` |
+|[**custom_t**](../utility/custom_t.md)| 定制点的指示器类型 | `类` |
+|[**fwd_type**](../utility/fwd_type.md)| 子级完美转发应返回的类型 | `类型别名模板` |
+|[**choice_t**](../utility/choice_t.md)| 用于指示函数静态分支的辅助类型 | `类模板` |
