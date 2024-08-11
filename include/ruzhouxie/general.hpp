@@ -132,8 +132,8 @@ namespace rzx
 	    bool nothrow = false;
 	};
 
-	template<class T, std::convertible_to<bool> B>
-	choice_t(T&&, B&&) -> choice_t<std::decay<T>>;
+	//template<class T, std::convertible_to<bool> B>
+	//choice_t(T&&, B&&) -> choice_t<std::decay<T>>;
 
     // template<class T>
     // struct wrapper
