@@ -1,5 +1,5 @@
 # rzx::`array`
-在标头[<ruzhouxie/general.hpp>](../headers/array.md "headers/array")中定义
+在标头[<ruzhouxie/array.hpp>](../headers/array.md "headers/array")中定义
 ```cpp
 namespace rzx{
 #if __STDC_HOSTED__
@@ -31,22 +31,22 @@ namespace rzx{
 ### 其他
 ||||
 |-|-|-|
-|[**operator[]**]()|访问指定的元素|`公开成员函数`|
-|[**data**]()|直接访问底层连续存储|`公开成员函数`|
-|[**begin**]()|返回指向起始的迭代器|`公开成员函数`|
-|[**end**]()|返回指向末尾的迭代器|`公开成员函数`|
-|[**size**]()|返回元素数|`公开成员函数`|
+|[**operator[]**](array/operator_at.md)|访问指定的元素|`公开成员函数`|
+|[**data**](array/data.md)|直接访问底层连续存储|`公开成员函数`|
+|[**begin**](array/begin.md)|返回指向起始的迭代器|`公开成员函数`|
+|[**end**](array/end.md)|返回指向末尾的迭代器|`公开成员函数`|
+|[**size**](array/size.md)|返回元素数|`公开成员函数`|
 ## 非成员函数
 ||||
 |-|-|-|
-|[**operator==**]()|两个`array`的每一个对元素是否都相等|`函数模板`|
-|[**get**(rzx::array)]()|两个`array`的每一个对元素是否都相等|`函数模板`|
+|[**operator==**](array/operator_cmp.md)|两个`array`的每一个对元素是否都相等|`函数模板`|
+|[**get**(rzx::array)](array/get.md)|两个`array`的每一个对元素是否都相等|`函数模板`|
 ## 辅助类
 ||||
 |-|-|-|
-|[**std::tuple_size**\<rzx::array\>]()|获得 array 的大小|`类模板特化`|
-|[**std::tuple_element**\<rzx::array\>]()|获得 array 元素的类型|`类模板特化`|
-## [推导指引]()
+|[**std::tuple_size**\<rzx::array\>](array/tuple_size.md)|获得 array 的大小|`类模板特化`|
+|[**std::tuple_element**\<rzx::array\>](array/tuple_element.md)|获得 array 元素的类型|`类模板特化`|
+## [推导指引](array/deduction_guides.md)
 ## 外部链接
 ||||
 |-|-|-|
