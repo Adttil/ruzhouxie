@@ -1,5 +1,5 @@
 # ruzhouxie::`make_tuple`
-在标头[<ruzhouxie/tuple.hpp>](../tuple.md)定义
+在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)定义
 ```cpp
 template< class... Types >
 constexpr ruzhouxie::tuple<VTypes...> make_tuple( Types&&... args );

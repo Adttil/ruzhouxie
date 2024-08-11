@@ -17,6 +17,8 @@ constexpr std::size_t operator""uz(unsigned long long x)
 }
 #endif
 
+
+
 namespace ruzhouxie
 {
 	using std::size_t;
@@ -45,7 +47,11 @@ namespace ruzhouxie
     //template<class T>
     //concept readonly = std::is_const_v<std::remove_reference_t<T>>;
 
-    template<class T>
+	using tt = const custom_t;
+
+	auto i = tt{  };
+    
+	template<class T>
     concept aggregated = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
     //template<class T>

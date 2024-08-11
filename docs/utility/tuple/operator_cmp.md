@@ -1,5 +1,5 @@
 # `operator==`(ruzhouxie::tuple)
-在标头[<ruzhouxie/tuple.hpp>](../tuple.md)定义
+在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)定义
 ```cpp
 template< class... TTypes, class... UTypes >
 constexpr bool operator==( const ruzhouxie::tuple<TTypes...>& lhs,
@@ -12,4 +12,4 @@ constexpr bool operator==( const ruzhouxie::tuple<TTypes...>& lhs,
 |-|-|
 |**lhs, rhs**|要比较的元组|
 ## 返回值
-在对于所有 [ `0`​, `sizeof...(Types)` ) 中的`i`都满足 [`get`](tuple/get.md)`<i>(lhs) == `[`get`](tuple/get.md)`<i>(rhs)`时返回`true`，否则返回`false`。对两个空元组返回`true`。
+在对于所有 [ `0`​, `sizeof...(Types)` ) 中的`i`都满足 [`get`](get.md)`<i>(lhs) == `[`get`](get.md)`<i>(rhs)`时返回`true`，否则返回`false`。对两个空元组返回`true`。

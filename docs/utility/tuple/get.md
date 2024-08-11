@@ -1,5 +1,5 @@
 # `get`(ruzhouxie::tuple)
-在标头[<ruzhouxie/tuple.hpp>](../../tuple.md)中定义
+在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)中定义
 ```cpp
 //(1)
 template< size_t I, class... Types >
@@ -32,7 +32,7 @@ const std::tuple_element<I, ruzhouxie::tuple<Types...>>::type&&
 |**t**|要提取内容的元组|
 ## 返回值
 到`t`的被选中元素的引用。
-## 参阅
+## 外部链接
 ||||
 |-|-|-|
 | [结构化绑定](https://zh.cppreference.com/w/cpp/language/structured_binding) | 绑定指定的名字到初始化式的子对象或元组元素 |
