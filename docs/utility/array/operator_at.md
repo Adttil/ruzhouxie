@@ -1,8 +1,8 @@
 # rzx::array<T, N>::`operator[]`
 在标头[<ruzhouxie/array.hpp>](../../headers/array.md "headers/array")中定义
 ```cpp
-T& operator[]( size_t pos );
-const T& operator[]( size_t pos ) const;
+constexpr T& operator[]( size_t pos );
+constexpr const T& operator[]( size_t pos ) const;
 ```
 返回位于指定位置`pos`的元素的引用。不进行边界检查。
 ## 参数

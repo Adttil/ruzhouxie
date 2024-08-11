@@ -35,9 +35,10 @@ using std::array;
 |-|-|-|
 |[**operator[]**](array/operator_at.md)|访问指定的元素|`公开成员函数`|
 |[**data**](array/data.md)|直接访问底层连续存储|`公开成员函数`|
+|[**size**](array/size.md)|返回元素数|`公开成员函数`|
 |[**begin**](array/begin.md)|返回指向起始的迭代器|`公开成员函数`|
 |[**end**](array/end.md)|返回指向末尾的迭代器|`公开成员函数`|
-|[**size**](array/size.md)|返回元素数|`公开成员函数`|
+
 ## 非成员函数
 ||||
 |-|-|-|
