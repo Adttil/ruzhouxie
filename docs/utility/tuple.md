@@ -1,8 +1,10 @@
 # rzx::`tuple`
 在标头[<ruzhouxie/tuple.hpp>](../headers/tuple.md)中定义
 ```cpp
-template< class... Types >
-struct tuple;
+namespace rzx{
+    template< class... Types >
+    struct tuple;
+}
 ```
 类模板`rzx::tuple`是固定大小的异质值的聚合。  
 它是一个聚合类，这是它与[**`std::tuple`**](https://zh.cppreference.com/w/cpp/utility/tuple)的主要区别，这使得它可以保持各种平凡性并且可以原位构造元素。
