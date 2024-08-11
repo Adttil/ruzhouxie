@@ -1,15 +1,17 @@
 # rzx::`array`
 在标头[<ruzhouxie/array.hpp>](../headers/array.md "headers/array")中定义
 ```cpp
-namespace rzx{
 #if __STDC_HOSTED__
-    template< typename T, size_t N >
-    class array;
+
+template< typename T, size_t N >
+class array;
+
 #else
 #include <array>
-    using std::array;
+
+using std::array;
+
 #endif
-}
 ```
 若C++标准非独立实现，`rzx::array`就是[**`std::array`**][std::array]，否则它是一个类似`std::array`但更加精简的原生数组包装类。此页面以下的说明表示的是`rzx::array`至少需要拥有的功能。
 ## 模板形参

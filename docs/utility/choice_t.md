@@ -1,13 +1,11 @@
 # rzx::`choice_t`
 在标头[<ruzhouxie/general.hpp>](../headers/general.md "headers/general")中定义
 ```cpp
-namespace rzx{
-    template <class Strategy = bool>
-    struct choice_t{
-	    Strategy strategy{};
-	    bool nothrow = false;
-	};
-}
+template <class Strategy = bool>
+struct choice_t{
+    Strategy strategy{};
+    bool nothrow = false;
+};
 ```
 `choice_t`是一个如上定义的简单聚合类模板，它是用于指示函数静态分支的辅助类型。
 ## 模板参数

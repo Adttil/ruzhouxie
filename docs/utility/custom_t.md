@@ -1,9 +1,7 @@
 # rzx::`custom_t`
 在标头[<ruzhouxie/general.hpp>](../headers/general.md "headers/general")中定义
 ```cpp
-namespace rzx{
-    struct custom_t{};
-}
+struct custom_t{};
 ```
 `rzx::custom_t`是空类类型，用于指示重载用于本库的定制点。在本库中的使用详见[`rzx::child_count`][child_count]、[`rzx::child`][child]。
 ## 注解

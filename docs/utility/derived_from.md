@@ -1,10 +1,8 @@
 # rzx::`derived_from`
 在标头[<ruzhouxie/general.hpp>](../headers/general.md "headers/general")中定义
 ```cpp
-namespace rzx{
-    template< class Derived, class Base >
-    concept derived_from = std::derived_from<std::remove_cvref_t<Derived>, std::remove_cvref_t<Base>>;
-}
+template< class Derived, class Base >
+concept derived_from = std::derived_from<std::remove_cvref_t<Derived>, std::remove_cvref_t<Base>>;
 ```
 如上定义，概念`rzx::derived_from`就是[**`std::derived_from`**][std::derived_from]的对参数忽略 cv 限定和去除引用的版本。
 ## 示例

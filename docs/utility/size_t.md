@@ -1,11 +1,9 @@
 # rzx::`size_t`
 在标头[<ruzhouxie/general.hpp>](../headers/general.md "headers/general")中定义
 ```cpp
-namespace rzx{
-    using size_t = std::size_t;
-}
+using std::size_t;
 ```
-[**`std::size_t`**][std::size_t]的别名，作为本库内表示数量、长度等非负整数的标准类型。
+`rzx::size_t`即[**`std::size_t`**][std::size_t]，作为本库内表示数量、长度等非负整数的标准类型。
 
 ## 外部链接
 ||||
