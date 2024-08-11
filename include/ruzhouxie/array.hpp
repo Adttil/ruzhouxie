@@ -36,7 +36,7 @@ namespace rzx
         template<class Self>
         constexpr auto&& operator[](this Self&& self, size_t i)noexcept
         {
-            return static_cast<fwd_type<decltype((self.data[i])), Self&&, T>>(self.data[i]);
+            return (self.data[i]);
         }
 
         static constexpr size_t size()noexcept
