@@ -23,7 +23,7 @@ namespace ruzhouxie
 {
 	using std::size_t;
 
-    namespace rzx = ::ruzhouxie;
+	namespace rzx = ::ruzhouxie;
 
     //inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
@@ -46,10 +46,6 @@ namespace ruzhouxie
 	//const object or ref to const object
     //template<class T>
     //concept readonly = std::is_const_v<std::remove_reference_t<T>>;
-
-	using tt = const custom_t;
-
-	auto i = tt{  };
     
 	template<class T>
     concept aggregated = std::is_aggregate_v<std::remove_cvref_t<T>>;
