@@ -45,8 +45,8 @@ namespace rzx
     //template<class T>
     //concept readonly = std::is_const_v<std::remove_reference_t<T>>;
     
-	template<class T>
-    concept aggregated = std::is_aggregate_v<std::remove_cvref_t<T>>;
+	//template<class T>
+    //concept aggregated = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
     //template<class T>
     //concept empty = std::is_empty_v<T>;

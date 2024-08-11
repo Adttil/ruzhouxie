@@ -4,7 +4,6 @@
 ## 概念
 ||||
 |-|-|-|
-|[**aggregated**](../utility/aggregated.md)| 指定类型是聚合类或其引用 | `概念` |
 |[**derived_from**](../utility/derived_from.md)| 指定一个类型派生自另一类型（移除引用后） | `概念` |
 ## 类型
 ||||

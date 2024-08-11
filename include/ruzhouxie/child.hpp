@@ -69,7 +69,7 @@ namespace rzx
             operator T();
         };
 
-        template <aggregated T>
+        template <class T>
         inline constexpr size_t aggregate_member_count = []<bool had_success = false>(this auto && self, auto...args)
         {
             using type = std::remove_cvref_t<T>;
@@ -91,7 +91,7 @@ namespace rzx
             }
         }();
 
-        template<size_t I, aggregated T>
+        template<size_t I, class T>
         constexpr decltype(auto) aggregate_get(T&& t) noexcept
         {
             constexpr size_t n = aggregate_member_count<T>;
@@ -158,7 +158,7 @@ namespace rzx
                 {
                     return { strategy_t::adl, noexcept(get<I>(std::declval<T>())) };
                 }
-                else if constexpr(aggregated<type>)
+                else if constexpr(std::is_aggregate_v<type>)
                 {
                     return { strategy_t::aggregate, true };
                 }
