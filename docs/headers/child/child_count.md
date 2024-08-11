@@ -10,7 +10,7 @@ inline constexpr size_t child_count;
   - 表达式`t.get<i>(custom_t{})`和`get<i>(t, custom_t{})`均满足: 非良构或者类型为`end_t`，`i >= std::tuple_size<std::remove_cvref_t<T>>::value`良构并且值为`false`；
   - 或者四个表达式全部都满足：非良构或者类型为`end_t`。
 - 否则，若`std::tuple_size<std::remove_cvref_t<T>>::value`良构且值为0，`child_count<T>`是`0`。
-- 否则，若`std::remove_cvref_t<T>`是一个聚合类，`child_count<T>`为此聚合类数据成员个数与`aggregate_supported_max_size`中更小的一个值；
+- 否则，若`std::remove_cvref_t<T>`是一个聚合类，`child_count<T>`为此聚合类数据成员个数与`auto_supported_aggregate_max_size`中更小的一个值；
 - 否则，`child_count<T>`是`0`。
 
 [declval]:https://zh.cppreference.com/w/cpp/utility/declval "外部：https://zh.cppreference.com/w/cpp/utility/declval"

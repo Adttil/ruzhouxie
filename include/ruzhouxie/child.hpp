@@ -51,6 +51,8 @@ namespace ruzhouxie
 
     end_t end();
     
+    inline constexpr size_t auto_supported_aggregate_max_size = 64uz;
+
     namespace detail::get_ns
     {
         struct universal_type
@@ -67,13 +69,11 @@ namespace ruzhouxie
             operator T();
         };
 
-        inline constexpr size_t aggregate_supported_to_get_max_size = 64uz;
-
         template <aggregated T>
         inline constexpr size_t aggregate_member_count = []<bool had_success = false>(this auto && self, auto...args)
         {
             using type = std::remove_cvref_t<T>;
-            if constexpr (sizeof...(args) > aggregate_supported_to_get_max_size)
+            if constexpr (sizeof...(args) > auto_supported_aggregate_max_size)
             {
                 return 0uz;
             }
