@@ -1,4 +1,4 @@
-# ruzhouxie::`child`
+# rzx::`child`
 在标头[<ruzhouxie/child.hpp>](../child.md)中定义
 ```cpp
 template<indexical auto...Indexes>

@@ -9,7 +9,7 @@
 
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     template<typename T>
     concept indexical_array = requires(std::remove_cvref_t<T> t, size_t i)
@@ -351,7 +351,7 @@ namespace ruzhouxie
     }
 }
 
-namespace ruzhouxie::detail
+namespace rzx::detail
 {
     constexpr auto concat_to_tuple()
 	{

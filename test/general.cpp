@@ -3,7 +3,7 @@
 
 #include <ruzhouxie/macro_define.hpp>
 
-using namespace ruzhouxie;
+using namespace rzx;
 
 // TEST(specified, same)
 // {

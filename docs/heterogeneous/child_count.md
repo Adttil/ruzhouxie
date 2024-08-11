@@ -1,4 +1,4 @@
-# ruzhouxie::`child_count`
+# rzx::`child_count`
 在标头[<ruzhouxie/child.hpp>](../child.md)中定义
 ```cpp
 template<class T>

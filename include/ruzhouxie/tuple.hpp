@@ -10,7 +10,7 @@
 
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     template<class...T>
     struct tuple;
@@ -38,7 +38,7 @@ namespace ruzhouxie
 	};
 }
 
-namespace ruzhouxie
+namespace rzx
 {
 #include "code_generate/tuple_specialization.code"
 
@@ -47,12 +47,12 @@ namespace ruzhouxie
 }
 
 template<class...T>
-struct std::tuple_size<ruzhouxie::tuple<T...>> : std::integral_constant<std::size_t, sizeof...(T)> {};
+struct std::tuple_size<rzx::tuple<T...>> : std::integral_constant<std::size_t, sizeof...(T)> {};
 
 template<size_t I, class...T>
-struct std::tuple_element<I, ruzhouxie::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
+struct std::tuple_element<I, rzx::tuple<T...>> : std::tuple_element<I, std::tuple<T...>> {};
 
-namespace ruzhouxie
+namespace rzx
 {
 	template<class...Args>
     constexpr auto make_tuple(Args&&...args)

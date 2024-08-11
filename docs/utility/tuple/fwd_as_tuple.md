@@ -1,8 +1,8 @@
-# ruzhouxie::`fwd_as_tuple`
+# rzx::`fwd_as_tuple`
 在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)定义
 ```cpp
 template< class... Types >
-constexpr ruzhouxie::tuple<Types&&...> fwd_as_tuple( Types&&... args );
+constexpr rzx::tuple<Types&&...> fwd_as_tuple( Types&&... args );
 ```
 构造到`args`中的各实参的引用的元组，适于作为实参转发给函数。该元组在以右值为实参时拥有右值引用数据成员，否则拥有左值引用数据成员。
 ## 参数
@@ -10,7 +10,7 @@ constexpr ruzhouxie::tuple<Types&&...> fwd_as_tuple( Types&&... args );
 |-|-|
 | args... | 为之构造元组的零或更多实参 |
 ## 返回值
-如同以`ruzhouxie::tuple<Types&&...>(std::forward<Types>(args)...)`创建的`ruzhouxie::tuple`对象。
+如同以`rzx::tuple<Types&&...>(std::forward<Types>(args)...)`创建的`rzx::tuple`对象。
 ## 参阅
 ||||
 | --- | --- | --- |

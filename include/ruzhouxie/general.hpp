@@ -19,11 +19,9 @@ constexpr std::size_t operator""uz(unsigned long long x)
 
 
 
-namespace ruzhouxie
+namespace rzx
 {
 	using std::size_t;
-
-	namespace rzx = ::ruzhouxie;
 
     //inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
 
@@ -152,7 +150,7 @@ namespace ruzhouxie
 	// wrapper(T&&) -> wrapper<T>;
 }
 
-namespace ruzhouxie
+namespace rzx
 {
 
     template<size_t I>

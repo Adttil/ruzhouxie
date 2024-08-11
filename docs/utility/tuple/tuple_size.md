@@ -1,8 +1,8 @@
-# std::`tuple_size`\<ruzhouxie::tuple\>
+# std::`tuple_size`\<rzx::tuple\>
 在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)中定义
 ```cpp
 template< class... Types >
-struct std::tuple_size< ruzhouxie::tuple<Types...> >
+struct std::tuple_size< rzx::tuple<Types...> >
     : std::integral_constant<std::size_t, sizeof...(Types)> { };
 ```
 提供对元组中元素数量的访问，作为编译时常量表达式。
@@ -31,7 +31,7 @@ inline constexpr std::size_t tuple_size_v = tuple_size<T>::value;
 ## 参阅
 ||||
 |-|-|-|
-| [**get**(ruzhouxie::tuple)](get.md) | 元组式访问指定的元素 | `函数模板` |
+| [**get**(rzx::tuple)](get.md) | 元组式访问指定的元素 | `函数模板` |
 ## 外部链接
 ||||
 |-|-|-|

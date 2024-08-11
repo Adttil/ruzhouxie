@@ -3,8 +3,6 @@
 
 #include <ruzhouxie/macro_define.hpp>
 
-namespace rzx = ruzhouxie;
-
 struct AddOne : rzx::adaptor_closure<AddOne>
 {
     auto operator()(auto x)const

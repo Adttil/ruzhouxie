@@ -1,7 +1,7 @@
 #include <ruzhouxie\child.hpp>
 #include "test_tool.hpp"
 
-using namespace ruzhouxie;
+using namespace rzx;
 
 TEST(child, aggregate)
 {

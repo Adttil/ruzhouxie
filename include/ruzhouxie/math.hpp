@@ -7,7 +7,7 @@
 
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     constexpr size_t normalize_index(std::integral auto index, size_t size)noexcept
     {

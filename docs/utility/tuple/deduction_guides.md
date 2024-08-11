@@ -1,4 +1,4 @@
-# ruzhouxie::tuple 的推导指引
+# rzx::tuple 的推导指引
 在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)中定义
 ```cpp
 template<typename...T>

@@ -1,7 +1,7 @@
 #include <ruzhouxie/tuple.hpp>
 #include "test_tool.hpp"
 
-using namespace ruzhouxie;
+using namespace rzx;
 
 TEST(tuple, get)
 {

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <magic/visualize.h>
 
-namespace ruzhouxie::test
+namespace rzx::test
 {
     constexpr ::magic::VisualizeOption magic_option
     {
@@ -29,10 +29,10 @@ namespace ruzhouxie::test
 
 #define MAGIC_TCHECK(type1, ...) \
 GTEST_EXPECT_TRUE((std::same_as<type1, __VA_ARGS__>)) \
-    << "Type [" << #type1 << "] is:\n" << magic::visualize<type1>(::ruzhouxie::test::magic_option) << '\n'\
-    << "Type [" << #__VA_ARGS__ << "] is:\n" << magic::visualize<__VA_ARGS__>(::ruzhouxie::test::magic_option) << '\n'
+    << "Type [" << #type1 << "] is:\n" << magic::visualize<type1>(::rzx::test::magic_option) << '\n'\
+    << "Type [" << #__VA_ARGS__ << "] is:\n" << magic::visualize<__VA_ARGS__>(::rzx::test::magic_option) << '\n'
 
 #define MAGIC_CHECK(exp1, ...) \
-::ruzhouxie::test::magic_check_impl<decltype(exp1), decltype(__VA_ARGS__)>(#exp1, #__VA_ARGS__, exp1, __VA_ARGS__);
+::rzx::test::magic_check_impl<decltype(exp1), decltype(__VA_ARGS__)>(#exp1, #__VA_ARGS__, exp1, __VA_ARGS__);
 
 #endif

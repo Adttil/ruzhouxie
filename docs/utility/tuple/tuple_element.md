@@ -1,8 +1,8 @@
-# std::`tuple_element`\<ruzhouxie::tuple>
+# std::`tuple_element`\<rzx::tuple>
 在标头[<ruzhouxie/tuple.hpp>](../../headers/tuple.md)中定义
 ```cpp
 template< std::size_t I, class... Types >
-struct std::tuple_element< I, ruzhouxie::tuple<Types...> >;
+struct std::tuple_element< I, rzx::tuple<Types...> >;
 ```
 提供对元组元素类型的编译时索引访问。
 ## 成员类型

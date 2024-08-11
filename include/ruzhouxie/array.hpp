@@ -11,7 +11,7 @@
 
 #include <array>
 
-namespace ruzhouxie
+namespace rzx
 {
     using std::array;
 }
@@ -22,7 +22,7 @@ namespace ruzhouxie
 
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     // This simple array is only for this library. 
     // It is not guaranteed to have exactly the same behavior as std::array.
@@ -104,16 +104,16 @@ namespace ruzhouxie
 }
 
 template<class T, size_t N>
-struct std::tuple_size<ruzhouxie::array<T, N>> : std::integral_constant<size_t, N>{};
+struct std::tuple_size<rzx::array<T, N>> : std::integral_constant<size_t, N>{};
 
 template<size_t I, class T, size_t N>
-struct std::tuple_element<I, ruzhouxie::array<T, N>>{
+struct std::tuple_element<I, rzx::array<T, N>>{
     using type = T;
 };
 
 #endif
 
-namespace ruzhouxie::detail
+namespace rzx::detail
 {
     template<size_t N, class A>
     constexpr auto array_take(const A& arr)

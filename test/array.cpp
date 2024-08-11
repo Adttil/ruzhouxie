@@ -1,7 +1,7 @@
 #include <ruzhouxie/array.hpp>
 #include "test_tool.hpp"
 
-using namespace ruzhouxie;
+using namespace rzx;
 
 TEST(array, _)
 {

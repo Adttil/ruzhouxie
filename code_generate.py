@@ -37,7 +37,7 @@ def generate_aggregate_getter_invoker_for(memeber_count):
     result += generate_sequence(memeber_count, lambda i : "m" + str(i))
     result += "] = FWD(t);\n"
 	
-    result += "    return ::ruzhouxie::arg_at<I>(";
+    result += "    return ::rzx::arg_at<I>(";
     result += generate_sequence(memeber_count, lambda i : "FWDLIKE(t, m" + str(i) + ')')
 
     result += ");\n}\n"

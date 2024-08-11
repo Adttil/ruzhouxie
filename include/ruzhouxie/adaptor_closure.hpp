@@ -8,13 +8,13 @@
 
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     template<class F> 
     struct adaptor_closure{};
 }
 
-namespace ruzhouxie::detail
+namespace rzx::detail
 {        
     template<class T>
     concept adaptor_closuroid = requires(std::remove_cvref_t<T>& t) 
@@ -38,7 +38,7 @@ namespace ruzhouxie::detail
     };
 }
 
-namespace ruzhouxie
+namespace rzx
 {
     template<detail::adaptor_closuroid L, detail::adaptor_closuroid R>
     constexpr auto operator|(L&& l, R&& r)
