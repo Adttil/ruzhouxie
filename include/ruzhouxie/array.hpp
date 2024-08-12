@@ -4,9 +4,6 @@
 #include <cstddef>
 #include <tuple>
 
-#include "macro_define.hpp"
-
-#define RUZHOUXIE_DONOT_USE_STD_ARRAY
 #if __STDC_HOSTED__ && !defined(RUZHOUXIE_DONOT_USE_STD_ARRAY)
 
 #include <array>
