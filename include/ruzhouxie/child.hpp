@@ -32,7 +32,7 @@ namespace rzx
         }
         else if constexpr(sizeof...(indexes) > 1uz)
         {
-            return detail::concat_array(to_indexes(indexes)...);
+            return rzx::concat_array(to_indexes(indexes)...);
         }
         else if constexpr(indexical_array<decltype((..., indexes))>)
         {
@@ -402,7 +402,7 @@ namespace rzx::detail
         {
             return array<size_t, Indices.size()>
             {
-                normalize_index(Indices[I], child_count<child_type<V, detail::array_take<I>(Indices)>>)...
+                normalize_index(Indices[I], child_count<child_type<V, rzx::array_take<I>(Indices)>>)...
             };
         }(std::make_index_sequence<Indices.size()>{});
     }
@@ -424,8 +424,8 @@ namespace rzx::detail
                 && (... && (n == child_count<decltype(child_relayout.template get<I>())>))
             )
             {
-                constexpr auto prefix = detail::array_take<n - 1uz>(child_relayout.template get<0uz>());
-                if constexpr((... && (prefix == detail::array_take<n - 1uz>(child_relayout.template get<I>())))
+                constexpr auto prefix = rzx::array_take<n - 1uz>(child_relayout.template get<0uz>());
+                if constexpr((... && (prefix == rzx::array_take<n - 1uz>(child_relayout.template get<I>())))
                     && (... && ((child_relayout.template get<I>())[n - 1uz] == I))
                 )
                 {
