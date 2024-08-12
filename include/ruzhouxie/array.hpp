@@ -57,7 +57,7 @@ namespace rzx
         template<size_t i, derived_from<array> Self>
         friend constexpr decltype(auto) get(Self&& self)noexcept
         {
-            return FWD(self)[i];
+            return static_cast<fwd_type<decltype(self.data[i]), Self>>(self.data[i]);
         }
 
         friend constexpr bool operator==(const array&, const array&) = default;
