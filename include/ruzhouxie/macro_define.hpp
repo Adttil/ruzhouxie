@@ -6,15 +6,13 @@
 
 #define RUZHOUXIE(x) RUZHOUXIE_##x
 
-#define RUZHOUXIE_no_unique_address [[no_unique_address]] [[msvc::no_unique_address]]
-
 #ifdef _MSC_VER
 
-#define RUZHOUXIE_consteval constexpr
+#define RUZHOUXIE_no_unique_address [[msvc::no_unique_address]]
 
 #else
 
-#define RUZHOUXIE_consteval consteval
+#define RUZHOUXIE_no_unique_address [[no_unique_address]]
 
 #endif
 
