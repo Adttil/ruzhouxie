@@ -32,7 +32,7 @@ namespace rzx
         }
         else if constexpr(sizeof...(indexes) > 1uz)
         {
-            return rzx::concat_array(to_indexes(indexes)...);
+            return rzx::array_cat(to_indexes(indexes)...);
         }
         else if constexpr(indexical_array<decltype((..., indexes))>)
         {

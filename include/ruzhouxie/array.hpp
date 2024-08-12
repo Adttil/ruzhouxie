@@ -139,9 +139,10 @@ namespace rzx
         return result;
     }
 
-    namespace detail{
+    namespace detail
+    {
         template<class A1, class A2>
-        constexpr auto concat_2_array(const A1& arr1, const A2& arr2)
+        constexpr auto two_array_cat(const A1& arr1, const A2& arr2)
         {
             using type1 = A1::value_type;
             using type2 = A2::value_type;
@@ -163,7 +164,7 @@ namespace rzx
     }
 
     template<class A, class...Rest>
-    constexpr auto concat_array(const A& arr, const Rest&...rest)
+    constexpr auto array_cat(const A& arr, const Rest&...rest)
     {
         if constexpr (sizeof...(rest) == 0)
         {
@@ -171,7 +172,7 @@ namespace rzx
         }
         else
         {
-            return detail::concat_2_array(arr, concat_array(rest...));
+            return detail::two_array_cat(arr, array_cat(rest...));
         }
     }
 }
