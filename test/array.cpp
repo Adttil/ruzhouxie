@@ -1,14 +1,12 @@
 #include <ruzhouxie/array.hpp>
 #include "test_tool.hpp"
 
-using namespace rzx;
-
 TEST(array, basic)
 {
-    auto arr = array{ 1, 2, 3 };
+    auto arr = rzx::array{ 1, 2, 3 };
     
-    MAGIC_TCHECK(decltype(arr), array<int, 3>);
-    MAGIC_CHECK(arr, array<int, 3>{ 1, 2, 3 });
+    MAGIC_TCHECK(decltype(arr), rzx::array<int, 3>);
+    MAGIC_CHECK(arr, rzx::array<int, 3>{ 1, 2, 3 });
 
     MAGIC_CHECK(arr[0], 1);
     MAGIC_CHECK(arr[1], 2);
@@ -26,7 +24,7 @@ TEST(array, basic)
 
 TEST(array, take)
 {
-    constexpr auto arr = array{ 1, 2, 3 };
+    constexpr auto arr = rzx::array{ 1, 2, 3 };
     constexpr auto take = rzx::array_take<2>(arr);
     
     MAGIC_CHECK(take.size(), 2);
@@ -36,7 +34,7 @@ TEST(array, take)
 
 TEST(array, drop)
 {
-    constexpr auto arr = array{ 1, 2, 3 };
+    constexpr auto arr = rzx::array{ 1, 2, 3 };
     constexpr auto drop = rzx::array_drop<1>(arr);
     
     MAGIC_CHECK(drop.size(), 2);
@@ -46,7 +44,7 @@ TEST(array, drop)
 
 TEST(array, cat)
 {
-    constexpr auto arr = array{ 1, 2 };
+    constexpr auto arr = rzx::array{ 1, 2 };
     constexpr auto cat = rzx::array_cat(arr, arr, arr);
     
     MAGIC_CHECK(cat.size(), 6);

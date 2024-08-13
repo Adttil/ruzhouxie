@@ -1,8 +1,6 @@
 #include <ruzhouxie/view_interface.hpp>
 #include "test_tool.hpp"
 
-using namespace rzx;
-
 template<auto I>
 struct X : rzx::view_interface<X<I>>
 {};

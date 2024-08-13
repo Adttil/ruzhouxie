@@ -1,8 +1,6 @@
 #include <ruzhouxie\child.hpp>
 #include "test_tool.hpp"
 
-using namespace rzx;
-
 TEST(child, aggregate)
 {
     struct X { int x; float& y; double&& z; };

@@ -3,8 +3,6 @@
 
 #include <ruzhouxie/macro_define.hpp>
 
-using namespace rzx;
-
 // TEST(specified, same)
 // {
 //     MAGIC_CHECK(true, specified<int, int>);
