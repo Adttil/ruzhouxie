@@ -27,6 +27,12 @@ namespace rzx
 
     struct custom_t{};
 
+	template<typename T>
+	struct type_tag
+	{
+		using type = T;
+	};
+
 	//type without cvref.
     //template<class T>
     //concept pure = std::same_as<T, std::remove_cvref_t<T>>;
