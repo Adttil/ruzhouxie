@@ -4,7 +4,7 @@
 #include "general.hpp"
 #include "macro_define.hpp"
 
-namespace ruzhouxie
+namespace rzx
 {
     template<auto value>
     struct constant_t : std::integral_constant<decltype(value), value> 
@@ -44,7 +44,7 @@ namespace ruzhouxie
 }
 
 // +0
-namespace ruzhouxie
+namespace rzx
 {
 	/*template<auto Zero, typename T> requires requires{ requires (Zero == 0); }
     RUZHOUXIE_INLINE constexpr T operator+(constant_t<Zero>, T&& value)
@@ -66,7 +66,7 @@ namespace ruzhouxie
 }
 
 //x0
-namespace ruzhouxie
+namespace rzx
 {
     template<auto zero> requires requires{ requires zero == 0; }
     constexpr auto operator*(constant_t<zero>, auto&&)
@@ -82,7 +82,7 @@ namespace ruzhouxie
 }
 
 //x1
-namespace ruzhouxie
+namespace rzx
 {
 	/*template<auto One, typename T> requires requires{ requires (One == 1); }
     RUZHOUXIE_INLINE constexpr T operator*(constant_t<One>, T&& value)
