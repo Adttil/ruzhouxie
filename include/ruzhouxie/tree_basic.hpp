@@ -9,6 +9,9 @@
 
 namespace rzx 
 {
+    template<typename V>
+    struct view_interface;
+    
     namespace detail::make_t_ns
     {
         template<typename T>
@@ -17,6 +20,31 @@ namespace rzx
 
     template<typename T>
     inline constexpr detail::make_t_ns::make_t<T> make{};
+
+    namespace detail
+    {
+        template<auto StrictureTable>
+        struct restrict_t;
+    }
+
+    template<auto StrictureTable>
+    inline constexpr detail::restrict_t<StrictureTable> restrict{};
+
+    enum class usage_t
+    {
+        discard,
+        once,
+        repeatedly
+    };
+
+    namespace detail::simplify_t_ns
+    {
+        template<auto UsageTable, auto Layout>
+        struct simplify_t;
+    }
+
+    template<auto UsageTable = usage_t::repeatedly, auto Layout = indexes_of_whole>
+    inline constexpr detail::simplify_t_ns::simplify_t<UsageTable, Layout> simplify{};
 }
 
 //make
@@ -65,6 +93,45 @@ namespace rzx
             else
             {
                 static_assert(false, "maker for T not found.");
+            }
+        }
+    };
+}
+
+//simplify
+namespace rzx 
+{
+    namespace detail::simplify_t_ns
+    {        
+        template<auto UsageTable, auto Layout>
+        void simplify();
+    }
+
+    template<auto UsageTable, auto Layout>
+    struct detail::simplify_t_ns::simplify_t : adaptor_closure<simplify_t<UsageTable, Layout>>
+    {
+        template<typename T>
+        constexpr decltype(auto) operator()(T&& t)const
+        {
+            if constexpr(requires{ FWD(t).template simplify<UsageTable, Layout>(custom_t{}); })
+            {
+                return FWD(t).template simplify<UsageTable, Layout>(custom_t{});
+            }
+            else if constexpr(requires{ simplify<UsageTable, Layout>(FWD(t), custom_t{}); })
+            {
+                return simplify<UsageTable, Layout>(FWD(t), custom_t{});
+            }
+            else if constexpr(requires{ FWD(t).template simplify<UsageTable, Layout>(); })
+            {
+                return FWD(t).template simplify<UsageTable, Layout>();
+            }
+            else if constexpr(requires{ simplify<UsageTable, Layout>(FWD(t)); })
+            {
+                return simplify<UsageTable, Layout>(FWD(t));
+            }
+            else
+            {
+                return FWD(t);
             }
         }
     };
