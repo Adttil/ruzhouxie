@@ -15,5 +15,5 @@ TEST(restrict, array)
     MAGIC_CHECK(restrict_a | child<1>, 2);
 
     MAGIC_TCHECK(decltype(restrict_a | child<0>), const int&);
-    MAGIC_TCHECK(decltype(restrict_a | child<0>), int&);
+    MAGIC_TCHECK(decltype(restrict_a | child<1>), int&);
 }

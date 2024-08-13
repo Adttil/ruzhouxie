@@ -98,7 +98,7 @@ namespace rzx
 
 
     template<auto Stricture>
-    struct detail::restrict_t
+    struct detail::restrict_t : adaptor_closure<restrict_t<Stricture>>
     {
         template<typename V>
         constexpr decltype(auto) operator()(V&& view)const
