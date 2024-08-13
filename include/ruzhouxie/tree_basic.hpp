@@ -4,15 +4,13 @@
 #include "child.hpp"
 #include "constant.hpp"
 #include "general.hpp"
+#include "view_interface.hpp"
 
 #include "macro_define.hpp"
 
 
 namespace rzx 
-{
-    template<typename V>
-    struct view_interface;
-    
+{    
     namespace detail::make_t_ns
     {
         template<typename T>
