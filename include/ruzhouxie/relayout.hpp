@@ -323,16 +323,9 @@ namespace rzx
         constexpr decltype(auto) simplify(this Self&& self)
         {
             constexpr auto layout = detail::apply_layout<Layout_>(Layout);
-            if constexpr(simple<V>)
-            {
-                return relayout_view<decltype(FWD(self, base)), layout>{ FWD(self, base) };
-            }
-            else
-            {
-                constexpr auto base_usage = detail::inverse_apply_layout_on_usage(Usage, Layout, tree_shape<V>);
+            constexpr auto base_usage = detail::inverse_apply_layout_on_usage(Usage, Layout, tree_shape<V>);
 
-                return FWD(self, base) | rzx::simplify<base_usage, layout>;
-            }
+            return FWD(self, base) | rzx::simplify<base_usage, layout>;
         }
     };
 

@@ -56,9 +56,6 @@ namespace rzx
             }
         }
     };
-
-    template<typename V>
-    concept simple = std::same_as<decltype(std::declval<V>() | simplify<>), V&&>;
 }
 
 #include "macro_undef.hpp"
