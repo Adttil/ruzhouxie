@@ -1,36 +1,12 @@
-#ifndef RUZHOUXIE_TREE_BASIC_HPP
-#define RUZHOUXIE_TREE_BASIC_HPP
+#ifndef RUZHOUXIE_RELAYOUT_HPP
+#define RUZHOUXIE_RELAYOUT_HPP
 
-#include "child.hpp"
 #include "constant.hpp"
 #include "general.hpp"
-#include "restrict.hpp"
 #include "simplify.hpp"
 #include "view_interface.hpp"
 
 #include "macro_define.hpp"
-
-
-namespace rzx 
-{    
-    namespace detail::make_t_ns
-    {
-        template<typename T>
-        struct make_t;
-    }
-
-    template<typename T>
-    inline constexpr detail::make_t_ns::make_t<T> make{};
-
-    namespace detail
-    {
-        template<auto Layout>
-        struct relayout_t;
-    }
-
-    template<auto Layout>
-    inline constexpr detail::relayout_t<Layout> layout{};
-}
 
 namespace rzx::detail
 {
@@ -238,60 +214,17 @@ namespace rzx::detail
     }
 }
 
-//make
 namespace rzx 
 {
-    template<typename T>
-    struct tuple_maker
+    namespace detail
     {
-        template<typename Arg>
-        constexpr T operator()(Arg&& arg)
-        {
-            return [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return T{ FWD(arg) | child<I> | make<std::tuple_element_t<I, T>>... };
-            }(std::make_index_sequence<std::tuple_size_v<T>>{});
-        }
-    };
-
-    namespace detail::make_t_ns
-    {        
-        template<typename T>
-        constexpr auto get_maker(type_tag<T>)noexcept
-        {
-            return tuple_maker<T>{};
-        }
+        template<auto Layout>
+        struct relayout_t;
     }
 
-    template<typename T>
-    struct detail::make_t_ns::make_t : adaptor_closure<make_t<T>>
-    {
-        template<typename Arg>
-        constexpr T operator()(Arg&& arg)const
-        {
-            if constexpr(terminal<T>)
-            {
-                return static_cast<T>(FWD(arg));
-            }
-            else if constexpr(std::same_as<std::remove_cv_t<Arg>, T> && requires{ T{ FWD(arg) }; })
-            {
-                return T{ FWD(arg) };
-            }
-            else if constexpr(requires{ get_maker(type_tag<T>{}); })
-            {
-                return get_maker(type_tag<T>{})(FWD(arg));
-            }
-            else
-            {
-                static_assert(false, "maker for T not found.");
-            }
-        }
-    };
-}
+    template<auto Layout>
+    inline constexpr detail::relayout_t<Layout> layout{};
 
-//relayout
-namespace rzx
-{
     namespace detail 
     {
         template<typename V, auto Layout>
