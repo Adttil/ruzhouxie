@@ -6,7 +6,6 @@
 
 #include "macro_define.hpp"
 
-
 namespace rzx 
 {  
     enum class usage_t
