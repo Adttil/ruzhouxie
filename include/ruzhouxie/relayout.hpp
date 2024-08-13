@@ -338,7 +338,14 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
-            return relayout_view{ FWD(t), constant_t<Layout>{} };
+            if constexpr(wrapped<T>)
+            {
+                return relayout_view<decltype(FWD(t, base)), Layout>{ FWD(t, base) };
+            }
+            else
+            {
+                return relayout_view{ FWD(t), constant_t<Layout>{} };
+            }
         }
     };
 }

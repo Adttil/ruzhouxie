@@ -53,6 +53,12 @@ namespace rzx
     template<class T>
     view(T) -> view<T>;
 
+    template<class T>
+    concept wrapped = requires(std::remove_cvref_t<T>& t)
+    {
+        { []<class V>(view<V>&)->view<V>*{}(t) } -> std::same_as<std::remove_cvref_t<T>*>;
+    };
+
     namespace detail 
     {
         struct refer_t : adaptor_closure<refer_t>
