@@ -62,10 +62,6 @@ namespace rzx
             {
                 return get_maker(type_tag<T>{})(FWD(arg));
             }
-            else if constexpr(requires{ get_maker(std::type_identity<T>{}); })
-            {
-                return get_maker(std::type_identity_t<T>{})(FWD(arg));
-            }
             else
             {
                 static_assert(false, "maker for T not found.");
