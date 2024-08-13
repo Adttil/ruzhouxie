@@ -5,7 +5,7 @@ using namespace rzx;
 
 TEST(relayout, array)
 {
-    constexpr auto layout = rzx::tuple{ 1, 0 };
+    constexpr auto layout = rzx::tuple{ rzx::array{ 1 }, rzx::array{ 0 } };
 
     auto a = rzx::array{ 1, 2 };
 

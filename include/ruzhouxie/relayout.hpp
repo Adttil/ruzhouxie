@@ -223,7 +223,7 @@ namespace rzx
     }
 
     template<auto Layout>
-    inline constexpr detail::relayout_t<Layout> layout{};
+    inline constexpr detail::relayout_t<Layout> relayout{};
 
     namespace detail 
     {
@@ -331,6 +331,16 @@ namespace rzx
 
     template<typename V, auto Layout>
     relayout_view(V, constant_t<Layout>) -> relayout_view<V, Layout>;
+
+    template<auto Layout>
+    struct detail::relayout_t : adaptor_closure<relayout_t<Layout>>
+    {
+        template<typename T>
+        constexpr auto operator()(T&& t)const
+        {
+            return relayout_view{ FWD(t), constant_t<Layout>{} };
+        }
+    };
 }
 
 #include "macro_undef.hpp"
