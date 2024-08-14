@@ -5,7 +5,7 @@
 #include "constant.hpp"
 #include "general.hpp"
 #include "relayout.hpp"
-#include "restrict.hpp"
+#include "astrict.hpp"
 #include "simplify.hpp"
 #include "view_interface.hpp"
 

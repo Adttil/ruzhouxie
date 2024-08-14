@@ -1,5 +1,5 @@
-#ifndef RUZHOUXIE_RESTRICT_HPP
-#define RUZHOUXIE_RESTRICT_HPP
+#ifndef RUZHOUXIE_ASTRICT_HPP
+#define RUZHOUXIE_ASTRICT_HPP
 
 #include "constant.hpp"
 #include "general.hpp"
@@ -19,16 +19,16 @@ namespace rzx
     namespace detail
     {
         template<auto StrictureTable>
-        struct restrict_t;
+        struct astrict_t;
     }
 
     template<auto StrictureTable>
-    inline constexpr detail::restrict_t<StrictureTable> restrict{};
+    inline constexpr detail::astrict_t<StrictureTable> astrict{};
 
     namespace detail
     {
         template<typename V, auto Stricture>
-        struct restrict_view_storage
+        struct astrict_view_storage
         {
             RUZHOUXIE(no_unique_address) V                     base;
             RUZHOUXIE(no_unique_address) constant_t<Stricture> stricture;
@@ -36,7 +36,7 @@ namespace rzx
     }
 
     template<typename V, auto Stricture>
-    struct restrict_view : detail::restrict_view_storage<V, Stricture>, view_interface<restrict_view<V, Stricture>>
+    struct astrict_view : detail::astrict_view_storage<V, Stricture>, view_interface<astrict_view<V, Stricture>>
     {
         template<size_t I, typename Self>
         constexpr decltype(auto) get(this Self&& self)
@@ -53,7 +53,7 @@ namespace rzx
                 }
                 else if constexpr(std::same_as<decltype(Stricture), stricture_t>)
                 {
-                    return FWD(self, base) | child<I> | restrict<Stricture>;
+                    return FWD(self, base) | child<I> | astrict<Stricture>;
                 }
                 else if constexpr(I >= child_count<decltype(Stricture)>)
                 {
@@ -61,13 +61,13 @@ namespace rzx
                 }
                 else
                 {
-                    return FWD(self, base) | child<I> | restrict<Stricture | child<I>>;
+                    return FWD(self, base) | child<I> | astrict<Stricture | child<I>>;
                 } 
             }
             else if constexpr(std::same_as<decltype(Stricture), stricture_t>)
             {                
                 //can simplify.
-                return restrict_view<decltype(FWD(self, base) | child<I>), Stricture>
+                return astrict_view<decltype(FWD(self, base) | child<I>), Stricture>
                 {
                     FWD(self, base) | child<I>
                 };
@@ -79,7 +79,7 @@ namespace rzx
             else
             {
                 //can simplify.
-                return restrict_view<decltype(FWD(self, base) | child<I>), Stricture | child<I>>
+                return astrict_view<decltype(FWD(self, base) | child<I>), Stricture | child<I>>
                 {
                     FWD(self, base) | child<I>
                 };
@@ -89,7 +89,7 @@ namespace rzx
         template<auto Usage, auto Layout, typename Self>
         constexpr decltype(auto) simplify(this Self&& self)
         {
-            return restrict_view<decltype(FWD(self, base) | rzx::simplify<Usage, Layout>), apply_layout<Layout>(Stricture)>
+            return astrict_view<decltype(FWD(self, base) | rzx::simplify<Usage, Layout>), apply_layout<Layout>(Stricture)>
             {
                 FWD(self, base) | rzx::simplify<Usage, Layout>
             };
@@ -98,7 +98,7 @@ namespace rzx
 
 
     template<auto Stricture>
-    struct detail::restrict_t : adaptor_closure<restrict_t<Stricture>>
+    struct detail::astrict_t : adaptor_closure<astrict_t<Stricture>>
     {
         template<typename V>
         constexpr decltype(auto) operator()(V&& view)const
@@ -116,7 +116,7 @@ namespace rzx
             }
             else
             {
-                return restrict_view<V&&, Stricture>{ FWD(view) };
+                return astrict_view<V&&, Stricture>{ FWD(view) };
             }
         }
     };
