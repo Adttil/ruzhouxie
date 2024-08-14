@@ -1,6 +1,7 @@
 #ifndef RUZHOUXIE_RELAYOUT_HPP
 #define RUZHOUXIE_RELAYOUT_HPP
 
+#include "child.hpp"
 #include "constant.hpp"
 #include "general.hpp"
 #include "simplify.hpp"
@@ -348,6 +349,130 @@ namespace rzx
             }
         }
     };
+}
+
+namespace rzx 
+{
+    namespace detail 
+    {
+        template<typename TLayout, size_t N>
+        constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
+        {
+            if constexpr(indexical_array<TLayout>)
+            {
+                return rzx::array_cat(prefix, layout);
+            }
+            else return[&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(detail::layout_add_prefix(layout | child<I>, prefix)...);
+            }(std::make_index_sequence<child_count<TLayout>>{});
+        }
+    }
+
+    template<typename T>
+    constexpr auto default_layout = []()
+    {
+        if constexpr (terminal<T>)
+        {
+            return indexes_of_whole;
+        }
+        else return[]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(detail::layout_add_prefix(default_layout<child_type<T, I>>, array{I})...);
+        }(std::make_index_sequence<child_count<T>>{});    
+    }();
+
+    template<class Relayouter>
+    struct relayouter_interface;
+
+    template<class Relayouter>
+    struct relayouter_interface : adaptor_closure<Relayouter>
+    {
+        template<typename V, derived_from<Relayouter> Self>
+        constexpr auto operator()(this Self&& self, V&& view)
+        {
+            constexpr auto layout = detail::normalize_layout<Relayouter::relayout(default_layout<V>), tree_shape_t<V>>();
+            return FWD(view) | relayout<layout>;
+        }
+    };
+
+    namespace detail
+    {
+        template<size_t N>
+        struct repeat_t : relayouter_interface<repeat_t<N>>
+        {
+            static constexpr auto relayout(const auto&)
+            {
+                return []<size_t...I>(std::index_sequence<I...>)
+                {
+                    return tuple{ array<size_t, I - I>{}... };
+                }(std::make_index_sequence<N>{});
+            }
+        };
+    }
+
+    template<size_t N>
+    inline constexpr detail::repeat_t<N> repeat{};
+
+    namespace detail
+    {
+        template<size_t I, size_t Axis>
+        struct component_t : relayouter_interface<component_t<I, Axis>>
+        {
+            template<typename TLayout>
+            static constexpr auto relayout(const TLayout& layout)
+            {
+                if constexpr (Axis == 0uz)
+                {
+                    static_assert(I < child_count<TLayout>, "Component index out of range.");
+                    return layout | child<I>;
+                }
+                else
+                {
+                    static_assert(branched<TLayout>, "Axis index out of range.");
+                    return[&]<size_t...J>(std::index_sequence<J...>)
+                    {
+                        return make_tuple(component_t<I, Axis - 1uz>::relayout(layout | child<J>)...);
+                    }(std::make_index_sequence<child_count<TLayout>>{});
+                }
+            }
+        };
+    }
+
+    template<size_t I, size_t Axis>
+    inline constexpr detail::component_t<I, Axis> component{}; 
+
+    namespace detail
+    {
+        template<size_t Axis1, size_t Axis2>
+        struct transpose_t : relayouter_interface<transpose_t<Axis1, Axis2>>
+        {
+            template<typename TLayout>
+            static constexpr auto relayout(const TLayout& layout)
+            {
+                if constexpr (Axis1 == 0uz)
+                {
+                    constexpr size_t N = tensor_shape<TLayout>[Axis2];
+                    return[&]<size_t...I>(std::index_sequence<I...>)
+                    {
+                        return rzx::make_tuple(component_t<I, Axis2>::relayout(layout)...);
+                    }(std::make_index_sequence<N>{});
+                }
+                else return[&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    return rzx::make_tuple(transpose_t<Axis1 - 1uz, Axis2 - 1uz>::relayout(layout | child<I>)...);
+                }(std::make_index_sequence<child_count<TLayout>>{});
+            }
+        };
+    }
+
+    template<size_t Axis1, size_t Axis2>
+    inline constexpr detail::transpose_t<Axis1, Axis2> transpose{}; 
+}
+
+namespace rzx::detail 
+{
+
 }
 
 #include "macro_undef.hpp"

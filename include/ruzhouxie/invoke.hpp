@@ -2,6 +2,7 @@
 #define RUZHOUXIE_INVOKE_HPP
 
 #include "general.hpp"
+#include "relayout.hpp"
 #include "simplify.hpp"
 #include "view_interface.hpp"
 
@@ -60,6 +61,19 @@ namespace rzx
                 return invoke_view{ fn_table, arg_table };
             }
         };
+
+        // template<class Fn>
+        // struct transform_t : adaptor_closure<transform_t<Fn>>
+        // {
+        //     Fn fn;
+
+        //     template<class V>
+        //     constexpr decltype(auto) operator()(V&& vec)const
+        //     {
+
+        //         return invoke_view{ array{}, arg_table };
+        //     }
+        // };
     }
 
     template<class FnTable>
@@ -67,6 +81,8 @@ namespace rzx
     {
         return detail::invoke_t<FnTable>{ FWD(fn_table) };
     }
+
+
 }
 
 #include "macro_undef.hpp"
