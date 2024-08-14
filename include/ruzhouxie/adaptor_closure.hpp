@@ -5,6 +5,7 @@
 #include<concepts>
 
 #include "general.hpp"
+#include "tuple.hpp"
 
 #include "macro_define.hpp"
 
@@ -12,6 +13,44 @@ namespace rzx
 {
     template<class F> 
     struct adaptor_closure{};
+
+    namespace detail
+    {
+        template<class Adaptor, class...Args>
+        struct closure : adaptor_closure<closure<Adaptor, Args...>>
+        {
+            tuple<Args...> captures;
+
+            template<typename T, size_t...I>
+            constexpr auto impl(T&& t, std::index_sequence<I...>)const
+            AS_EXPRESSION(
+                Adaptor{}(FWD(t), get<I>(captures)...)
+            )
+
+            template<typename T>
+            constexpr auto operator()(T&& t)const
+            AS_EXPRESSION(
+                impl(FWD(t), std::index_sequence_for<Args...>{})
+            )
+        };
+    }
+
+    template<class F> 
+    struct adaptor
+    {
+        template<typename...Args>
+        constexpr auto operator()(Args&&...args)const
+        AS_EXPRESSION(
+            F{}.result(FWD(args)...)
+        )
+
+        template<typename...Args> //requires (not requires{ F{}.result(std::declval<Args>()...); })
+        constexpr auto operator()(Args&&...args)const
+            //requires (not requires{ F{}.result(FWD(args)...); })
+        {
+            return detail::closure<F, std::decay_t<Args>...>{ {}, FWD(args)... };
+        }
+    };
 }
 
 namespace rzx::detail

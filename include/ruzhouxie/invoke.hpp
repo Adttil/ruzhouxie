@@ -12,16 +12,16 @@ namespace rzx
 {
     namespace detail
     {
-        template<class FnTable, class ArgTable>
+        template<class ArgTable, class FnTable>
         struct invoke_view_storage
         {
-            RUZHOUXIE(no_unique_address) FnTable  fn_table;
             RUZHOUXIE(no_unique_address) ArgTable arg_table;
+            RUZHOUXIE(no_unique_address) FnTable  fn_table;
         };
     }
 
-    template<class FnTable, class ArgTable>
-    struct invoke_view : detail::invoke_view_storage<FnTable, ArgTable>, view_interface<invoke_view<FnTable, ArgTable>>
+    template<class ArgTable, class FnTable>
+    struct invoke_view : detail::invoke_view_storage<ArgTable, FnTable>, view_interface<invoke_view<ArgTable, FnTable>>
     {
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)
@@ -45,44 +45,34 @@ namespace rzx
         }
     };
 
-    template<class FnTable, class ArgTable>
-    invoke_view(FnTable, ArgTable) -> invoke_view<FnTable, ArgTable>;
+    template<class ArgTable, class FnTable>
+    invoke_view(ArgTable, FnTable) -> invoke_view<ArgTable, FnTable>;
 
     namespace detail
     {
-        template<class FnTable>
-        struct invoke_t : adaptor_closure<invoke_t<FnTable>>
+        struct invoke_t : adaptor<invoke_t>
         {
-            FnTable fn_table;
-
-            template<class ArgTable>
-            constexpr decltype(auto) operator()(ArgTable&& arg_table)const
+            template<class ArgTable, class FnTable>
+            constexpr decltype(auto) result(ArgTable&& arg_table, FnTable&& fn_table)const
             {
-                return invoke_view{ fn_table, arg_table };
+                return invoke_view<ArgTable, std::decay_t<FnTable>>{ FWD(arg_table), FWD(fn_table) };
             }
         };
 
-        // template<class Fn>
-        // struct transform_t : adaptor_closure<transform_t<Fn>>
-        // {
-        //     Fn fn;
-
-        //     template<class V>
-        //     constexpr decltype(auto) operator()(V&& vec)const
-        //     {
-
-        //         return invoke_view{ array{}, arg_table };
-        //     }
-        // };
+        struct transform_t : adaptor<transform_t>
+        {
+            template<class ArgTable, class Fn>
+            constexpr decltype(auto) result(ArgTable&& arg_table, Fn&& fn)const
+            {
+                constexpr size_t n =child_count<ArgTable>;
+                return invoke_view<ArgTable, decltype(Fn{} | repeat<n>)>{ FWD(arg_table), Fn{} | repeat<n> };
+            }
+        };
     }
 
-    template<class FnTable>
-    constexpr auto invoke(FnTable&& fn_table)
-    {
-        return detail::invoke_t<FnTable>{ FWD(fn_table) };
-    }
+    inline constexpr detail::invoke_t invoke{};
 
-
+    inline constexpr detail::transform_t transform{};
 }
 
 #include "macro_undef.hpp"
