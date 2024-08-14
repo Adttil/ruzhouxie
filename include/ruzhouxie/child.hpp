@@ -234,8 +234,12 @@ namespace rzx
 
     inline namespace functors
     {
+        //msvc bug: https://developercommunity.visualstudio.com/t/MSVC-cannot-correctly-recognize-NTTP-in/10722592
+        //template<indexical auto...I>
+        //inline constexpr detail::child_t<rzx::to_indexes(I...)> child{};
+
         template<indexical auto...I>
-        inline constexpr detail::child_t<to_indexes(I...)> child{};
+        inline constexpr auto child = detail::child_t<rzx::to_indexes(I...)>{};
     }
     
     template<indexical_array auto Indexes>
