@@ -17,14 +17,16 @@ namespace rzx
     namespace detail
     {
         template<class Adaptor, class...Args>
-        struct closure : adaptor_closure<closure<Adaptor, Args...>>
+        struct closure : tuple<Args...>, adaptor_closure<closure<Adaptor, Args...>>
         {
-            tuple<Args...> captures;
+            // clang crashed with [[no_unique_address]]
+            // https://github.com/llvm/llvm-project/issues/104227
+            //RUZHOUXIE(no_unique_address) tuple<Args...> captures;
 
             template<typename T, size_t...I>
             constexpr auto impl(T&& t, std::index_sequence<I...>)const
             AS_EXPRESSION(
-                Adaptor{}(FWD(t), get<I>(captures)...)
+                Adaptor{}(FWD(t), get<I>(static_cast<const tuple<Args...>&>(*this))...)
             )
 
             template<typename T>
@@ -44,12 +46,12 @@ namespace rzx
             F{}.result(FWD(args)...)
         )
 
-        template<typename...Args> //requires (not requires{ F{}.result(std::declval<Args>()...); })
+        template<typename...Args> 
+            requires (not requires{ F{}.result(std::declval<Args>()...); })
         constexpr auto operator()(Args&&...args)const
-            //requires (not requires{ F{}.result(FWD(args)...); })
-        {
-            return detail::closure<F, std::decay_t<Args>...>{ {}, FWD(args)... };
-        }
+        AS_EXPRESSION(
+            detail::closure<F, std::decay_t<Args>...>{ FWD(args)... }
+        )
     };
 }
 
