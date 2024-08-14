@@ -426,16 +426,16 @@ namespace rzx::detail
         else return []<size_t...I>(std::index_sequence<I...>)
         {
             constexpr auto child_relayout = rzx::make_tuple(normalize_layout<Layout | child<I>, V>()...);
-            constexpr size_t n = child_count<decltype(child_relayout.template get<0uz>())>;
+            constexpr size_t n = child_count<decltype(child_relayout | child<0uz>)>;
 
             if constexpr(n > 0uz
-                && (... && indexical_array<decltype(child_relayout.template get<I>())>)
-                && (... && (n == child_count<decltype(child_relayout.template get<I>())>))
+                && (... && indexical_array<decltype(child_relayout | child<I>)>)
+                && (... && (n == child_count<decltype(child_relayout | child<I>)>))
             )
             {
-                constexpr auto prefix = rzx::array_take<n - 1uz>(child_relayout.template get<0uz>());
-                if constexpr((... && (prefix == rzx::array_take<n - 1uz>(child_relayout.template get<I>())))
-                    && (... && ((child_relayout.template get<I>())[n - 1uz] == I))
+                constexpr auto prefix = rzx::array_take<n - 1uz>(child_relayout | child<0uz>);
+                if constexpr((... && (prefix == rzx::array_take<n - 1uz>(child_relayout | child<I>)))
+                    && (... && ((child_relayout | child<I>)[n - 1uz] == I))
                 )
                 {
                     return prefix;
