@@ -58,21 +58,54 @@ namespace rzx
                 return invoke_view<ArgTable, std::decay_t<FnTable>>{ FWD(arg_table), FWD(fn_table) };
             }
         };
-
+    }
+    
+    inline constexpr detail::invoke_t invoke{};
+    
+    namespace detail
+    {
         struct transform_t : adaptor<transform_t>
         {
             template<class ArgTable, class Fn>
             constexpr decltype(auto) result(ArgTable&& arg_table, Fn&& fn)const
             {
-                constexpr size_t n =child_count<ArgTable>;
+                constexpr size_t n = child_count<ArgTable>;
                 return invoke_view<ArgTable, decltype(FWD(fn) | repeat<n>)>{ FWD(arg_table), FWD(fn) | repeat<n> };
             }
         };
     }
-
-    inline constexpr detail::invoke_t invoke{};
-
+    
     inline constexpr detail::transform_t transform{};
+    
+    namespace detail
+    {
+        struct zip_transform_t
+        {
+            template<class Fn>
+            struct closure_type
+            {
+                Fn fn;
+                
+                constexpr decltype(auto) operator()(this auto&& self, auto&& args)
+                {
+                    return rzx::apply(FWD(self, fn), FWD(args));
+                }
+            };
+
+            template<class Fn, class...ArgTables>
+            constexpr decltype(auto) operator()(Fn&& fn, ArgTables&&...arg_tables)const
+            {
+                struct capture_t{ Fn fn; };
+                return tuple<ArgTables...>{ FWD(arg_tables)... }
+                       | transpose<> 
+                       | transform(closure_type<Fn>{ FWD(fn) });
+            }
+        };
+    }
+
+    inline constexpr detail::zip_transform_t zip_transform{};
+
+    
 }
 
 #include "macro_undef.hpp"
