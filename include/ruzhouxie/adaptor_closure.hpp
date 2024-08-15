@@ -23,16 +23,16 @@ namespace rzx
             // https://github.com/llvm/llvm-project/issues/104227
             //RUZHOUXIE(no_unique_address) tuple<Args...> captures;
 
-            template<typename T, size_t...I>
-            constexpr auto impl(T&& t, std::index_sequence<I...>)const
+            template<typename T, size_t...I, typename Self>
+            constexpr auto impl(this Self&& self, T&& t, std::index_sequence<I...>)
             AS_EXPRESSION(
-                Adaptor{}(FWD(t), get<I>(static_cast<const tuple<Args...>&>(*this))...)
+                Adaptor{}(FWD(t), get<I>(FWD(self))...)
             )
 
-            template<typename T>
-            constexpr auto operator()(T&& t)const
+            template<typename T, typename Self>
+            constexpr auto operator()(this Self&& self, T&& t)
             AS_EXPRESSION(
-                impl(FWD(t), std::index_sequence_for<Args...>{})
+                FWD(self).impl(FWD(t), std::index_sequence_for<Args...>{})
             )
         };
     }
@@ -50,7 +50,7 @@ namespace rzx
             requires (not requires{ F{}.result(std::declval<Args>()...); })
         constexpr auto operator()(Args&&...args)const
         AS_EXPRESSION(
-            detail::closure<F, std::decay_t<Args>...>{ FWD(args)... }
+            detail::closure<F, Args...>{ FWD(args)... }
         )
     };
 }
@@ -84,7 +84,7 @@ namespace rzx
     template<detail::adaptor_closuroid L, detail::adaptor_closuroid R>
     constexpr auto operator|(L&& l, R&& r)
     AS_EXPRESSION(
-        detail::pipeline<std::decay_t<L>, std::decay_t<R>>{ {}, FWD(l), FWD(r) }
+        detail::pipeline<L, R>{ {}, FWD(l), FWD(r) }
     )
 
     template<class L, detail::adaptor_closuroid R>

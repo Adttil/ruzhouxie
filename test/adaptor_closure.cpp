@@ -22,8 +22,8 @@ struct Square : rzx::adaptor_closure<Square>
 TEST(adaptor_closure, _)
 {
     //using namespace rzx;
-    constexpr AddOne add_one{};
-    constexpr Square square{};
+    static constexpr AddOne add_one{};
+    static constexpr Square square{};
     constexpr auto mix = add_one | square;
 
     MAGIC_CHECK(1 | add_one, 2);

@@ -341,11 +341,18 @@ namespace rzx
         {
             if constexpr(wrapped<T>)
             {
-                return relayout_view<decltype(FWD(t, base)), Layout>{ FWD(t, base) };
+                if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
+                {
+                    return relayout_view<std::decay_t<decltype(t.base)>, Layout>{ FWD(t, base) };
+                }
+                else
+                {
+                    return relayout_view<decltype(FWD(t, base)), Layout>{ FWD(t, base) };
+                }
             }
             else
             {
-                return relayout_view{ FWD(t), constant_t<Layout>{} };
+                return relayout_view<T, Layout>{ FWD(t) };
             }
         }
     };

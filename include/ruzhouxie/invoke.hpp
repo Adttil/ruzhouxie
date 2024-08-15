@@ -62,10 +62,10 @@ namespace rzx
         struct transform_t : adaptor<transform_t>
         {
             template<class ArgTable, class Fn>
-            constexpr decltype(auto) result(ArgTable&& arg_table, Fn fn)const
+            constexpr decltype(auto) result(ArgTable&& arg_table, Fn&& fn)const
             {
                 constexpr size_t n =child_count<ArgTable>;
-                return invoke_view<ArgTable, decltype(Fn{} | repeat<n>)>{ FWD(arg_table), Fn{} | repeat<n> };
+                return invoke_view<ArgTable, decltype(FWD(fn) | repeat<n>)>{ FWD(arg_table), FWD(fn) | repeat<n> };
             }
         };
     }

@@ -66,7 +66,7 @@ namespace rzx
             template<class T>
             constexpr decltype(auto) operator()(T&& t) const
             {
-                if constexpr(std::is_reference_v<T>)
+                if constexpr(std::is_lvalue_reference_v<T>)
                 {
                     return t;
                 }
