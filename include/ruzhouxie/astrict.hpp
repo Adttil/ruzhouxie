@@ -86,14 +86,20 @@ namespace rzx
             } 
         }
 
-        // template<auto Usage, auto Layout, typename Self>
-        // constexpr decltype(auto) simplify(this Self&& self)
-        // {
-        //     return astrict_view<decltype(FWD(self, base) | rzx::simplify<Usage, Layout>), apply_layout<Layout>(Stricture)>
-        //     {
-        //         FWD(self, base) | rzx::simplify<Usage, Layout>
-        //     };
-        // }
+        template<auto UsageTable, typename Self>
+        constexpr decltype(auto) simplified_data(this Self&& self)
+        {
+            return astrict_view<decltype(FWD(self, base) | rzx::simplify<UsageTable>), Stricture>
+            {
+                FWD(self, base) | rzx::simplify<UsageTable>
+            };
+        }
+
+        template<derived_from<astrict_view> Self>
+        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        {
+            return rzx::simplified_layout<V>;
+        }
     };
 
 
