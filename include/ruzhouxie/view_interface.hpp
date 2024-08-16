@@ -35,7 +35,7 @@ namespace rzx
         {
             if constexpr(I < child_count<T>)
             {
-                return FWD(self) | child<I>;
+                return FWD(self, base) | child<I>;
             }
             else
             {

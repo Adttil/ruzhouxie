@@ -9,32 +9,55 @@
 
 namespace rzx 
 {
-    template<class L, class R>
-    constexpr decltype(auto) dot(L&& left, R&& right)
+    namespace detail
     {
-        return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
+        struct dot_t : adaptor<dot_t>
         {
-            return (0 + ... + ((left | child<I>) * (right | child<I>)));
-        }(std::make_index_sequence<rzx::min(child_count<L>, child_count<R>)>{});
+            template<class L, class R>
+            constexpr decltype(auto) result(L&& left, R&& right)const
+            {
+                return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
+                {
+                    return (... + ((left | child<I>) * (right | child<I>)));
+                }(std::make_index_sequence<rzx::min(child_count<L>, child_count<R>)>{});
+            }
+        };
     }
 
-    template<class M, class V>
-    constexpr decltype(auto) mat_mul_vec(M&& mat, V&& vec)
+    inline constexpr detail::dot_t dot{};
+
+    namespace detail
     {
-        constexpr size_t n = child_count<M>;
-        return zip_transform([](auto&& row, auto&& vec){ return dot(FWD(row), FWD(vec)); }, FWD(mat), FWD(vec) | repeat<n>);
+        struct mat_mul_vec_t : adaptor<mat_mul_vec_t>
+        {
+            template<class M, class V>
+            constexpr decltype(auto) result(M&& mat, V&& vec)const
+            {
+                constexpr size_t row_count = child_count<M>;
+                return zip_transform(dot, FWD(mat), FWD(vec) | repeat<row_count>);
+            }
+        };
     }
 
-    constexpr auto vec_mul_mat(auto&& _vec, auto&& _mat)
-	{
-	    return mat_mul_vec(FWD(_mat) | transpose<>, FWD(_vec));
-	};
+    inline constexpr detail::mat_mul_vec_t mat_mul_vec{};
 
-    template<class L, class R>
-    constexpr auto mat_mul(L&& l, R&& r)
+    namespace detail
+    {
+        struct vec_mul_mat_t : adaptor<vec_mul_mat_t>
+        {
+            constexpr auto result(auto&& _vec, auto&& _mat)const
+	        {
+	            return mat_mul_vec(FWD(_mat) | transpose<>, FWD(_vec));
+	        };
+        };
+    }
+
+    inline constexpr detail::vec_mul_mat_t vec_mul_mat{};
+
+    inline constexpr auto mat_mul = []<class L, class R>(L&& l, R&& r)
 	{
         constexpr size_t n = child_count<L>;
-		return  zip_transform([](auto&& row, auto&& mat){ return vec_mul_mat(FWD(row), FWD(mat)); }, FWD(l), FWD(r) | repeat<n>);
+		return zip_transform(vec_mul_mat, FWD(l), FWD(r) | repeat<n>);
 	};
 }
 

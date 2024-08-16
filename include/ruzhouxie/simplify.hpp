@@ -14,6 +14,21 @@ namespace rzx
         once,
         repeatedly
     };
+}
+
+namespace rzx::detail 
+{
+    template<typename U, typename L, typename S>
+    constexpr auto inverse_apply_layout_on_usage(const U& usage, const L& layout, const S& shape)
+    {
+        auto result = make_tree_of_same_value(usage_t::discard, shape);
+        inverse_apply_layout_on_usage_at(usage, layout, result);
+        return result;
+    }
+}
+
+namespace rzx 
+{  
 
     namespace detail::simplify_t_ns
     {

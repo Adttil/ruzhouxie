@@ -30,7 +30,9 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return T{ arg | child<I> | make<std::tuple_element_t<I, T>>... };
+                auto&& simplify_arg = FWD(arg) | simplify<>;
+                //auto&& astrict_arg = FWD(simplify_arg) | astrict<stricture_t::readonly>; 
+                return T{ FWD(simplify_arg) | child<I> | make<std::tuple_element_t<I, T>>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
     };
