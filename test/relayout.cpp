@@ -3,7 +3,7 @@
 
 TEST(relayout, array)
 {
-    constexpr auto layout = rzx::tuple{ rzx::array{ 1 }, rzx::array{ 0 } };
+    constexpr auto layout = rzx::tuple{ rzx::array{ 1uz }, rzx::array{ 0uz } };
 
     auto a = rzx::array{ 1, 2 };
 

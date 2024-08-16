@@ -133,20 +133,21 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
+            constexpr auto normalized_layout = detail::normalize_layout<Layout, tree_shape_t<T>>();
             if constexpr(wrapped<T>)
             {
                 if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
                 {
-                    return relayout_view<std::decay_t<decltype(t.base)>, Layout>{ FWD(t, base) };
+                    return relayout_view<std::decay_t<decltype(t.base)>, normalized_layout>{ FWD(t, base) };
                 }
                 else
                 {
-                    return relayout_view<decltype(FWD(t, base)), Layout>{ FWD(t, base) };
+                    return relayout_view<decltype(FWD(t, base)), normalized_layout>{ FWD(t, base) };
                 }
             }
             else
             {
-                return relayout_view<T, Layout>{ FWD(t) };
+                return relayout_view<T, normalized_layout>{ FWD(t) };
             }
         }
     };
