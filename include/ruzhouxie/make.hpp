@@ -26,11 +26,11 @@ namespace rzx
     struct tuple_maker
     {
         template<typename Arg>
-        constexpr T operator()(Arg&& arg)
+        constexpr T operator()(Arg&& arg)const
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return T{ FWD(arg) | child<I> | make<std::tuple_element_t<I, T>>... };
+                return T{ arg | child<I> | make<std::tuple_element_t<I, T>>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
     };
@@ -54,7 +54,7 @@ namespace rzx
             {
                 return static_cast<T>(FWD(arg));
             }
-            else if constexpr(std::same_as<std::remove_cv_t<Arg>, T> && requires{ T{ FWD(arg) }; })
+            else if constexpr(std::same_as<std::remove_cvref_t<Arg>, T> && requires{ T{ FWD(arg) }; })
             {
                 return T{ FWD(arg) };
             }
