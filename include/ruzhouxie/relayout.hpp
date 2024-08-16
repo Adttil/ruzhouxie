@@ -114,13 +114,20 @@ namespace rzx
             }
         }
 
-        template<auto Usage, auto Layout_, typename Self>
-        constexpr decltype(auto) simplify(this Self&& self)
+        template<auto Usage, typename Self>
+        constexpr decltype(auto) simplified_data(this Self&& self)
         {
-            constexpr auto layout = detail::apply_layout<Layout_>(Layout);
+            //constexpr auto layout = detail::apply_layout<Layout_>(Layout);
             constexpr auto base_usage = detail::inverse_apply_layout_on_usage(Usage, Layout, tree_shape<V>);
 
-            return FWD(self, base) | rzx::simplify<base_usage, layout>;
+            return FWD(self, base) | rzx::simplified_data<base_usage>;
+        }
+
+        template<derived_from<relayout_view> Self>
+        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        {
+            constexpr auto base_layout = rzx::simplified_layout<V>;
+            return detail::apply_layout<Layout>(base_layout);
         }
     };
 

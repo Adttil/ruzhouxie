@@ -602,27 +602,6 @@ namespace rzx::detail
             return make_tuple(min_common_drived_tree_shape(padding_shape1 | child<I>, shape2 | child<I>)...);
         }(std::make_index_sequence<child_count<S2>>{});
     }
-
-    template<typename U, typename L, typename R>
-    constexpr void inverse_apply_layout_on_usage_at(const U& usage, const L& layout, R& result)
-    {
-        if constexpr(indexical<L>)
-        {
-            auto&& result_usage = result | child<layout>;
-            if constexpr(terminal<decltype(result_usage)>)
-            {
-                result_usage = max(result_usage, usage);
-            }
-            else return [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                (..., inverse_apply_layout_on_usage_at(usage, indexes_of_whole, result_usage | child<I>));
-            }(std::make_index_sequence<child_count<decltype(result_usage)>>{});
-        }
-        else return[&]<size_t...I>(std::index_sequence<I...>)
-        {
-            (..., inverse_apply_layout_on_usage_at(usage | child<I>, layout | child<I>, result));
-        }(std::make_index_sequence<child_count<L>>{});
-    }
     //===================================================================    
 
     template<typename L, typename...Rest>

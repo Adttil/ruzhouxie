@@ -8,6 +8,36 @@
 
 #include "macro_define.hpp"
 
+namespace rzx::detail
+{
+    struct no_cache_t{};
+
+    //UsageTable shohuld be normalized.
+    template<auto UsageTable, class ArgTable, class FnTable>
+    constexpr decltype(auto) get_cache(ArgTable&& arg_table, FnTable&& fn_table)
+    {
+        if constexpr(requires{ FWD(fn_table)(FWD(arg_table)); })
+        {
+            static_assert(std::same_as<decltype(UsageTable), usage_t>, "Invalid usage table.");
+            if constexpr(UsageTable == usage_t::repeatedly)
+            {
+                return FWD(fn_table)(FWD(arg_table));
+            }
+            else
+            {
+                return no_cache_t{};
+            }
+        }
+        else return[&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::tuple<decltype(get_cache<UsageTable | child<I>>(FWD(arg_table) | child<I>, FWD(fn_table) | child<I>))...>
+            { 
+                get_cache<UsageTable | child<I>>(FWD(arg_table) | child<I>, FWD(fn_table) | child<I>)...
+            };
+        }(std::make_index_sequence<child_count<FnTable>>{});
+    }
+}
+
 namespace rzx 
 {
     namespace detail
@@ -43,6 +73,26 @@ namespace rzx
                 };
             }
         }
+
+    private:
+        template<typename Self, typename Cache>
+        struct simplify_result_type
+        {
+            Self self;
+            Cache cache;
+        };
+
+        
+
+    public:
+        // template<auto Usage, auto Layout, typename Self>
+        // constexpr decltype(auto) simplify(this Self&& self)
+        // {
+        //     decltype(auto) arg = FWD(self. arg_table) | rzx::simplify<Usage, Layout>;
+        //     decltype(auto) fn = FWD(self. fn_table) | rzx::simplify<Usage, Layout>;
+
+        //     return FWD(self, base) | rzx::simplify<base_usage, layout>;
+        // }
     };
 
     template<class ArgTable, class FnTable>
