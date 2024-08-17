@@ -117,19 +117,19 @@ namespace rzx
             {
                 return simplified_data<normalized_usage_table>(FWD(t));
             }
-            else if constexpr(terminal<T>)
+            else// if constexpr(terminal<T>)
             {
                 return FWD(t);
             }
-            else return [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
+            // else return [&]<size_t...I>(std::index_sequence<I...>)
+            // {
+            //     constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
 
-                return rzx::tuple<decltype(FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>)...>
-                {
-                    FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>...
-                };
-            }(std::make_index_sequence<child_count<T>>{});
+            //     return rzx::tuple<decltype(FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>)...>
+            //     {
+            //         FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>...
+            //     };
+            // }(std::make_index_sequence<child_count<T>>{});
         }
     };
 }
@@ -147,14 +147,14 @@ namespace rzx
             {
                 return get_simplified_layout(type_tag<T>{});
             }
-            else if constexpr(terminal<T>)
+            else// if constexpr(terminal<T>)
             {
                 return indexes_of_whole;
             }
-            else return [&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return rzx::make_tuple(simplified_layout<child_type<T, I>>()...);
-            }(std::make_index_sequence<child_count<T>>{});
+            // else return [&]<size_t...I>(std::index_sequence<I...>)
+            // {
+            //     return rzx::make_tuple(simplified_layout<child_type<T, I>>()...);
+            // }(std::make_index_sequence<child_count<T>>{});
         };
     }
 

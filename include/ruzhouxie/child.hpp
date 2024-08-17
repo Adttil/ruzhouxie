@@ -469,12 +469,12 @@ namespace rzx::detail
             if constexpr(not indexical<Layout>)
             {
                 static_assert(child_count<Shape> == child_count<Layout>, "Invalid layout.");
-                return rzx::make_tuple(normalize_usage(layout | child<I>, shape | child<I>)...);
+                return rzx::make_tuple(normalize_layout(layout | child<I>, shape | child<I>)...);
             }
             else
             {
                 auto indexes = to_indexes(layout);
-                return rzx::make_tuple(normalize_usage(array_cat(indexes, array{ I }) , shape | child<I>)...);
+                return rzx::make_tuple(normalize_layout(array_cat(indexes, array{ I }) , shape | child<I>)...);
             }
         }(std::make_index_sequence<child_count<Shape>>{});
     }
