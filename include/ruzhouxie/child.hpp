@@ -404,32 +404,32 @@ namespace rzx::detail
 		}(std::make_index_sequence<child_count<V> - N>{});
 	}
 
-    template<indexical auto Indices, typename V>
-    constexpr auto normalize_indices()
+    template<indexical auto Indices, class Shape>
+    constexpr auto normalize_indices(Shape shape)
     {
         if constexpr(std::integral<decltype(Indices)>)
         {
-            return array{ normalize_index(Indices, child_count<V>) };
+            return array{ normalize_index(Indices, child_count<Shape>) };
         }
         else return []<size_t...I>(std::index_sequence<I...>)
         {
             return array<size_t, Indices.size()>
             {
-                normalize_index(Indices[I], child_count<child_type<V, rzx::array_take<I>(Indices)>>)...
+                normalize_index(Indices[I], child_count<child_type<Shape, rzx::array_take<I>(Indices)>>)...
             };
         }(std::make_index_sequence<Indices.size()>{});
     }
 
-    template<auto Layout, typename V>
-    constexpr auto simplify_layout()
+    template<auto Layout, class Shape>
+    constexpr auto simplify_layout(Shape shape)
     {
         if constexpr(indexical_array<decltype(Layout)> || std::integral<decltype(Layout)>)
         {
-            return normalize_indices<Layout, V>();
+            return normalize_indices<Layout>(shape);
         }
         else return []<size_t...I>(std::index_sequence<I...>)
         {
-            constexpr auto child_relayout = rzx::make_tuple(simplify_layout<Layout | child<I>, V>()...);
+            constexpr auto child_relayout = rzx::make_tuple(simplify_layout<Layout | child<I>>(Shape{})...);
             constexpr size_t n = child_count<decltype(child_relayout | child<0uz>)>;
 
             if constexpr(n > 0uz
@@ -454,6 +454,29 @@ namespace rzx::detail
                 return child_relayout;
             }
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<class Layout, class Shape>
+    constexpr auto normalize_layout(const Layout& layout, const Shape& shape)
+    {
+        if constexpr(terminal<Shape>)
+        {
+            static_assert(indexical<Layout>, "Invalid layout.");
+            return to_indexes(layout);
+        }
+        else return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            if constexpr(not indexical<Layout>)
+            {
+                static_assert(child_count<Shape> == child_count<Layout>, "Invalid layout.");
+                return rzx::make_tuple(normalize_usage(layout | child<I>, shape | child<I>)...);
+            }
+            else
+            {
+                auto indexes = to_indexes(layout);
+                return rzx::make_tuple(normalize_usage(array_cat(indexes, array{ I }) , shape | child<I>)...);
+            }
+        }(std::make_index_sequence<child_count<Shape>>{});
     }
 }
 

@@ -140,7 +140,7 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
-            constexpr auto simplified_layout = detail::simplify_layout<Layout, tree_shape_t<T>>();
+            constexpr auto simplified_layout = detail::simplify_layout<Layout>(tree_shape<T>);
             if constexpr(wrapped<T>)
             {
                 if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
@@ -200,7 +200,7 @@ namespace rzx
         template<typename V, derived_from<Relayouter> Self>
         constexpr auto operator()(this Self&& self, V&& view)
         {
-            constexpr auto layout = detail::simplify_layout<Relayouter::relayout(default_layout<V>), tree_shape_t<V>>();
+            constexpr auto layout = detail::simplify_layout<Relayouter::relayout(default_layout<V>)>(tree_shape<V>);
             return FWD(view) | relayout<layout>;
         }
     };
