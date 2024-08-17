@@ -254,6 +254,7 @@ namespace rzx
             }
             else if constexpr(Indexes.size() == 1uz)
             {
+                static_assert(child_count<T> > 0);
                 return get<normalize_index(Indexes[0], child_count<T>)>(FWD(t));
             }
             else
@@ -477,6 +478,19 @@ namespace rzx::detail
                 return rzx::make_tuple(normalize_layout(array_cat(indexes, array{ I }) , shape | child<I>)...);
             }
         }(std::make_index_sequence<child_count<Shape>>{});
+    }
+
+    template<typename TLayout, size_t N>
+    constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
+    {
+        if constexpr(indexical_array<TLayout>)
+        {
+            return rzx::array_cat(prefix, layout);
+        }
+        else return[&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(detail::layout_add_prefix(layout | child<I>, prefix)...);
+        }(std::make_index_sequence<child_count<TLayout>>{});
     }
 }
 

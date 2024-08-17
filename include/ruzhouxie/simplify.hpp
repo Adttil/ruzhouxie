@@ -153,7 +153,7 @@ namespace rzx
             }
             // else return [&]<size_t...I>(std::index_sequence<I...>)
             // {
-            //     return rzx::make_tuple(simplified_layout<child_type<T, I>>()...);
+            //     return rzx::make_tuple(detail::layout_add_prefix(simplified_layout<child_type<T, I>>(), array{ I })...);
             // }(std::make_index_sequence<child_count<T>>{});
         };
     }

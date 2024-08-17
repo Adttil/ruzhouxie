@@ -1,10 +1,11 @@
 #include <ruzhouxie/invoke.hpp>
+#include <ruzhouxie/make.hpp>
 #include "test_tool.hpp"
 
 TEST(invoke, transform)
 {
-    auto a = rzx::tuple{ 2, 0.5f };
-    auto b = a | rzx::transform([](auto x){ return x * x; });
+    static constexpr auto a = rzx::tuple{ 2, 0.5f };
+    constexpr auto b = a | rzx::transform([](auto x){ return x * x; }) | rzx::make<rzx::tuple<int, float>>;
 
     MAGIC_CHECK(b | rzx::child<0>, 4);
     MAGIC_CHECK(b | rzx::child<1>, 0.25f);

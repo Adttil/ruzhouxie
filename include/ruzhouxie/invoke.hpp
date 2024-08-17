@@ -86,16 +86,13 @@ namespace rzx
         // template<auto UsageTable, typename Self>
         // constexpr decltype(auto) simplified_data(this Self&& self)
         // {
-        //     return invoke_view<decltype(FWD(self, base) | rzx::simplify<UsageTable>), Stricture>
-        //     {
-        //         FWD(self, base) | rzx::simplify<UsageTable>
-        //     };
+        //     return FWD(self);
         // }
 
         // template<derived_from<invoke_view> Self>
         // friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
         // {
-        //     return rzx::simplified_layout<V>;
+        //     return indexes_of_whole;
         // }
     };
 

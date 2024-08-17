@@ -139,10 +139,23 @@ namespace rzx
     struct detail::relayout_t : adaptor_closure<relayout_t<Layout>>
     {
         template<typename T>
-        constexpr auto operator()(T&& t)const
+        constexpr decltype(auto) operator()(T&& t)const
         {
             constexpr auto simplified_layout = detail::simplify_layout<Layout>(tree_shape<T>);
-            if constexpr(wrapped<T>)
+            if constexpr(indexical<decltype(simplified_layout)>)
+            {
+                using type = decltype(FWD(t) | child<simplified_layout>);
+                return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
+                // if constexpr(std::is_rvalue_reference_v<type>)
+                // {
+                //     return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
+                // }
+                // else
+                // {
+                //     return FWD(t) | child<simplified_layout>;
+                // }
+            }
+            else if constexpr(wrapped<T>)
             {
                 if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
                 {
@@ -165,18 +178,7 @@ namespace rzx
 {
     namespace detail 
     {
-        template<typename TLayout, size_t N>
-        constexpr auto layout_add_prefix(const TLayout& layout, const array<size_t, N>& prefix)
-        {
-            if constexpr(indexical_array<TLayout>)
-            {
-                return rzx::array_cat(prefix, layout);
-            }
-            else return[&]<size_t...I>(std::index_sequence<I...>)
-            {
-                return rzx::make_tuple(detail::layout_add_prefix(layout | child<I>, prefix)...);
-            }(std::make_index_sequence<child_count<TLayout>>{});
-        }
+        
     }
 
     template<typename T>
