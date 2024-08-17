@@ -455,15 +455,6 @@ namespace rzx::detail
             }
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
-
-    template<auto Seq, typename V>
-    constexpr auto normalize_sequence()
-    {
-        return []<size_t...I>(std::index_sequence<I...>)
-        {
-            return rzx::make_tuple(simplify_layout<Seq | child<I>, V>()...);
-        }(std::make_index_sequence<child_count<decltype(Seq)>>{});
-    }
 }
 
 namespace rzx::detail
