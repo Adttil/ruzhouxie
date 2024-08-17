@@ -30,11 +30,11 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& simplified_arg_data = FWD(arg) | simplified_data<>;
-                constexpr auto simplified_arg_layout = simplified_layout<Arg>;
-                auto simplified_arg = relayout_view<decltype(simplified_arg_data), simplified_arg_layout>{ FWD(simplified_arg_data) };
+                //auto&& simplified_arg_data = FWD(arg) | simplified_data<>;
+                //constexpr auto simplified_arg_layout = simplified_layout<Arg>;
+                //auto simplified_arg = relayout_view<decltype(simplified_arg_data), simplified_arg_layout>{ FWD(simplified_arg_data) };
                 //auto&& astrict_arg = FWD(simplify_arg) | astrict<stricture_t::readonly>; 
-                return T{ FWD(simplified_arg) | child<I> | make<std::tuple_element_t<I, T>>... };
+                return T{ arg | child<I> | make<std::tuple_element_t<I, T>>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
     };

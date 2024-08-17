@@ -118,7 +118,7 @@ namespace rzx
         constexpr decltype(auto) simplified_data(this Self&& self)
         {
             //constexpr auto layout = detail::apply_layout<Layout_>(Layout);
-            constexpr auto base_usage = detail::inverse_apply_layout_on_usage(Usage, Layout, tree_shape<V>);
+            constexpr auto base_usage = detail::inverse_apply_layout_on_usage<Layout>(Usage, tree_shape<V>);
 
             return FWD(self, base) | rzx::simplified_data<base_usage>;
         }

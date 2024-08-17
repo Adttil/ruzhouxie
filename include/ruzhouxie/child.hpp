@@ -351,7 +351,7 @@ namespace rzx
         else return [&]<size_t...I>(std::index_sequence<I...>)
         {
             return rzx::make_tuple(rzx::make_tree_of_same_value(value, shape | child<I>)...);
-        }();
+        }(std::make_index_sequence<child_count<S>>{});
     }
 
     template<class F, class T>

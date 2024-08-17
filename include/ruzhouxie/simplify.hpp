@@ -24,32 +24,32 @@ namespace rzx
 
 namespace rzx::detail 
 {
-    template<typename U, typename L, typename R>
-    constexpr void inverse_apply_layout_on_usage_at(const U& usage, const L& layout, R& result)
+    template<auto Layout, typename U, typename R>
+    constexpr void inverse_apply_layout_on_usage_at(const U& usage, R& result)
     {
-        if constexpr(indexical<L>)
+        if constexpr(indexical<decltype(Layout)>)
         {
-            auto&& result_usage = result | child<layout>;
+            auto&& result_usage = result | child<Layout>;
             if constexpr(terminal<decltype(result_usage)>)
             {
                 result_usage = result_usage + usage;
             }
             else return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                (..., inverse_apply_layout_on_usage_at(usage, indexes_of_whole, result_usage | child<I>));
+                (..., inverse_apply_layout_on_usage_at<indexes_of_whole>(usage, result_usage | child<I>));
             }(std::make_index_sequence<child_count<decltype(result_usage)>>{});
         }
         else return[&]<size_t...I>(std::index_sequence<I...>)
         {
-            (..., inverse_apply_layout_on_usage_at(usage | child<I>, layout | child<I>, result));
-        }(std::make_index_sequence<child_count<L>>{});
+            (..., inverse_apply_layout_on_usage_at<Layout | child<I>>(usage | child<I>, result));
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
 
-    template<typename U, typename L, typename S>
-    constexpr auto inverse_apply_layout_on_usage(const U& usage, const L& layout, const S& shape)
+    template<auto Layout, typename U, typename S>
+    constexpr auto inverse_apply_layout_on_usage(const U& usage, const S& shape)
     {
         auto result = make_tree_of_same_value(usage_t::discard, shape);
-        inverse_apply_layout_on_usage_at(usage, layout, result);
+        inverse_apply_layout_on_usage_at<Layout>(usage, result);
         return result;
     }
 
@@ -99,26 +99,37 @@ namespace rzx
         template<typename T>
         constexpr decltype(auto) operator()(T&& t)const
         {
-            if constexpr(requires{ FWD(t).template simplified_data<UsageTable>(custom_t{}); })
+            constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
+
+            if constexpr(requires{ FWD(t).template simplified_data<normalized_usage_table>(custom_t{}); })
             {
-                return FWD(t).template simplified_data<UsageTable>(custom_t{});
+                return FWD(t).template simplified_data<normalized_usage_table>(custom_t{});
             }
-            else if constexpr(requires{ simplified_data<UsageTable>(FWD(t), custom_t{}); })
+            else if constexpr(requires{ simplified_data<normalized_usage_table>(FWD(t), custom_t{}); })
             {
-                return simplified_data<UsageTable>(FWD(t), custom_t{});
+                return simplified_data<normalized_usage_table>(FWD(t), custom_t{});
             }
-            else if constexpr(requires{ FWD(t).template simplified_data<UsageTable>(); })
+            else if constexpr(requires{ FWD(t).template simplified_data<normalized_usage_table>(); })
             {
-                return FWD(t).template simplified_data<UsageTable>();
+                return FWD(t).template simplified_data<normalized_usage_table>();
             }
-            else if constexpr(requires{ simplified_data<UsageTable>(FWD(t)); })
+            else if constexpr(requires{ simplified_data<normalized_usage_table>(FWD(t)); })
             {
-                return simplified_data<UsageTable>(FWD(t));
+                return simplified_data<normalized_usage_table>(FWD(t));
             }
-            else
+            else if constexpr(terminal<T>)
             {
                 return FWD(t);
             }
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
+
+                return rzx::tuple<decltype(FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>)...>
+                {
+                    FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>...
+                };
+            }(std::make_index_sequence<child_count<T>>{});
         }
     };
 }
@@ -136,10 +147,14 @@ namespace rzx
             {
                 return get_simplified_layout(type_tag<T>{});
             }
-            else
+            else if constexpr(terminal<T>)
             {
                 return indexes_of_whole;
             }
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(simplified_layout<child_type<T, I>>()...);
+            }(std::make_index_sequence<child_count<T>>{});
         };
     }
 
