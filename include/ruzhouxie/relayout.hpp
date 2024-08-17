@@ -140,21 +140,21 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
-            constexpr auto normalized_layout = detail::normalize_layout<Layout, tree_shape_t<T>>();
+            constexpr auto simplified_layout = detail::simplify_layout<Layout, tree_shape_t<T>>();
             if constexpr(wrapped<T>)
             {
                 if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
                 {
-                    return relayout_view<std::decay_t<decltype(t.base)>, normalized_layout>{ FWD(t, base) };
+                    return relayout_view<std::decay_t<decltype(t.base)>, simplified_layout>{ FWD(t, base) };
                 }
                 else
                 {
-                    return relayout_view<decltype(FWD(t, base)), normalized_layout>{ FWD(t, base) };
+                    return relayout_view<decltype(FWD(t, base)), simplified_layout>{ FWD(t, base) };
                 }
             }
             else
             {
-                return relayout_view<T, normalized_layout>{ FWD(t) };
+                return relayout_view<T, simplified_layout>{ FWD(t) };
             }
         }
     };
@@ -200,7 +200,7 @@ namespace rzx
         template<typename V, derived_from<Relayouter> Self>
         constexpr auto operator()(this Self&& self, V&& view)
         {
-            constexpr auto layout = detail::normalize_layout<Relayouter::relayout(default_layout<V>), tree_shape_t<V>>();
+            constexpr auto layout = detail::simplify_layout<Relayouter::relayout(default_layout<V>), tree_shape_t<V>>();
             return FWD(view) | relayout<layout>;
         }
     };

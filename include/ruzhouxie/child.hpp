@@ -421,7 +421,7 @@ namespace rzx::detail
     }
 
     template<auto Layout, typename V>
-    constexpr auto normalize_layout()
+    constexpr auto simplify_layout()
     {
         if constexpr(indexical_array<decltype(Layout)> || std::integral<decltype(Layout)>)
         {
@@ -429,7 +429,7 @@ namespace rzx::detail
         }
         else return []<size_t...I>(std::index_sequence<I...>)
         {
-            constexpr auto child_relayout = rzx::make_tuple(normalize_layout<Layout | child<I>, V>()...);
+            constexpr auto child_relayout = rzx::make_tuple(simplify_layout<Layout | child<I>, V>()...);
             constexpr size_t n = child_count<decltype(child_relayout | child<0uz>)>;
 
             if constexpr(n > 0uz
@@ -461,7 +461,7 @@ namespace rzx::detail
     {
         return []<size_t...I>(std::index_sequence<I...>)
         {
-            return rzx::make_tuple(normalize_layout<Seq | child<I>, V>()...);
+            return rzx::make_tuple(simplify_layout<Seq | child<I>, V>()...);
         }(std::make_index_sequence<child_count<decltype(Seq)>>{});
     }
 }
