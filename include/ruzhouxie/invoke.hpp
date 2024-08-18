@@ -53,6 +53,19 @@ namespace rzx
     template<class ArgTable, class FnTable>
     struct invoke_view : detail::invoke_view_storage<ArgTable, FnTable>, view_interface<invoke_view<ArgTable, FnTable>>
     {
+        template<typename Self>
+        constexpr decltype(auto) self(this Self&& self)
+        {
+            if constexpr(std::is_object_v<Self> && std::is_reference_v<ArgTable> && std::is_reference_v<FnTable>)
+            {
+                return invoke_view{ FWD(self) };
+            }
+            else
+            {
+                return FWD(self);
+            }
+        }
+
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)
         {
@@ -82,18 +95,37 @@ namespace rzx
             Cache cache;
         };
 
-    public:
-        // template<auto UsageTable, typename Self>
-        // constexpr decltype(auto) simplified_data(this Self&& self)
-        // {
-        //     return FWD(self);
-        // }
+        template<size_t I, auto UsageTable, typename Self>
+        constexpr decltype(auto) child_data(this Self&& self)
+        {
+            if constexpr(requires{ (FWD(self, fn_table) | child<I>)(FWD(self, arg_table) | child<I>); })
+            {
+                return (FWD(self, fn_table) | child<I>)(FWD(self, arg_table) | child<I>);
+            }
+            else
+            {
+                return FWD(self) | child<I> | rzx::simplified_data<UsageTable>;
+            }
+        }
 
-        // template<derived_from<invoke_view> Self>
-        // friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
-        // {
-        //     return indexes_of_whole;
-        // }
+    public:
+        template<auto UsageTable, typename Self>
+        constexpr decltype(auto) simplified_data(this Self&& self)
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return tuple<std::decay_t<decltype(FWD(self).template child_data<I, UsageTable>())>...>{
+                    FWD(self).template child_data<I, UsageTable>()...
+                };
+            }(std::make_index_sequence<child_count<Self>>{});
+            //return FWD(self).self();
+        }
+
+        template<derived_from<invoke_view> Self>
+        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        {
+            return indexes_of_whole;
+        }
     };
 
     template<class ArgTable, class FnTable>

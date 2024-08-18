@@ -96,40 +96,39 @@ namespace rzx
     template<auto UsageTable>
     struct detail::simplified_data_t_ns::simplified_data_t : adaptor_closure<simplified_data_t<UsageTable>>
     {
-        template<typename T>
+        template<typename T, auto NormalizedUsage = detail::normalize_usage(UsageTable, tree_shape<T>)>
         constexpr decltype(auto) operator()(T&& t)const
         {
-            constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
+            //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
+            //constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
 
-            if constexpr(requires{ FWD(t).template simplified_data<normalized_usage_table>(custom_t{}); })
+            if constexpr(requires{ FWD(t).template simplified_data<NormalizedUsage>(custom_t{}); })
             {
-                return FWD(t).template simplified_data<normalized_usage_table>(custom_t{});
+                return FWD(t).template simplified_data<NormalizedUsage>(custom_t{});
             }
-            else if constexpr(requires{ simplified_data<normalized_usage_table>(FWD(t), custom_t{}); })
+            else if constexpr(requires{ simplified_data<NormalizedUsage>(FWD(t), custom_t{}); })
             {
-                return simplified_data<normalized_usage_table>(FWD(t), custom_t{});
+                return simplified_data<NormalizedUsage>(FWD(t), custom_t{});
             }
-            else if constexpr(requires{ FWD(t).template simplified_data<normalized_usage_table>(); })
+            else if constexpr(requires{ FWD(t).template simplified_data<NormalizedUsage>(); })
             {
-                return FWD(t).template simplified_data<normalized_usage_table>();
+                return FWD(t).template simplified_data<NormalizedUsage>();
             }
-            else if constexpr(requires{ simplified_data<normalized_usage_table>(FWD(t)); })
+            else if constexpr(requires{ simplified_data<NormalizedUsage>(FWD(t)); })
             {
-                return simplified_data<normalized_usage_table>(FWD(t));
+                return simplified_data<NormalizedUsage>(FWD(t));
             }
-            else// if constexpr(terminal<T>)
+            else if constexpr(terminal<T>)
             {
-                return FWD(t);
+                return FWD(t) | child<>;
             }
-            // else return [&]<size_t...I>(std::index_sequence<I...>)
-            // {
-            //     constexpr auto normalized_usage_table = detail::normalize_usage(UsageTable, tree_shape<T>);
-
-            //     return rzx::tuple<decltype(FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>)...>
-            //     {
-            //         FWD(t) | child<I> | rzx::simplified_data<normalized_usage_table | child<I>>...
-            //     };
-            // }(std::make_index_sequence<child_count<T>>{});
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::tuple<decltype(FWD(t) | child<I> | rzx::simplified_data<NormalizedUsage | child<I>>)...>
+                {
+                    FWD(t) | child<I> | rzx::simplified_data<NormalizedUsage | child<I>>...
+                };
+            }(std::make_index_sequence<child_count<T>>{});
         }
     };
 }
@@ -147,14 +146,14 @@ namespace rzx
             {
                 return get_simplified_layout(type_tag<T>{});
             }
-            else// if constexpr(terminal<T>)
+            else if constexpr(terminal<T>)
             {
                 return indexes_of_whole;
             }
-            // else return [&]<size_t...I>(std::index_sequence<I...>)
-            // {
-            //     return rzx::make_tuple(detail::layout_add_prefix(simplified_layout<child_type<T, I>>(), array{ I })...);
-            // }(std::make_index_sequence<child_count<T>>{});
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(detail::layout_add_prefix(simplified_layout<child_type<T, I>>(), array{ I })...);
+            }(std::make_index_sequence<child_count<T>>{});
         };
     }
 

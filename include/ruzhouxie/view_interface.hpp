@@ -30,6 +30,19 @@ namespace rzx
     template<class T>
     struct view : detail::view_storage<T>, view_interface<view<T>>
     {
+        template<class Self>
+        constexpr decltype(auto) self(this Self&& self)
+        {
+            if constexpr(std::is_object_v<Self> && std::is_reference_v<T>)
+            {
+                return view{ FWD(self) };
+            }
+            else
+            {
+                return FWD(self);
+            }
+        }
+
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)
         {
@@ -43,10 +56,16 @@ namespace rzx
             } 
         }
 
-        template<auto Usage, auto Layout, class Self>
-        constexpr decltype(auto) simplify(this Self&& self)
+        template<auto UsageTable, typename Self>
+        constexpr decltype(auto) simplified_data(this Self&& self)
         {
-            return FWD(self, base) | rzx::simplify<Usage, Layout>;
+            return FWD(self, base) | rzx::simplified_data<UsageTable>;
+        }
+
+        template<derived_from<view> Self>
+        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        {
+            return simplified_layout<T>;
         }
     };
 
