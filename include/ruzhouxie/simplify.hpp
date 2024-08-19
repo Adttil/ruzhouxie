@@ -88,10 +88,32 @@ namespace rzx
         
         template<auto UsageTable>
         void simplified_data();
+        
+        template<class T, auto UsageTable>
+        constexpr bool is_simple()
+        {
+            constexpr bool no_custom = not bool
+            {
+                requires{ std::declval<T>().template simplified_data<UsageTable>(custom_t{}); }
+                ||
+                requires{ simplified_data<UsageTable>(std::declval<T>(), custom_t{}); }
+                ||
+                requires{ std::declval<T>().template simplified_data<UsageTable>(); }
+                ||
+                requires{ simplified_data<UsageTable>(std::declval<T>()); }
+            };
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return (no_custom && ... && is_simple<child_type<T, I>, UsageTable | child<I>>());
+            }(std::make_index_sequence<child_count<T>>{});
+        }
     }
 
     template<auto UsageTable = usage_t::repeatedly>
     inline constexpr detail::simplified_data_t_ns::simplified_data_t<UsageTable> simplified_data{};
+
+    template<class T, auto UsageTable = usage_t::repeatedly>
+    concept simple = detail::simplified_data_t_ns::is_simple<T, detail::normalize_usage(UsageTable, tree_shape<T>)>();
 
     template<auto UsageTable>
     struct detail::simplified_data_t_ns::simplified_data_t : adaptor_closure<simplified_data_t<UsageTable>>
@@ -118,7 +140,7 @@ namespace rzx
             {
                 return simplified_data<NormalizedUsage>(FWD(t));
             }
-            else if constexpr(terminal<T>)
+            else if constexpr(simple<T, NormalizedUsage>)
             {
                 return FWD(t) | child<>;
             }
@@ -146,7 +168,7 @@ namespace rzx
             {
                 return get_simplified_layout(type_tag<T>{});
             }
-            else if constexpr(terminal<T>)
+            else if constexpr(simple<T>)
             {
                 return indexes_of_whole;
             }
