@@ -159,28 +159,31 @@ namespace rzx
 {  
     namespace detail::simplified_layout_t_ns
     {
+        template<auto UsageTable>
         void get_simplified_layout();
         
-        template<class T>
+        template<class T, auto UsageTable>
         constexpr auto simplified_layout()
         {
-            if constexpr(requires{ get_simplified_layout(type_tag<T>{}); })
+            if constexpr(requires{ get_simplified_layout<UsageTable>(type_tag<T>{}); })
             {
-                return get_simplified_layout(type_tag<T>{});
+                return get_simplified_layout<UsageTable>(type_tag<T>{});
             }
-            else if constexpr(simple<T>)
+            else if constexpr(simple<T, UsageTable>)
             {
                 return indexes_of_whole;
             }
             else return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return rzx::make_tuple(detail::layout_add_prefix(simplified_layout<child_type<T, I>>(), array{ I })...);
+                return rzx::make_tuple(
+                    detail::layout_add_prefix(simplified_layout<child_type<T, I>, UsageTable | child<I>>(), array{ I })...
+                );
             }(std::make_index_sequence<child_count<T>>{});
         };
     }
 
-    template<class T>
-    inline constexpr auto simplified_layout = detail::simplified_layout_t_ns::simplified_layout<T>();
+    template<class T, auto UsageTable = usage_t::repeatedly>
+    inline constexpr auto simplified_layout = detail::simplified_layout_t_ns::simplified_layout<T, detail::normalize_usage(UsageTable, tree_shape<T>)>();
 }
 
 #include "macro_undef.hpp"

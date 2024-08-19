@@ -124,16 +124,6 @@ namespace rzx
         {
             using arg_t = decltype(FWD(self, arg_table) | rzx::simplify<UsageTable>);
 
-            // static_assert(
-            //     tree_shape<arg_t> ==
-            //     tree_shape<decltype(FWD(self, arg_table))>
-            // , "ggg");
-
-            static_assert(std::same_as<
-                tree_shape_t<arg_t>,
-                tree_shape_t<decltype(FWD(self, arg_table))>
-            >, "ggg");
-
             return invoke_view<arg_t, decltype(FWD(self, fn_table))>{ 
                 FWD(self, arg_table) | rzx::simplify<UsageTable>,
                 FWD(self, fn_table)
@@ -144,18 +134,6 @@ namespace rzx
         constexpr decltype(auto) simplified_data(this Self&& self)
         {
             using base_t = decltype(FWD(self).template get_data<UsageTable>());
-
-             static_assert(std::same_as<
-                tree_shape_t<base_t>,
-                tree_shape_t<Self>
-            >, "bbb");
-
-            static_assert(child_count<simplify_result_type<base_t>> == 2uz, "hhh");
-            static_assert(std::same_as<
-                tree_shape_t<child_type<simplify_result_type<base_t>, 1>>,
-                tree_shape_t<Self>
-            >
-            , "fff");
 
             return simplify_result_type<base_t>
             {
@@ -171,7 +149,7 @@ namespace rzx
             //return FWD(self).self();
         }
 
-        template<derived_from<invoke_view> Self>
+        template<auto UsageTable, derived_from<invoke_view> Self>
         friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
         {
             return array{ 1uz };

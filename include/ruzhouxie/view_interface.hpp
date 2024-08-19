@@ -62,10 +62,10 @@ namespace rzx
             return FWD(self, base) | rzx::simplified_data<UsageTable>;
         }
 
-        template<derived_from<view> Self>
-        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        template<auto UsageTable, derived_from<view> Self>
+        friend constexpr auto get_simplified_layout(type_tag<Self>)
         {
-            return simplified_layout<T>;
+            return simplified_layout<T, UsageTable>;
         }
     };
 

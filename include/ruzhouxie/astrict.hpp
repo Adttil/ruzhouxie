@@ -108,7 +108,7 @@ namespace rzx
             };
         }
 
-        template<derived_from<astrict_view> Self>
+        template<auto Usage, derived_from<astrict_view> Self>
         friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
         {
             return rzx::simplified_layout<V>;
