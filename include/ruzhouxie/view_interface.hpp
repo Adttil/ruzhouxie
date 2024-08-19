@@ -30,18 +30,18 @@ namespace rzx
     template<class T>
     struct view : detail::view_storage<T>, view_interface<view<T>>
     {
-        template<class Self>
-        constexpr decltype(auto) self(this Self&& self)
-        {
-            if constexpr(std::is_object_v<Self> && std::is_reference_v<T>)
-            {
-                return view{ FWD(self) };
-            }
-            else
-            {
-                return FWD(self);
-            }
-        }
+        // template<class Self>
+        // constexpr decltype(auto) self(this Self&& self)
+        // {
+        //     if constexpr(std::is_object_v<Self> && std::is_reference_v<T>)
+        //     {
+        //         return view{ FWD(self) };
+        //     }
+        //     else
+        //     {
+        //         return FWD(self);
+        //     }
+        // }
 
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)

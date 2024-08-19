@@ -38,18 +38,18 @@ namespace rzx
     template<typename V, auto Stricture>
     struct astrict_view : detail::astrict_view_storage<V, Stricture>, view_interface<astrict_view<V, Stricture>>
     {
-        template<typename Self>
-        constexpr decltype(auto) self(this Self&& self)
-        {
-            if constexpr(/*std::is_object_v<Self> && */std::is_reference_v<V>)
-            {
-                return astrict_view{ FWD(self) };
-            }
-            else
-            {
-                return FWD(self);
-            }
-        }
+        // template<typename Self>
+        // constexpr decltype(auto) self(this Self&& self)
+        // {
+        //     if constexpr(std::is_object_v<Self> && std::is_reference_v<V>)
+        //     {
+        //         return astrict_view{ FWD(self) };
+        //     }
+        //     else
+        //     {
+        //         return FWD(self);
+        //     }
+        // }
 
         template<size_t I, typename Self>
         constexpr decltype(auto) get(this Self&& self)

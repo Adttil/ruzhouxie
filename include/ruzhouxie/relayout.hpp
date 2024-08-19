@@ -81,18 +81,18 @@ namespace rzx
         }
     
     public:
-        template<class Self>
-        constexpr decltype(auto) self(this Self&& self)
-        {
-            if constexpr(std::is_object_v<Self> && std::is_reference_v<V>)
-            {
-                return relayout_view{ FWD(self) };
-            }
-            else
-            {
-                return FWD(self);
-            }
-        }
+        // template<class Self>
+        // constexpr decltype(auto) self(this Self&& self)
+        // {
+        //     if constexpr(std::is_object_v<Self> && std::is_reference_v<V>)
+        //     {
+        //         return relayout_view{ FWD(self) };
+        //     }
+        //     else
+        //     {
+        //         return FWD(self);
+        //     }
+        // }
 
         template<size_t I, typename Self>
         constexpr decltype(auto) get(this Self&& self)

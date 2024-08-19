@@ -53,18 +53,18 @@ namespace rzx
     template<class ArgTable, class FnTable>
     struct invoke_view : detail::invoke_view_storage<ArgTable, FnTable>, view_interface<invoke_view<ArgTable, FnTable>>
     {
-        template<typename Self>
-        constexpr decltype(auto) self(this Self&& self)
-        {
-            if constexpr(std::is_object_v<Self> && std::is_reference_v<ArgTable> && std::is_reference_v<FnTable>)
-            {
-                return invoke_view{ FWD(self) };
-            }
-            else
-            {
-                return FWD(self);
-            }
-        }
+        // template<typename Self>
+        // constexpr decltype(auto) self(this Self&& self)
+        // {
+        //     if constexpr(std::is_object_v<Self> && std::is_reference_v<ArgTable> && std::is_reference_v<FnTable>)
+        //     {
+        //         return invoke_view{ FWD(self) };
+        //     }
+        //     else
+        //     {
+        //         return FWD(self);
+        //     }
+        // }
 
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)

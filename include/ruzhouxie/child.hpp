@@ -231,7 +231,7 @@ namespace rzx
         template<indexical_array auto Indexes>
         struct child_t;
 
-        void self();
+        //void self();
     }
 
     inline namespace functors
@@ -252,26 +252,27 @@ namespace rzx
         {
             if constexpr(Indexes.size() == 0uz)
             {
-                if constexpr(requires{ FWD(t).self(custom_t{}); })
-                {
-                    return FWD(t).self(custom_t{});
-                }
-                else if constexpr(requires{ self(FWD(t), custom_t{}); })
-                {
-                    return self(FWD(t), custom_t{});
-                }
-                else if constexpr(requires{ FWD(t).self(); })
-                {
-                    return FWD(t).self();
-                }
-                else if constexpr(requires{ self(FWD(t)); })
-                {
-                    return self(FWD(t));
-                }
-                else
-                {
-                    return FWD(t);
-                }
+                return FWD(t);
+                // if constexpr(requires{ FWD(t).self(custom_t{}); })
+                // {
+                //     return FWD(t).self(custom_t{});
+                // }
+                // else if constexpr(requires{ self(FWD(t), custom_t{}); })
+                // {
+                //     return self(FWD(t), custom_t{});
+                // }
+                // else if constexpr(requires{ FWD(t).self(); })
+                // {
+                //     return FWD(t).self();
+                // }
+                // else if constexpr(requires{ self(FWD(t)); })
+                // {
+                //     return self(FWD(t));
+                // }
+                // else
+                // {
+                //     return FWD(t);
+                // }
             }
             else if constexpr(Indexes.size() == 1uz)
             {
