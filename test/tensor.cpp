@@ -5,13 +5,15 @@
 
 auto rnd = std::default_random_engine{ 0 };
 auto dis = std::uniform_real_distribution<float>{ 0.0f, 1.0f };
-constexpr size_t N = 100000000;
-
+size_t N;
 int s;
 
 TEST(tensor, mat_mul)
 {
-    std::cout << "input seed: ",std::cin >> s; 
+    std::cout << "input N: "; std::cin >> N; 
+    std::cout << "input seed: "; std::cin >> s; 
+
+
     static constexpr auto a = rzx::tuple{
         rzx::tuple{ 1, 2 },
         rzx::tuple{ 3, 4 }
