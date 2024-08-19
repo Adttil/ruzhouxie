@@ -140,7 +140,8 @@ namespace rzx
         template<derived_from<relayout_view> Self>
         friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
         {
-            constexpr auto base_layout = rzx::simplified_layout<V>;
+            constexpr auto base_layout = detail::normalize_layout(rzx::simplified_layout<V>, tree_shape<V>);
+            //constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
             return detail::apply_layout<Layout>(base_layout);
         }
     };
@@ -295,9 +296,29 @@ namespace rzx
     inline constexpr detail::transpose_t<Axis1, Axis2> transpose{}; 
 }
 
-namespace rzx::detail 
-{
+namespace rzx 
+{  
+    namespace detail
+    {
+        template<auto UsageTable>
+        struct simplify_t;
+    }
 
+    template<auto UsageTable = usage_t::repeatedly>
+    inline constexpr detail::simplify_t<UsageTable> simplify{};
+
+    template<auto UsageTable>
+    struct detail::simplify_t : adaptor_closure<simplify_t<UsageTable>>
+    {
+        template<typename T>
+        constexpr auto operator()(T&& t)const
+        {
+            using data_type = decltype(FWD(t) | simplified_data<UsageTable>);
+            constexpr auto layout = detail::simplify_layout<simplified_layout<T>>(tree_shape<data_type>);
+            static_assert(std::same_as<tree_shape_t<T>, tree_shape_t<relayout_view<data_type, layout>>>, "fuck");
+            return relayout_view<data_type, layout>{ FWD(t) | simplified_data<UsageTable> };
+        }
+    };
 }
 
 #include "macro_undef.hpp"

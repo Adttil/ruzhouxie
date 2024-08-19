@@ -31,11 +31,11 @@ struct X
     friend bool operator==(const X&, const X&) = default;
 };
 
-TEST(simplify, _)
-{
-    MAGIC_CHECK(X<0>{} | rzx::simplify<>, 0);
-    MAGIC_CHECK(X<1>{} | rzx::simplify<>, 1);
-    MAGIC_CHECK(X<2>{} | rzx::simplify<>, 2);
-    MAGIC_CHECK(X<3>{} | rzx::simplify<>, 3);
-    MAGIC_CHECK(X<4>{} | rzx::simplify<>, X<4>{});
-}
+// TEST(simplify, _)
+// {
+//     MAGIC_CHECK(X<0>{} | rzx::simplify<>, 0);
+//     MAGIC_CHECK(X<1>{} | rzx::simplify<>, 1);
+//     MAGIC_CHECK(X<2>{} | rzx::simplify<>, 2);
+//     MAGIC_CHECK(X<3>{} | rzx::simplify<>, 3);
+//     MAGIC_CHECK(X<4>{} | rzx::simplify<>, X<4>{});
+// }

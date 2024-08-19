@@ -87,14 +87,7 @@ namespace rzx
             }
         }
 
-    private:
-        template<typename Self, typename Cache>
-        struct simplify_result_type
-        {
-            Self self;
-            Cache cache;
-        };
-
+    //private:
         template<size_t I, auto UsageTable, typename Self>
         constexpr decltype(auto) child_data(this Self&& self)
         {
@@ -108,23 +101,82 @@ namespace rzx
             }
         }
 
+        template<class Data>
+        struct simplify_result_type
+        {
+            Data data;
+
+            static constexpr decltype(auto) init_cache(Data&& data)
+            {
+                return [&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    return tuple<std::decay_t<decltype(FWD(data).template child_data<I, usage_t::repeatedly>())>...>{
+                        FWD(data).template child_data<I, usage_t::repeatedly>()...
+                    };
+                }(std::make_index_sequence<child_count<Data>>{});
+            }
+
+            decltype(init_cache(FWD(data))) cache = init_cache(FWD(data));
+        };
     public:
+        template<auto UsageTable, typename Self>
+        constexpr decltype(auto) get_data(this Self&& self)
+        {
+            using arg_t = decltype(FWD(self, arg_table) | rzx::simplify<UsageTable>);
+
+            // static_assert(
+            //     tree_shape<arg_t> ==
+            //     tree_shape<decltype(FWD(self, arg_table))>
+            // , "ggg");
+
+            static_assert(std::same_as<
+                tree_shape_t<arg_t>,
+                tree_shape_t<decltype(FWD(self, arg_table))>
+            >, "ggg");
+
+            return invoke_view<arg_t, decltype(FWD(self, fn_table))>{ 
+                FWD(self, arg_table) | rzx::simplify<UsageTable>,
+                FWD(self, fn_table)
+            };
+        }
+
         template<auto UsageTable, typename Self>
         constexpr decltype(auto) simplified_data(this Self&& self)
         {
-            return [&]<size_t...I>(std::index_sequence<I...>)
+            using base_t = decltype(FWD(self).template get_data<UsageTable>());
+
+             static_assert(std::same_as<
+                tree_shape_t<base_t>,
+                tree_shape_t<Self>
+            >, "bbb");
+
+            static_assert(child_count<simplify_result_type<base_t>> == 2uz, "hhh");
+            static_assert(std::same_as<
+                tree_shape_t<child_type<simplify_result_type<base_t>, 1>>,
+                tree_shape_t<Self>
+            >
+            , "fff");
+
+            return simplify_result_type<base_t>
             {
-                return tuple<std::decay_t<decltype(FWD(self).template child_data<I, UsageTable>())>...>{
-                    FWD(self).template child_data<I, UsageTable>()...
-                };
-            }(std::make_index_sequence<child_count<Self>>{});
+                FWD(self).template get_data<UsageTable>()
+            };
+
+            // return [&]<size_t...I>(std::index_sequence<I...>)
+            // {
+            //     return tuple<std::decay_t<decltype(FWD(self).template child_data<I, UsageTable>())>...>{
+            //         FWD(self).template child_data<I, UsageTable>()...
+            //     };
+            // }(std::make_index_sequence<child_count<Self>>{});
             //return FWD(self).self();
         }
 
         template<derived_from<invoke_view> Self>
         friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
         {
-            return indexes_of_whole;
+            return array{ 1uz };
+
+            //return indexes_of_whole;
         }
     };
 

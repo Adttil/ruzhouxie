@@ -102,9 +102,9 @@ namespace rzx
         template<auto UsageTable, typename Self>
         constexpr decltype(auto) simplified_data(this Self&& self)
         {
-            return astrict_view<decltype(FWD(self, base) | rzx::simplify<UsageTable>), Stricture>
+            return astrict_view<decltype(FWD(self, base) | rzx::simplified_data<UsageTable>), Stricture>
             {
-                FWD(self, base) | rzx::simplify<UsageTable>
+                FWD(self, base) | rzx::simplified_data<UsageTable>
             };
         }
 
