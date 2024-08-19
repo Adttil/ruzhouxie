@@ -15,12 +15,12 @@ namespace rzx
 {
     namespace detail::make_t_ns
     {
-        template<typename T>
+        template<typename T, indexical_array auto indexes>
         struct make_t;
     }
 
-    template<typename T>
-    inline constexpr detail::make_t_ns::make_t<T> make{};
+    template<typename T, indexical auto...indexes>
+    inline constexpr auto make = detail::make_t_ns::make_t<T, to_indexes(indexes...)>{};
     
     template<typename T>
     struct tuple_maker
@@ -34,7 +34,7 @@ namespace rzx
                 constexpr auto simplified_arg_layout = detail::simplify_layout<simplified_layout<Arg>>(tree_shape<decltype(simplified_arg_data)>);
                 auto&& simplified_arg = relayout_view<decltype(simplified_arg_data), simplified_arg_layout>{ FWD(simplified_arg_data) };
                 auto astrict_arg = astrict_view<decltype(FWD(simplified_arg)), stricture_t::readonly>{ FWD(simplified_arg) }; 
-                return T{ FWD(astrict_arg) | child<I> | make<std::tuple_element_t<I, T>>... };
+                return T{ FWD(astrict_arg) | make<std::tuple_element_t<I, T>, I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
     };
@@ -48,23 +48,23 @@ namespace rzx
         }
     }
 
-    template<typename T>
-    struct detail::make_t_ns::make_t : adaptor_closure<make_t<T>>
+    template<typename T, indexical_array auto indexes>
+    struct detail::make_t_ns::make_t : adaptor_closure<make_t<T, indexes>>
     {
         template<typename Arg>
         constexpr T operator()(Arg&& arg)const
         {
-            if constexpr(terminal<T>)
+            if constexpr(terminal<child_type<Arg, indexes>>)
             {
-                return T{ FWD(arg) };
+                return FWD(arg) | child<indexes>;
             }
-            else if constexpr(std::same_as<std::remove_cvref_t<Arg>, T> && requires{ T{ FWD(arg) }; })
+            else if constexpr(std::same_as<std::remove_cvref_t<child_type<Arg, indexes>>, T> && requires{ T{ FWD(arg) | child<indexes> }; })
             {
-                return T{ FWD(arg) };
+                return FWD(arg) | child<indexes>;
             }
             else if constexpr(requires{ get_maker(type_tag<T>{}); })
             {
-                return get_maker(type_tag<T>{})(FWD(arg));
+                return get_maker(type_tag<T>{})(FWD(arg) | child<indexes>);
             }
             else
             {
