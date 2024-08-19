@@ -100,19 +100,39 @@ namespace rzx
         }
 
         template<auto UsageTable, typename Self>
-        constexpr decltype(auto) simplified_data(this Self&& self)
+        constexpr auto simplifier(this Self&& self)
         {
-            return astrict_view<decltype(FWD(self, base) | rzx::simplified_data<UsageTable>), Stricture>
+            struct simplifier_t
             {
-                FWD(self, base) | rzx::simplified_data<UsageTable>
+                decltype(FWD(self, base)) base_;
+                
+                static constexpr auto layout(){ return decltype(FWD(self, base) |  get_simplifier<UsageTable>)::layout(); }
+
+                constexpr decltype(auto) data()const
+                {
+                    return astrict_view<decltype((FWD(base_) | rzx::get_simplifier<UsageTable>).data()), Stricture>
+                    {
+                        (FWD(base_) | rzx::get_simplifier<UsageTable>).data()
+                    };
+                }
             };
+            return simplifier_t{ FWD(self, base) };
         }
 
-        template<auto Usage, derived_from<astrict_view> Self>
-        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
-        {
-            return rzx::simplified_layout<V>;
-        }
+        // template<auto UsageTable, typename Self>
+        // constexpr decltype(auto) simplified_data(this Self&& self)
+        // {
+        //     return astrict_view<decltype(FWD(self, base) | rzx::simplified_data<UsageTable>), Stricture>
+        //     {
+        //         FWD(self, base) | rzx::simplified_data<UsageTable>
+        //     };
+        // }
+
+        // template<auto Usage, derived_from<astrict_view> Self>
+        // friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        // {
+        //     return rzx::simplified_layout<V>;
+        // }
     };
 
 

@@ -57,16 +57,22 @@ namespace rzx
         }
 
         template<auto UsageTable, typename Self>
-        constexpr decltype(auto) simplified_data(this Self&& self)
+        constexpr auto simplifier(this Self&& self)
         {
-            return FWD(self, base) | rzx::simplified_data<UsageTable>;
+            return FWD(self, base) | get_simplifier<UsageTable>;
         }
 
-        template<auto UsageTable, derived_from<view> Self>
-        friend constexpr auto get_simplified_layout(type_tag<Self>)
-        {
-            return simplified_layout<T, UsageTable>;
-        }
+        // template<auto UsageTable, typename Self>
+        // constexpr decltype(auto) simplified_data(this Self&& self)
+        // {
+        //     return FWD(self, base) | rzx::simplified_data<UsageTable>;
+        // }
+
+        // template<auto UsageTable, derived_from<view> Self>
+        // friend constexpr auto get_simplified_layout(type_tag<Self>)
+        // {
+        //     return simplified_layout<T, UsageTable>;
+        // }
     };
 
     template<class T>

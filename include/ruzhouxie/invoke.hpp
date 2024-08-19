@@ -97,7 +97,8 @@ namespace rzx
             }
             else
             {
-                return FWD(self) | child<I> | rzx::simplified_data<UsageTable>;
+                return (FWD(self) | child<I> | rzx::get_simplifier<UsageTable>).data();
+                //return FWD(self) | child<I> | rzx::simplified_data<UsageTable>;
             }
         }
 
@@ -128,6 +129,29 @@ namespace rzx
                 FWD(self, arg_table) | rzx::simplify<UsageTable>,
                 FWD(self, fn_table)
             };
+        }
+
+        template<auto UsageTable, typename Self>
+        constexpr auto simplifier(this Self&& self)
+        {
+            using base_t = decltype(FWD(self).template get_data<UsageTable>());
+
+            struct simplifier_t
+            {
+                Self&& self;
+
+                static constexpr auto layout(){ return array{ 1uz }; }
+
+                constexpr decltype(auto) data()
+                { 
+                    return simplify_result_type<base_t>
+                    {
+                        FWD(self).template get_data<UsageTable>()
+                    };
+                }
+            };
+
+            return simplifier_t{ FWD(self) };
         }
 
         template<auto UsageTable, typename Self>

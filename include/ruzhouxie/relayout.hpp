@@ -127,24 +127,58 @@ namespace rzx
             }
         }
 
-        template<auto Usage, typename Self>
-        constexpr decltype(auto) simplified_data(this Self&& self)
+        template<auto UsageTable, typename Self>
+        constexpr auto simplifier(this Self&& self)
         {
-            constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-            constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
+            struct simplifier_t
+            {
+                decltype(FWD(self, base)) base;
 
-            return FWD(self, base) | rzx::simplified_data<base_usage>;
+                static consteval auto base_usage()
+                {
+                    constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+                    return detail::inverse_apply_layout_on_usage<layout>(UsageTable, tree_shape<V>);
+                }
+
+                static consteval auto base_layout()
+                {
+                    constexpr auto base_simplifer_layout = decltype(std::declval<V>() | rzx::get_simplifier<base_usage()>)::layout();
+                    return detail::normalize_layout(base_simplifer_layout, tree_shape<V>);
+                }
+
+                static consteval auto layout()
+                {
+                    return detail::apply_layout<Layout>(base_layout()); 
+                }
+
+                constexpr decltype(auto) data()
+                {
+                    return (static_cast<decltype(base)&&>(base) | rzx::get_simplifier<base_usage()>).data(); 
+                }
+            };
+
+            return simplifier_t{ FWD(self, base) };
         }
+        
 
-        template<auto Usage, derived_from<relayout_view> Self>
-        friend constexpr auto get_simplified_layout(type_tag<Self>)
-        {
-            constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-            constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
-            constexpr auto base_layout = detail::normalize_layout(rzx::simplified_layout<V, base_usage>, tree_shape<V>);
+        // template<auto Usage, typename Self>
+        // constexpr decltype(auto) simplified_data(this Self&& self)
+        // {
+        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+        //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
 
-            return detail::apply_layout<Layout>(base_layout);
-        }
+        //     return FWD(self, base) | rzx::simplified_data<base_usage>;
+        // }
+
+        // template<auto Usage, derived_from<relayout_view> Self>
+        // friend constexpr auto get_simplified_layout(type_tag<Self>)
+        // {
+        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+        //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
+        //     constexpr auto base_layout = detail::normalize_layout(rzx::simplified_layout<V, base_usage>, tree_shape<V>);
+
+        //     return detail::apply_layout<Layout>(base_layout);
+        // }
     };
 
     template<typename V, auto Layout>
@@ -314,10 +348,10 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
-            using data_type = decltype(FWD(t) | simplified_data<UsageTable>);
-            constexpr auto layout = detail::simplify_layout<simplified_layout<T>>(tree_shape<data_type>);
-            static_assert(std::same_as<tree_shape_t<T>, tree_shape_t<relayout_view<data_type, layout>>>, "fuck");
-            return relayout_view<data_type, layout>{ FWD(t) | simplified_data<UsageTable> };
+            auto simplifier = FWD(t) | get_simplifier<UsageTable>;
+            using data_type = decltype(simplifier.data());
+            constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
+            return relayout_view<data_type, layout>{ simplifier.data() };
         }
     };
 }
