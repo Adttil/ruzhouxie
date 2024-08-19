@@ -5,10 +5,13 @@
 
 auto rnd = std::default_random_engine{ 0 };
 auto dis = std::uniform_real_distribution<float>{ -1.0f, 1.0f };
-constexpr size_t N = 500000000;
+constexpr size_t N = 100000000;
+
+int s;
 
 TEST(tensor, mat_mul)
 {
+    std::cout << "input seed: ",std::cin >> s; 
     static constexpr auto a = rzx::tuple{
         rzx::tuple{ 1, 2 },
         rzx::tuple{ 3, 4 }
@@ -23,36 +26,61 @@ TEST(tensor, mat_mul)
 }
 TEST(tensor, mat_mul_flat)
 {
-    rnd.seed(0);
+    rnd.seed(s);
     auto a = rzx::tuple{
-        rzx::tuple{ dis(rnd), dis(rnd) },
-        rzx::tuple{ dis(rnd), dis(rnd) }
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) }
     };
-
+    using rzx::child;
     for(size_t i = 0; i < N; ++i)
     {
-        using rzx::child;
         a = rzx::tuple
         {
             rzx::tuple{ 
-                child<0, 0>(a) * child<0, 0>(a) + child<0, 1>(a) * child<1, 0>(a),
-                child<0, 0>(a) * child<0, 1>(a) + child<0, 1>(a) * child<1, 1>(a) 
+                child<0, 0>(a) * child<0, 0>(a) + child<0, 1>(a) * child<1, 0>(a) + child<0, 2>(a) * child<2, 0>(a) + child<0, 3>(a) * child<3, 0>(a),
+                child<0, 0>(a) * child<0, 1>(a) + child<0, 1>(a) * child<1, 1>(a) + child<0, 2>(a) * child<2, 1>(a) + child<0, 3>(a) * child<3, 1>(a),
+                child<0, 0>(a) * child<0, 2>(a) + child<0, 1>(a) * child<1, 2>(a) + child<0, 2>(a) * child<2, 2>(a) + child<0, 3>(a) * child<3, 2>(a),
+                child<0, 0>(a) * child<0, 3>(a) + child<0, 1>(a) * child<1, 3>(a) + child<0, 2>(a) * child<2, 3>(a) + child<0, 3>(a) * child<3, 3>(a)
             },
             rzx::tuple{ 
-                child<1, 0>(a) * child<0, 0>(a) + child<1, 1>(a) * child<1, 0>(a), 
-                child<1, 0>(a) * child<0, 1>(a) + child<1, 1>(a) * child<1, 1>(a) 
+                child<1, 0>(a) * child<0, 0>(a) + child<1, 1>(a) * child<1, 0>(a) + child<1, 2>(a) * child<2, 0>(a) + child<1, 3>(a) * child<3, 0>(a),
+                child<1, 0>(a) * child<0, 1>(a) + child<1, 1>(a) * child<1, 1>(a) + child<1, 2>(a) * child<2, 1>(a) + child<1, 3>(a) * child<3, 1>(a),
+                child<1, 0>(a) * child<0, 2>(a) + child<1, 1>(a) * child<1, 2>(a) + child<1, 2>(a) * child<2, 2>(a) + child<1, 3>(a) * child<3, 2>(a),
+                child<1, 0>(a) * child<0, 3>(a) + child<1, 1>(a) * child<1, 3>(a) + child<1, 2>(a) * child<2, 3>(a) + child<1, 3>(a) * child<3, 3>(a)
+            },
+            rzx::tuple{ 
+                child<2, 0>(a) * child<0, 0>(a) + child<2, 1>(a) * child<1, 0>(a) + child<2, 2>(a) * child<2, 0>(a) + child<2, 3>(a) * child<3, 0>(a),
+                child<2, 0>(a) * child<0, 1>(a) + child<2, 1>(a) * child<1, 1>(a) + child<2, 2>(a) * child<2, 1>(a) + child<2, 3>(a) * child<3, 1>(a),
+                child<2, 0>(a) * child<0, 2>(a) + child<2, 1>(a) * child<1, 2>(a) + child<2, 2>(a) * child<2, 2>(a) + child<2, 3>(a) * child<3, 2>(a),
+                child<2, 0>(a) * child<0, 3>(a) + child<2, 1>(a) * child<1, 3>(a) + child<2, 2>(a) * child<2, 3>(a) + child<2, 3>(a) * child<3, 3>(a)
+            },
+            rzx::tuple{ 
+                child<3, 0>(a) * child<0, 0>(a) + child<3, 1>(a) * child<1, 0>(a) + child<3, 2>(a) * child<2, 0>(a) + child<3, 3>(a) * child<3, 0>(a),
+                child<3, 0>(a) * child<0, 1>(a) + child<3, 1>(a) * child<1, 1>(a) + child<3, 2>(a) * child<2, 1>(a) + child<3, 3>(a) * child<3, 1>(a),
+                child<3, 0>(a) * child<0, 2>(a) + child<3, 1>(a) * child<1, 2>(a) + child<3, 2>(a) * child<2, 2>(a) + child<3, 3>(a) * child<3, 2>(a),
+                child<3, 0>(a) * child<0, 3>(a) + child<3, 1>(a) * child<1, 3>(a) + child<3, 2>(a) * child<2, 3>(a) + child<3, 3>(a) * child<3, 3>(a)
             }
         };
     }
 
-    std::cout << rzx::child<0, 0>(a) << ", " << rzx::child<0, 1>(a) << ", " << rzx::child<1, 0>(a) << ", " << rzx::child<1, 1>(a) << '\n';
+    std::cout << std::format("{},{},{},{}\n{},{},{},{}\n{},{},{},{}\n,{},{},{},{}",
+                 child<0, 0>(a), child<0, 1>(a), child<0, 2>(a), child<0, 3>(a),
+                 child<1, 0>(a), child<1, 1>(a), child<1, 2>(a), child<1, 3>(a),
+                 child<2, 0>(a), child<2, 1>(a), child<2, 2>(a), child<2, 3>(a),
+                 child<3, 0>(a), child<3, 1>(a), child<3, 2>(a), child<3, 3>(a)
+                 );
+    //std::cout << rzx::child<0, 0>(a) << ", " << rzx::child<0, 1>(a) << ", " << rzx::child<1, 0>(a) << ", " << rzx::child<1, 1>(a) << '\n';
 }
 TEST(tensor, mat_mul_rzx)
 {
-    rnd.seed(0);
+    rnd.seed(s);
     auto a = rzx::tuple{
-        rzx::tuple{ dis(rnd), dis(rnd) },
-        rzx::tuple{ dis(rnd), dis(rnd) }
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) },
+        rzx::tuple{ dis(rnd), dis(rnd), dis(rnd), dis(rnd) }
     };
 
     for(size_t i = 0; i < N; ++i)
@@ -60,6 +88,13 @@ TEST(tensor, mat_mul_rzx)
         a = rzx::mat_mul(a, a) | rzx::make<decltype(a)>;
     }
 
-    std::cout << rzx::child<0, 0>(a) << ", " << rzx::child<0, 1>(a) << ", " << rzx::child<1, 0>(a) << ", " << rzx::child<1, 1>(a) << '\n';
+    using rzx::child;
+    std::cout << std::format("{},{},{},{}\n{},{},{},{}\n{},{},{},{}\n,{},{},{},{}",
+                 child<0, 0>(a), child<0, 1>(a), child<0, 2>(a), child<0, 3>(a),
+                 child<1, 0>(a), child<1, 1>(a), child<1, 2>(a), child<1, 3>(a),
+                 child<2, 0>(a), child<2, 1>(a), child<2, 2>(a), child<2, 3>(a),
+                 child<3, 0>(a), child<3, 1>(a), child<3, 2>(a), child<3, 3>(a)
+                 );
+    //std::cout << rzx::child<0, 0>(a) << ", " << rzx::child<0, 1>(a) << ", " << rzx::child<1, 0>(a) << ", " << rzx::child<1, 1>(a) << '\n';
 }
 
