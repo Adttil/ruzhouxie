@@ -119,7 +119,7 @@ namespace rzx
     struct detail::get_simplifier_t_ns::get_simplifier_t : adaptor_closure<get_simplifier_t<UsageTable>>
     {
         template<typename T, auto NormalizedUsage = detail::normalize_usage(UsageTable, tree_shape<T>)>
-        constexpr decltype(auto) operator()(T&& t)const
+        constexpr auto operator()(T&& t)const
         {
             //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
             //constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
@@ -185,6 +185,25 @@ namespace rzx
             }
         }
     };
+
+    namespace detail
+    {
+        template<auto UsageTable>
+        struct simplified_data : adaptor_closure<simplified_data<UsageTable>>
+        {
+            template<typename T>
+            constexpr decltype(auto) operator()(T&& t)const
+            {
+                return (FWD(t) | get_simplifier<UsageTable>).data();
+            }
+        };
+    }
+
+    template<auto UsageTable>
+    inline constexpr detail::simplified_data<UsageTable> simplified_data{};
+
+    template<class T, auto UsageTable>
+    inline constexpr auto simplified_layout = decltype(std::declval<T>() | get_simplifier<UsageTable>)::layout();
 }
 
 // namespace rzx 

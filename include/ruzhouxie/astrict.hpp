@@ -104,15 +104,15 @@ namespace rzx
         {
             struct simplifier_t
             {
-                decltype(FWD(self, base)) base_;
+                decltype(FWD(self, base)) base;
                 
-                static constexpr auto layout(){ return decltype(FWD(self, base) |  get_simplifier<UsageTable>)::layout(); }
+                static constexpr auto layout(){ return simplified_layout<decltype(FWD(self, base)), UsageTable>; }
 
                 constexpr decltype(auto) data()const
                 {
-                    return astrict_view<decltype((FWD(base_) | rzx::get_simplifier<UsageTable>).data()), Stricture>
+                    return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), Stricture>
                     {
-                        (FWD(base_) | rzx::get_simplifier<UsageTable>).data()
+                        FWD(base) | rzx::simplified_data<UsageTable>
                     };
                 }
             };

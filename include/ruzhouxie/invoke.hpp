@@ -97,8 +97,7 @@ namespace rzx
             }
             else
             {
-                return (FWD(self) | child<I> | rzx::get_simplifier<UsageTable>).data();
-                //return FWD(self) | child<I> | rzx::simplified_data<UsageTable>;
+                return FWD(self) | child<I> | rzx::simplified_data<UsageTable>;
             }
         }
 
@@ -154,32 +153,32 @@ namespace rzx
             return simplifier_t{ FWD(self) };
         }
 
-        template<auto UsageTable, typename Self>
-        constexpr decltype(auto) simplified_data(this Self&& self)
-        {
-            using base_t = decltype(FWD(self).template get_data<UsageTable>());
+        // template<auto UsageTable, typename Self>
+        // constexpr decltype(auto) simplified_data(this Self&& self)
+        // {
+        //     using base_t = decltype(FWD(self).template get_data<UsageTable>());
 
-            return simplify_result_type<base_t>
-            {
-                FWD(self).template get_data<UsageTable>()
-            };
+        //     return simplify_result_type<base_t>
+        //     {
+        //         FWD(self).template get_data<UsageTable>()
+        //     };
 
-            // return [&]<size_t...I>(std::index_sequence<I...>)
-            // {
-            //     return tuple<std::decay_t<decltype(FWD(self).template child_data<I, UsageTable>())>...>{
-            //         FWD(self).template child_data<I, UsageTable>()...
-            //     };
-            // }(std::make_index_sequence<child_count<Self>>{});
-            //return FWD(self).self();
-        }
+        //     // return [&]<size_t...I>(std::index_sequence<I...>)
+        //     // {
+        //     //     return tuple<std::decay_t<decltype(FWD(self).template child_data<I, UsageTable>())>...>{
+        //     //         FWD(self).template child_data<I, UsageTable>()...
+        //     //     };
+        //     // }(std::make_index_sequence<child_count<Self>>{});
+        //     //return FWD(self).self();
+        // }
 
-        template<auto UsageTable, derived_from<invoke_view> Self>
-        friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
-        {
-            return array{ 1uz };
+        // template<auto UsageTable, derived_from<invoke_view> Self>
+        // friend constexpr decltype(auto) get_simplified_layout(type_tag<Self>)
+        // {
+        //     return array{ 1uz };
 
-            //return indexes_of_whole;
-        }
+        //     //return indexes_of_whole;
+        // }
     };
 
     template<class ArgTable, class FnTable>

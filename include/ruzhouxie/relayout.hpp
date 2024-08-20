@@ -142,18 +142,18 @@ namespace rzx
 
                 static consteval auto base_layout()
                 {
-                    constexpr auto base_simplifer_layout = decltype(std::declval<V>() | rzx::get_simplifier<base_usage()>)::layout();
+                    constexpr auto base_simplifer_layout = simplified_layout<V, base_usage()>;
                     return detail::normalize_layout(base_simplifer_layout, tree_shape<V>);
                 }
 
                 static consteval auto layout()
                 {
-                    return detail::apply_layout<Layout>(base_layout()); 
+                    return detail::apply_layout<Layout>(base_layout());
                 }
 
                 constexpr decltype(auto) data()
                 {
-                    return (static_cast<decltype(base)&&>(base) | rzx::get_simplifier<base_usage()>).data(); 
+                    return FWD(base) | simplified_data<base_usage()>;
                 }
             };
 
