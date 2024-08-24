@@ -191,7 +191,7 @@ namespace rzx
             template<class ArgTable, class FnTable>
             constexpr decltype(auto) result(ArgTable&& arg_table, FnTable&& fn_table)const
             {
-                return invoke_view<ArgTable, std::decay_t<FnTable>>{ FWD(arg_table), FWD(fn_table) };
+                return invoke_view<unwrap_t<ArgTable>, unwrap_t<FnTable>>{ unwrap(FWD(arg_table)), unwrap(FWD(fn_table)) };
             }
         };
     }
@@ -206,7 +206,7 @@ namespace rzx
             constexpr decltype(auto) result(ArgTable&& arg_table, Fn&& fn)const
             {
                 constexpr size_t n = child_count<ArgTable>;
-                return invoke_view<ArgTable, decltype(FWD(fn) | repeat<n>)>{ FWD(arg_table), FWD(fn) | repeat<n> };
+                return invoke_view<unwrap_t<ArgTable>, decltype(FWD(fn) | repeat<n>)>{ unwrap(FWD(arg_table)), FWD(fn) | repeat<n> };
             }
         };
     }

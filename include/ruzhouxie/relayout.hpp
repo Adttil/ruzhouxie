@@ -193,8 +193,11 @@ namespace rzx
             constexpr auto simplified_layout = detail::simplify_layout<Layout>(tree_shape<T>);
             if constexpr(indexical<decltype(simplified_layout)>)
             {
-                using type = decltype(FWD(t) | child<simplified_layout>);
-                return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
+                return decltype(wrap(FWD(t) | child<simplified_layout>)){ rzx::unwrap(FWD(t) | child<simplified_layout>) };
+                
+                //using type = decltype(FWD(t) | child<simplified_layout>);
+                //return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
+                
                 // if constexpr(std::is_rvalue_reference_v<type>)
                 // {
                 //     return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
@@ -204,21 +207,25 @@ namespace rzx
                 //     return FWD(t) | child<simplified_layout>;
                 // }
             }
-            else if constexpr(wrapped<T>)
-            {
-                if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
-                {
-                    return relayout_view<std::decay_t<decltype(t.base)>, simplified_layout>{ FWD(t, base) };
-                }
-                else
-                {
-                    return relayout_view<decltype(FWD(t, base)), simplified_layout>{ FWD(t, base) };
-                }
-            }
             else
             {
-                return relayout_view<T, simplified_layout>{ FWD(t) };
+                return relayout_view<unwrap_t<T>, simplified_layout>{ rzx::unwrap(FWD(t)) };
             }
+            // else if constexpr(wrapped<T>)
+            // {
+            //     if constexpr(std::is_object_v<T> && std::is_object_v<decltype(t.base)>)
+            //     {
+            //         return relayout_view<std::decay_t<decltype(t.base)>, simplified_layout>{ FWD(t, base) };
+            //     }
+            //     else
+            //     {
+            //         return relayout_view<decltype(FWD(t, base)), simplified_layout>{ FWD(t, base) };
+            //     }
+            // }
+            // else
+            // {
+            //     return relayout_view<T, simplified_layout>{ FWD(t) };
+            // }
         }
     };
 }

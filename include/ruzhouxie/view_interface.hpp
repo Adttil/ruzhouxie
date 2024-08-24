@@ -84,24 +84,57 @@ namespace rzx
         { []<class V>(view<V>&)->view<V>*{}(t) } -> std::same_as<std::remove_cvref_t<T>*>;
     };
 
+    template<class T>
+    using unwrap_t = decltype([]{
+        if constexpr(not wrapped<T>)
+        {
+            return type_tag<T>{};
+        }
+        else if constexpr(std::is_lvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
+        {
+            return type_tag<decltype(T::base)>{};
+        }
+        else
+        {
+            return type_tag<decltype(FWD(std::declval<T>(), base))>{};
+        }
+    }())::type;
+
+    template<class T>
+    constexpr decltype(auto) unwrap(T&& t)
+    {
+        if constexpr(not wrapped<T>)
+        {
+            return FWD(t);
+        }
+        else
+        {
+            return FWD(t, base);
+        }
+    }
+
     namespace detail 
     {
+        struct wrap_t : adaptor_closure<wrap_t>
+        {
+            template<class T>
+            constexpr view<unwrap_t<T>> operator()(T&& t) const
+            {
+                return { rzx::unwrap(FWD(t)) };
+            }
+        };
+
         struct refer_t : adaptor_closure<refer_t>
         {
             template<class T>
-            constexpr decltype(auto) operator()(T&& t) const
+            constexpr view<unwrap_t<T>&&> operator()(T&& t) const
             {
-                if constexpr(std::is_lvalue_reference_v<T>)
-                {
-                    return t;
-                }
-                else
-                {
-                    return view<T&&>{ FWD(t) };
-                }
+                return { rzx::unwrap(FWD(t)) };
             }
         };
     }
+
+    inline constexpr detail::wrap_t wrap{};
 
     inline constexpr detail::refer_t refer{};
 }

@@ -142,6 +142,8 @@ namespace rzx
         template<typename V>
         constexpr decltype(auto) operator()(V&& view)const
         {
+            //return astrict_view<unwrap_t<V>, Stricture>{ unwrap(FWD(view)) };
+            
             if constexpr(terminal<V>)
             {
                 if constexpr(Stricture == stricture_t::none)
