@@ -35,7 +35,7 @@ namespace rzx
                 //auto&& simplified_arg = relayout_view<decltype(simplified_arg_data), simplified_arg_layout>{ FWD(simplified_arg_data) };
                 
                 auto&& simplified_arg = FWD(arg) | simplify<>;
-                auto astrict_arg = astrict_view<decltype(FWD(simplified_arg)), stricture_t::readonly>{ FWD(simplified_arg) }; 
+                auto&& astrict_arg = FWD(simplified_arg) | astrict<stricture_t::readonly>; 
                 return T{ FWD(astrict_arg) | make<std::tuple_element_t<I, T>, I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }

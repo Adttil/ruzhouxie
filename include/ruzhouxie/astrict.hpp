@@ -35,8 +35,8 @@ namespace rzx
         };
     }
 
-    template<typename V, auto Stricture>
-    struct astrict_view : detail::astrict_view_storage<V, Stricture>, view_interface<astrict_view<V, Stricture>>
+    template<typename V, auto StrictureTable>
+    struct astrict_view : detail::astrict_view_storage<V, StrictureTable>, view_interface<astrict_view<V, StrictureTable>>
     {
         // template<typename Self>
         // constexpr decltype(auto) self(this Self&& self)
@@ -58,41 +58,36 @@ namespace rzx
             {
                 return end();
             }
-            else if constexpr(terminal<child_type<V, I>>)
+            else if constexpr(std::same_as<decltype(StrictureTable), stricture_t>)
             {
-                if constexpr(std::is_object_v<decltype(FWD(self, base) | child<I>)>)
+                if constexpr(StrictureTable == stricture_t::readonly)
+                {
+                    return std::as_const(self.base) | child<I>;
+                }
+                else
                 {
                     return FWD(self, base) | child<I>;
                 }
-                else if constexpr(std::same_as<decltype(Stricture), stricture_t>)
-                {
-                    return FWD(self, base) | child<I> | astrict<Stricture>;
-                }
-                else if constexpr(I >= child_count<decltype(Stricture)>)
+            }
+            else if constexpr(terminal<child_type<V, I>>)
+            {
+                if constexpr(std::is_object_v<decltype(FWD(self, base) | child<I>)> || I >= child_count<decltype(StrictureTable)>)
                 {
                     return FWD(self, base) | child<I>;
                 }
                 else
                 {
-                    return FWD(self, base) | child<I> | astrict<Stricture | child<I>>;
+                    return FWD(self, base) | child<I> | astrict<StrictureTable | child<I>>;
                 } 
             }
-            else if constexpr(std::same_as<decltype(Stricture), stricture_t>)
-            {                
-                //can simplify.
-                return astrict_view<decltype(FWD(self, base) | child<I>), Stricture>
-                {
-                    FWD(self, base) | child<I>
-                };
-            }
-            else if constexpr(I >= child_count<decltype(Stricture)>)
+            else if constexpr(I >= child_count<decltype(StrictureTable)>)
             {
                 return FWD(self, base) | child<I>;
             }
             else
             {
                 //can simplify.
-                return astrict_view<decltype(FWD(self, base) | child<I>), Stricture | child<I>>
+                return astrict_view<decltype(FWD(self, base) | child<I>), StrictureTable | child<I>>
                 {
                     FWD(self, base) | child<I>
                 };
@@ -110,7 +105,7 @@ namespace rzx
 
                 constexpr decltype(auto) data()const
                 {
-                    return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), Stricture>
+                    return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
                     {
                         FWD(base) | rzx::simplified_data<UsageTable>
                     };

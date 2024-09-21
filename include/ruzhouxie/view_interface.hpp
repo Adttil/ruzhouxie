@@ -81,24 +81,31 @@ namespace rzx
     template<class T>
     concept wrapped = requires(std::remove_cvref_t<T>& t)
     {
-        { []<class V>(view<V>&)->view<V>*{}(t) } -> std::same_as<std::remove_cvref_t<T>*>;
+        { []<class V>(view<V>&)->view<V>*{ return nullptr; }(t) } -> std::same_as<std::remove_cvref_t<T>*>;
     };
 
+    namespace detail
+    {
+        template<class T>
+        auto unwrap_type_tag()
+        {
+            if constexpr(not wrapped<T>)
+            {
+                return type_tag<T>{};
+            }
+            else if constexpr(std::is_lvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
+            {
+                return type_tag<decltype(T::base)>{};
+            }
+            else
+            {
+                return type_tag<decltype(FWD(std::declval<T>(), base))>{};
+            }
+        }
+    }
+
     template<class T>
-    using unwrap_t = decltype([]{
-        if constexpr(not wrapped<T>)
-        {
-            return type_tag<T>{};
-        }
-        else if constexpr(std::is_lvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
-        {
-            return type_tag<decltype(T::base)>{};
-        }
-        else
-        {
-            return type_tag<decltype(FWD(std::declval<T>(), base))>{};
-        }
-    }())::type;
+    using unwrap_t = decltype(detail::unwrap_type_tag<T>())::type;
 
     template<class T>
     constexpr decltype(auto) unwrap(T&& t)
