@@ -444,7 +444,7 @@ namespace rzx::detail
     }
 
     template<auto Layout, class Shape>
-    constexpr auto simplify_layout(Shape shape)
+    constexpr auto simplify_layout(Shape shape = {})
     {
         if constexpr(indexical_array<decltype(Layout)> || std::integral<decltype(Layout)>)
         {

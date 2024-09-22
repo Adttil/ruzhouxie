@@ -22,5 +22,7 @@ struct X
 
 TEST(make, auto_move)
 {
-    //auto r = 3 | rzx::repeat<3> | rzx::make<rzx::tuple<int, int, int>>;
+    auto r0 = rzx::tuple<X, X, X>{ X{}, X{}, X{} };
+    std::puts("==========");
+    X{} | rzx::refer | rzx::repeat<5> | rzx::make<rzx::array<X, 5>>;
 }

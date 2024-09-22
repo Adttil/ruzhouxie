@@ -145,3 +145,15 @@ TEST(tensor, mat_mul_rzx_spec)
                  );
     //std::cout << rzx::child<0, 0>(a) << ", " << rzx::child<0, 1>(a) << ", " << rzx::child<1, 0>(a) << ", " << rzx::child<1, 1>(a) << '\n';
 }
+
+TEST(tensor, triple_mat_mul)
+{
+    static constexpr auto a = rzx::tuple{
+        rzx::tuple{ 1, 2 },
+        rzx::tuple{ 3, 4 }
+    };
+
+    constexpr auto b = rzx::mat_mul(a, rzx::mat_mul(a, a)) | rzx::make<rzx::array<rzx::array<int, 2>, 2>>;
+
+    std::cout << std::format("{},{}\n{},{}\n", rzx::child<0, 0>(b), rzx::child<0, 1>(b),  rzx::child<1, 0>(b), rzx::child<1, 1>(b));
+}

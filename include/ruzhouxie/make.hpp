@@ -44,13 +44,14 @@ namespace rzx::detail
     template<auto Layout, size_t I, class S, class StrictureTables>
     constexpr auto set_stricture_table_for_seq(StrictureTables& stricture_tables, S shape = {})
     {
-        if constexpr(I == child_count<S> - 1uz)
+        if constexpr(I == child_count<decltype(Layout)> - 1uz)
         {
             return;
         }
         else
         {
-            auto& stricture_table = stricture_tables | child<I> = stricture_tables | child<I + 1uz>;
+            stricture_tables | child<I> = stricture_tables | child<I + 1uz>;
+            auto& stricture_table =  stricture_tables | child<I>;
             set_stricture_table_by_layout<Layout | child<I + 1uz>>(stricture_table);
         }
     }
@@ -58,12 +59,16 @@ namespace rzx::detail
     template<auto Layout, class S>
     constexpr auto stricture_tables_for_seq(S shape = {})
     {
-        constexpr auto nlayout = detail::normalize_layout2<Layout>(shape);
-        auto stricture_tables = array<decltype(make_default_stricture_table(shape)), child_count<S>>{};
+        constexpr auto nlayout = detail::normalize_layout2<Layout>(S{});
+        constexpr auto count = child_count<decltype(nlayout)>;
+        constexpr auto init_stricture_tables = array<decltype(make_default_stricture_table(shape)), count>{};
+        auto stricture_tables = init_stricture_tables;
         [&]<size_t...I>(std::index_sequence<I...>)
         {
-            (..., set_stricture_table_for_seq<nlayout, child_count<S> - I - 1uz>(stricture_tables, shape));
-        }(std::make_index_sequence<child_count<S>>{});
+            constexpr auto nlayout = detail::normalize_layout2<Layout>(S{});
+            constexpr auto count = child_count<decltype(nlayout)>;
+            (..., set_stricture_table_for_seq<nlayout, count - I - 1uz>(stricture_tables, shape));
+        }(std::make_index_sequence<count>{});
         return stricture_tables;
     }
 }
@@ -88,15 +93,15 @@ namespace rzx
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
                 auto simplifier = FWD(arg) | get_simplifier<>;
-                auto&& data = simplifier.data();
-                constexpr auto data_shape = tree_shape<decltype(data)>;
-                constexpr auto layout = detail::simplify_layout<simplifier.layout()>(data_shape);
-                constexpr auto stricture_tables = detail::stricture_tables_for_seq<simplifier.layout()>(data_shape);
+                auto&& data = FWD(simplifier).data();
+                using data_shape_t = tree_shape_t<decltype(data)>;
+                constexpr auto layout = detail::simplify_layout<simplifier.layout(), data_shape_t>();
+                constexpr auto stricture_tables = detail::stricture_tables_for_seq<layout, data_shape_t>();
 
                 return T{ 
-                    FWD(data) 
-                    | astrict<stricture_tables 
-                    | child<I>> 
+                    FWD(data)
+                    | astrict<stricture_tables | child<I>> 
+                    | refer
                     | relayout<layout> 
                     | make<std::tuple_element_t<I, T>, I>... 
                 };
