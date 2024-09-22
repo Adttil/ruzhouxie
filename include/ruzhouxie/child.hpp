@@ -327,7 +327,7 @@ namespace rzx
     }();
 
     template<typename T>
-    using tree_shape_t = decltype(tree_shape<T>);
+    using tree_shape_t = std::remove_const_t<decltype(tree_shape<T>)>;
 
     template<typename T>
     inline constexpr size_t tensor_rank = []
@@ -500,6 +500,29 @@ namespace rzx::detail
                 return rzx::make_tuple(normalize_layout(array_cat(indexes, array{ I }) , shape | child<I>)...);
             }
         }(std::make_index_sequence<child_count<Shape>>{});
+    }
+
+    template<auto Layout, class Shape>
+    constexpr auto normalize_layout2(Shape shape = {})
+    {
+        if constexpr(indexical<decltype(Layout)>)
+        {
+            constexpr auto indexes = to_indexes(Layout);
+            using child_shape_t = child_type<Shape, indexes>;
+            if constexpr(terminal<child_shape_t>)
+            {
+                return indexes;
+            }
+            else return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                constexpr auto indexes = to_indexes(Layout);
+                return rzx::make_tuple(normalize_layout2<array_cat(indexes, array{ I })>(shape)...);
+            }(std::make_index_sequence<child_count<child_shape_t>>{});
+        }
+        else return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(normalize_layout2<Layout | child<I>>(shape)...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
 
     template<typename TLayout, size_t N>
