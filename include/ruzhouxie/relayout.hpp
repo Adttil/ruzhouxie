@@ -360,7 +360,14 @@ namespace rzx
             auto simplifier = FWD(t) | get_simplifier<UsageTable>;
             using data_type = decltype(simplifier.data());
             constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
-            return relayout_view<data_type, layout>{ simplifier.data() };
+            if constexpr(equal(layout, indexes_of_whole))
+            {
+                return simplifier.data();
+            }
+            else
+            {
+                return relayout_view<data_type, layout>{ simplifier.data() };
+            }
         }
     };
 }

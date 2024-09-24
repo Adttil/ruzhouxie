@@ -39,3 +39,10 @@ TEST(relayout, transpose)
     MAGIC_CHECK(2, b | rzx::child<1, 0>);
     MAGIC_CHECK(4, b | rzx::child<1, 1>);
 }
+
+TEST(relayout, simplify)
+{
+    auto a = rzx::array{ 1, 2, 3 };
+    auto&& b = a | rzx::simplify<>;
+    MAGIC_TCHECK(decltype(a)&&, decltype(b));
+}

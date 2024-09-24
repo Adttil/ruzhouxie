@@ -146,5 +146,19 @@ namespace rzx
     inline constexpr detail::refer_t refer{};
 }
 
+namespace rzx 
+{
+    namespace detail
+    {
+        template<class C, class T>
+        struct context_view_storage
+        {
+            C context;
+            T base;
+        };
+    }
+    
+}
+
 #include "macro_undef.hpp"
 #endif
