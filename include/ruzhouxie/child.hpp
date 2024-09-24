@@ -726,6 +726,12 @@ namespace rzx::detail
     };
 
     template<class T>
+    struct storage_type<T, T, T, T>
+    {
+        using type = T;
+    };
+
+    template<class T>
     struct storage_type<T&, T&, T&, T&>
     {
         using type = T&;
