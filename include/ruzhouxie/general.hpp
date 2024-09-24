@@ -166,7 +166,7 @@ namespace rzx
 	}
 
     constexpr bool equal(auto&& x, auto&& y) 
-	    noexcept(not requires{ FWD(x) == FWD(y); } || requires{ requires noexcept(FWD(x) == FWD(y)); })
+	    //noexcept(not requires{ FWD(x) == FWD(y); } || requires{ requires noexcept(FWD(x) == FWD(y)); })
 	{
 	    if constexpr(requires{ FWD(x) == FWD(y); })
 		{

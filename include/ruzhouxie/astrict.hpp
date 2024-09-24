@@ -8,6 +8,15 @@
 
 #include "macro_define.hpp"
 
+namespace rzx 
+{
+    enum class stricture_t
+    {
+        none,
+        readonly
+    };
+}
+
 namespace rzx::detail 
 {
     template<class T>
@@ -39,17 +48,38 @@ namespace rzx::detail
             return stricture_table | child<I>;
         }
     }
+
+    template<auto StrictureTable, class Shape>
+    constexpr auto simplify_stricture_table(Shape shape = {})
+    {
+        if constexpr(terminal<decltype(StrictureTable)>)
+        {
+            static_assert(std::same_as<decltype(StrictureTable), stricture_t>);
+            return StrictureTable;
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr auto children = rzx::make_tuple(simplify_stricture_table<StrictureTable | child<I>>(Shape{} | child<I>)...);
+            constexpr size_t pad_size = child_count<Shape> > sizeof...(I) ? child_count<Shape> - sizeof...(I) : 0uz;
+            constexpr auto padded_children = concat_to_tuple(children, array<stricture_t, pad_size>{});
+            if constexpr((... && rzx::equal(padded_children | child<I>, stricture_t::none)))
+            {
+                return stricture_t::none;
+            }
+            else if constexpr((... && rzx::equal(padded_children | child<I>, stricture_t::readonly)))
+            {
+                return stricture_t::readonly;
+            }
+            else
+            {
+                return padded_children;
+            }
+        }(std::make_index_sequence<child_count<decltype(StrictureTable)>>{});
+    }
 }
 
 namespace rzx 
 {
-
-    enum class stricture_t
-    {
-        none,
-        readonly
-    };
-
     namespace detail
     {
         template<auto StrictureTable>
@@ -166,16 +196,17 @@ namespace rzx
         template<typename V>
         constexpr decltype(auto) operator()(V&& view)const
         {
+            constexpr auto simplified_stricture_table = detail::simplify_stricture_table<StrictureTable>(tree_shape<V>);
             //return astrict_view<unwrap_t<V>, Stricture>{ unwrap(FWD(view)) };
-            if constexpr(branched<decltype(StrictureTable)>)
+            if constexpr(branched<decltype(simplified_stricture_table)>)
             {
-                return astrict_view<unwrap_t<V>, StrictureTable>{ unwrap(FWD(view)) };
+                return astrict_view<unwrap_t<V>, simplified_stricture_table>{ unwrap(FWD(view)) };
             }
-            else if constexpr(StrictureTable == stricture_t::none)
+            else if constexpr(simplified_stricture_table == stricture_t::none)
             {
                 return FWD(view);
             }
-            else if constexpr(StrictureTable == stricture_t::readonly)
+            else if constexpr(simplified_stricture_table == stricture_t::readonly)
             {
                 if constexpr(detail::is_totally_const<decltype(std::as_const(view))>())
                 {
