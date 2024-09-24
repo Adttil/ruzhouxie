@@ -1,5 +1,5 @@
-#ifndef RUZHOUXIE_TREE_BASIC_HPP
-#define RUZHOUXIE_TREE_BASIC_HPP
+#ifndef RUZHOUXIE_MAKE_HPP
+#define RUZHOUXIE_MAKE_HPP
 
 #include "child.hpp"
 #include "constant.hpp"
@@ -142,6 +142,38 @@ namespace rzx
             }
         }
     };
+}
+
+namespace rzx 
+{
+    namespace detail 
+    {
+        struct for_each_t : adaptor<for_each_t>
+        {
+            template<typename Arg, typename Fn>
+            constexpr void result(Arg&& arg, Fn&& fn)const
+            {
+                [&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    auto simplifier = FWD(arg) | get_simplifier<>;
+                    auto&& data = FWD(simplifier).data();
+                    using data_shape_t = tree_shape_t<decltype(data)>;
+                    constexpr auto layout = detail::simplify_layout<simplifier.layout(), data_shape_t>();
+                    constexpr auto stricture_tables = detail::stricture_tables_for_seq<layout, data_shape_t>();
+
+                    (..., fn( 
+                        FWD(data)
+                        | astrict<stricture_tables | child<I>> 
+                        | refer
+                        | relayout<layout> 
+                        | child<I> 
+                    ));
+                }(std::make_index_sequence<child_count<Arg>>{});
+            }
+        }; 
+    }
+
+    inline constexpr detail::for_each_t for_each{};
 }
 
 #include "macro_undef.hpp"

@@ -336,6 +336,8 @@ namespace rzx
 
     template<size_t Axis1 = 0uz, size_t Axis2 = Axis1 + 1uz>
     inline constexpr detail::transpose_t<Axis1, Axis2> transpose{}; 
+
+    inline constexpr auto zip = transpose<>; 
 }
 
 namespace rzx 

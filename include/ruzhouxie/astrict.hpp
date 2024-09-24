@@ -8,8 +8,42 @@
 
 #include "macro_define.hpp"
 
+namespace rzx::detail 
+{
+    template<class T>
+    consteval bool is_totally_const()
+    {
+        if constexpr(not std::is_const_v<std::remove_reference_t<T>>)
+        {
+            return false;
+        }
+        else if constexpr(terminal<T>)
+        {
+            return true;
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return (... && is_totally_const<child_type<T, I>>());
+        }(std::make_index_sequence<child_count<T>>{});
+    }
+
+    template<size_t I, class StrictureTable>
+    constexpr auto child_stricture_table(const StrictureTable& stricture_table)
+    {
+        if constexpr(terminal<StrictureTable>)
+        {
+            return stricture_table;
+        }
+        else
+        {
+            return stricture_table | child<I>;
+        }
+    }
+}
+
 namespace rzx 
 {
+
     enum class stricture_t
     {
         none,
@@ -54,44 +88,27 @@ namespace rzx
         template<size_t I, typename Self>
         constexpr decltype(auto) get(this Self&& self)
         {            
+            constexpr auto child_stricture_table = detail::child_stricture_table<I>(StrictureTable);
             if constexpr (I >= child_count<V>)
             {
                 return end();
             }
-            else if constexpr(std::same_as<decltype(StrictureTable), stricture_t>)
+            else if constexpr(std::is_reference_v<decltype(FWD(self).template base_child<I>())>)
             {
-                if constexpr(StrictureTable == stricture_t::readonly)
-                {
-                    return std::as_const(self.base) | child<I>;
-                }
-                else
-                {
-                    return FWD(self, base) | child<I>;
-                }
+                return FWD(self).template base_child<I>() | astrict<child_stricture_table>;
             }
-            else if constexpr(terminal<child_type<V, I>>)
+            else if constexpr(detail::is_totally_const<const decltype(FWD(self, base) | child<I>)&>()
+                            || equal(child_stricture_table, stricture_t::none))
             {
-                if constexpr(std::is_object_v<decltype(FWD(self, base) | child<I>)> || I >= child_count<decltype(StrictureTable)>)
-                {
-                    return FWD(self, base) | child<I>;
-                }
-                else
-                {
-                    return FWD(self, base) | child<I> | astrict<StrictureTable | child<I>>;
-                } 
-            }
-            else if constexpr(I >= child_count<decltype(StrictureTable)>)
-            {
-                return FWD(self, base) | child<I>;
+                return FWD(self).template base_child<I>();
             }
             else
             {
-                //can simplify.
-                return astrict_view<decltype(FWD(self, base) | child<I>), StrictureTable | child<I>>
+                return astrict_view<decltype(FWD(self).template base_child<I>()), child_stricture_table>
                 {
-                    FWD(self, base) | child<I>
+                    FWD(self).template base_child<I>()
                 };
-            } 
+            }
         }
 
         template<auto UsageTable, typename Self>
@@ -112,8 +129,21 @@ namespace rzx
                 }
             };
             return simplifier_t{ FWD(self, base) };
-        }
+        }        
 
+    private:
+        template<size_t I, class Self>
+        constexpr decltype(auto) base_child(this Self&& self)
+        {
+            if constexpr(requires{ requires StrictureTable == stricture_t::readonly; })
+            {
+                return std::as_const(self.base) | child<I>;
+            }
+            else
+            {
+                return FWD(self, base) | child<I>;
+            }
+        }
         // template<auto UsageTable, typename Self>
         // constexpr decltype(auto) simplified_data(this Self&& self)
         // {
@@ -130,29 +160,31 @@ namespace rzx
         // }
     };
 
-
-    template<auto Stricture>
-    struct detail::astrict_t : adaptor_closure<astrict_t<Stricture>>
+    template<auto StrictureTable>
+    struct detail::astrict_t : adaptor_closure<astrict_t<StrictureTable>>
     {
         template<typename V>
         constexpr decltype(auto) operator()(V&& view)const
         {
             //return astrict_view<unwrap_t<V>, Stricture>{ unwrap(FWD(view)) };
-            
-            if constexpr(terminal<V>)
+            if constexpr(branched<decltype(StrictureTable)>)
             {
-                if constexpr(Stricture == stricture_t::none)
-                {
-                    return FWD(view);
-                }
-                else if constexpr(Stricture == stricture_t::readonly)
+                return astrict_view<unwrap_t<V>, StrictureTable>{ unwrap(FWD(view)) };
+            }
+            else if constexpr(StrictureTable == stricture_t::none)
+            {
+                return FWD(view);
+            }
+            else if constexpr(StrictureTable == stricture_t::readonly)
+            {
+                if constexpr(detail::is_totally_const<decltype(std::as_const(view))>())
                 {
                     return std::as_const(view);
                 }
-            }
-            else
-            {
-                return astrict_view<V&&, Stricture>{ FWD(view) };
+                else
+                {
+                    return astrict_view<unwrap_t<V>, stricture_t::readonly>{ unwrap(FWD(view)) };
+                }
             }
         }
     };

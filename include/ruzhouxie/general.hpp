@@ -165,18 +165,18 @@ namespace rzx
 	    return std::get<I>(std::forward_as_tuple(FWD(args)...));
 	}
 
-    // RUZHOUXIE_INLINE constexpr bool equal(auto&& x, auto&& y) 
-	//     noexcept(not requires{ FWD(x) == FWD(y); } || requires{ requires noexcept(FWD(x) == FWD(y)); })
-	// {
-	//     if constexpr(requires{ FWD(x) == FWD(y); })
-	// 	{
-	// 	    return FWD(x) == FWD(y);
-	// 	}
-	//     else
-	// 	{
-	// 	    return false;
-	// 	}
-	// }
+    constexpr bool equal(auto&& x, auto&& y) 
+	    noexcept(not requires{ FWD(x) == FWD(y); } || requires{ requires noexcept(FWD(x) == FWD(y)); })
+	{
+	    if constexpr(requires{ FWD(x) == FWD(y); })
+		{
+		    return FWD(x) == FWD(y);
+		}
+	    else
+		{
+		    return false;
+		}
+	}
 }
 
 #include "macro_undef.hpp"

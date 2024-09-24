@@ -714,5 +714,55 @@ namespace rzx::detail
     }
 }
 
+namespace rzx::detail
+{
+    template<class L, class CL, class R, class RL>
+    struct storage_type;
+
+    template<class T>
+    struct storage_type<T&, const T&, T&&, const T&&>
+    {
+        using type = T;
+    };
+
+    template<class T>
+    struct storage_type<T&, T&, T&, T&>
+    {
+        using type = T&;
+    };
+
+    template<class T>
+    struct storage_type<const T&, const T&, const T&, const T&>
+    {
+        using type = const T&;
+    };
+
+    template<class T>
+    struct storage_type<T&, T&, T&&, T&&>
+    {
+        using type = T&&;
+    };
+
+    template<class T>
+    struct storage_type<const T&, const T&, const T&&, const T&&>
+    {
+        using type = const T&&;
+    };
+
+    template<class T, size_t I>
+    struct tuple_element_by_child
+    : storage_type<child_type<T&, I>, child_type<const T&, I>, child_type<T&&, I>, child_type<const T&&, I>>
+    {};
+
+    template<class T>
+    consteval bool is_valid_for_tuple_element_by_child()
+    {
+        return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return (... && requires{ typename tuple_element_by_child<T, I>::type; });
+        }(std::make_index_sequence<child_count<T>>{});
+    }
+}
+
 #include "macro_undef.hpp"
 #endif
