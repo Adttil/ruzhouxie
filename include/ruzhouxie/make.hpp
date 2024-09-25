@@ -115,11 +115,7 @@ namespace rzx
             template<typename Arg, typename Fn>
             constexpr void result(Arg&& arg, Fn&& fn)const
             {
-                [&]<size_t...I>(std::index_sequence<I...>)
-                {
-                    auto&& seq = FWD(arg) | sequence;
-                    (..., (FWD(seq) | child<I> | apply(fn)));
-                }(std::make_index_sequence<child_count<Arg>>{});
+                for_each(FWD(arg), apply(fn));
             }
         }; 
     }
