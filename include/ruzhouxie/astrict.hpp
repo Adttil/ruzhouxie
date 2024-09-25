@@ -286,12 +286,47 @@ namespace rzx::detail
     // Layout should be normalize by S. 
     // S should be branched.
     template<auto Layout, class S>
-    constexpr auto stricture_table_for_use_child_sequentially(S shape = {})
+    constexpr auto stricture_table_for_sequence(S shape = {})
     {
         return []<size_t...I>(std::index_sequence<I...>)
         {
             constexpr auto child_stricture_tables = stricture_tables_for_seq<Layout, S>();
             return rzx::make_tuple(apply_layout<Layout | child<I>>(child_stricture_tables | child<I>)...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<class StrictureTable>
+    constexpr auto combine_stricture_table(const StrictureTable& l, const StrictureTable& r)
+    {
+        if constexpr(terminal<StrictureTable>)
+        {
+            return l < r ? r : l;
+        }
+        else return[&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(detail::combine_stricture_table(l | child<I>, r | child<I>)...);
+        }(std::make_index_sequence<child_count<StrictureTable>>{});
+    }
+
+    // Layout should be normalize by S. 
+    // S should be branched.
+    template<auto Layout, class S>
+    constexpr auto stricture_table_for_children(S shape = {})
+    {
+        return []<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr auto tables = stricture_tables_for_seq<Layout, S>();
+
+            constexpr auto inv_layout = inverse.relayout(Layout);
+            constexpr auto inv_tables = stricture_tables_for_seq<inv_layout, S>();
+
+            constexpr size_t last_index = sizeof...(I) - 1uz;
+
+            return rzx::make_tuple(
+                apply_layout<Layout | child<I>>(
+                    combine_stricture_table(tables | child<I>, inv_tables | child<last_index - I>)
+                )...
+            );
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
 }
@@ -308,11 +343,12 @@ namespace rzx
                 using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
                 constexpr auto layout = simplified_layout<T>;
                 constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
-                constexpr auto stricture_table = detail::stricture_table_for_use_child_sequentially<nlayout, data_shape_t>();
+                constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
 
                 using simplified_t = decltype(FWD(t) | simplify<>);
+                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
 
-                return astrict_view<simplified_t, stricture_table>{ FWD(t) | simplify<> };
+                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
             }
 
             template<terminal T>
@@ -324,6 +360,62 @@ namespace rzx
     }
 
     inline constexpr detail::sequence_t sequence{};
+
+    namespace detail
+    {
+        struct inverse_sequence_t : adaptor_closure<inverse_sequence_t>
+        {
+            template<branched T>
+            constexpr decltype(auto) operator()(T&& t)const
+            {
+                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
+                constexpr auto layout = simplified_layout<T>;
+                constexpr auto nlayout = inverse.relayout(detail::normalize_layout2<layout, data_shape_t>());
+                constexpr auto stricture_table = inverse.relayout(detail::stricture_table_for_sequence<nlayout, data_shape_t>());
+
+                using simplified_t = decltype(FWD(t) | simplify<>);
+                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
+
+                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
+            }
+
+            template<terminal T>
+            constexpr tuple<> operator()(T&& t)const
+            {
+                return {};
+            }
+        };
+    }
+
+    inline constexpr detail::inverse_sequence_t inverse_sequence{};
+
+    namespace detail
+    {
+        struct children_t : adaptor_closure<children_t>
+        {
+            template<branched T>
+            constexpr decltype(auto) operator()(T&& t)const
+            {
+                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
+                constexpr auto layout = simplified_layout<T>;
+                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
+                constexpr auto stricture_table = detail::stricture_table_for_children<nlayout, data_shape_t>();
+
+                using simplified_t = decltype(FWD(t) | simplify<>);
+                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
+
+                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
+            }
+
+            template<terminal T>
+            constexpr tuple<> operator()(T&& t)const
+            {
+                return {};
+            }
+        };
+    }
+
+    inline constexpr detail::children_t children{};
 }
 
 #include "macro_undef.hpp"

@@ -23,7 +23,7 @@ namespace rzx
     inline constexpr auto make = detail::make_t_ns::make_t<T, to_indexes(indexes...)>{};
     
     template<typename T>
-    struct tuple_maker
+    struct sequence_maker
     {
         template<typename Arg>
         constexpr T operator()(Arg&& arg)const
@@ -36,12 +36,40 @@ namespace rzx
         }
     };
 
+    template<typename T>
+    struct inverse_sequence_maker
+    {
+        template<typename Arg>
+        constexpr T operator()(Arg&& arg)const
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                auto&& seq = FWD(arg) | inverse_sequence;
+                return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
+            }(std::make_index_sequence<std::tuple_size_v<T>>{});
+        }
+    };
+
+    template<typename T>
+    struct children_maker
+    {
+        template<typename Arg>
+        constexpr T operator()(Arg&& arg)const
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                auto&& seq = FWD(arg) | children;
+                return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
+            }(std::make_index_sequence<std::tuple_size_v<T>>{});
+        }
+    };
+
     namespace detail::make_t_ns
     {        
         template<typename T>
         constexpr auto get_maker(type_tag<T>)noexcept
         {
-            return tuple_maker<T>{};
+            return children_maker<T>{};
         }
     }
 
@@ -121,6 +149,27 @@ namespace rzx
     }
 
     inline constexpr detail::for_each_children_t for_each_children{};
+}
+
+namespace rzx 
+{
+    template<class...T>
+    constexpr auto get_maker(type_tag<tuple<T...>>)
+    {
+        return sequence_maker<tuple<T...>>{};
+    }
+
+    template<class...T>
+    constexpr auto get_maker(type_tag<std::tuple<T...>>)
+    {
+        return inverse_sequence_maker<std::tuple<T...>>{};
+    }
+
+    template<class T, size_t N>
+    constexpr auto get_maker(type_tag<array<T, N>>)
+    {
+        return sequence_maker<array<T, N>>{};
+    }
 }
 
 #include "macro_undef.hpp"

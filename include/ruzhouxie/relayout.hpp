@@ -339,6 +339,24 @@ namespace rzx
 
     namespace detail
     {
+        struct inverse_t : relayouter_interface<inverse_t>
+        {
+            template<typename TLayout>
+            static constexpr auto relayout(const TLayout& layout)
+            {
+                return[&]<size_t...I>(std::index_sequence<I...>)
+                {
+                    constexpr auto last_index = child_count<TLayout> - 1uz;
+                    return rzx::make_tuple(layout | child<last_index - I> ...);
+                }(std::make_index_sequence<child_count<TLayout>>{});
+            }
+        };
+    }
+
+    inline constexpr detail::inverse_t inverse{}; 
+
+    namespace detail
+    {
         struct zip_t : adaptor<zip_t>
         {
             template<typename...T>
