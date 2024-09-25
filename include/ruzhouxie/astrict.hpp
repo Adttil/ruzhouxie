@@ -4,6 +4,7 @@
 #include "constant.hpp"
 #include "general.hpp"
 #include "simplify.hpp"
+#include "relayout.hpp"
 #include "view_interface.hpp"
 
 #include "macro_define.hpp"
@@ -219,6 +220,110 @@ namespace rzx
             }
         }
     };
+}
+
+namespace rzx::detail 
+{
+    template<class S>
+    constexpr auto make_default_stricture_table(S shape = {})
+    {
+        if constexpr(terminal<S>)
+        {
+            return stricture_t{};
+        }
+        else return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            auto stricture_table = rzx::make_tuple(detail::make_default_stricture_table(shape | child<I>)...);
+            static_assert(std::same_as<tree_shape_t<decltype(stricture_table)>, S>);
+            return stricture_table;
+        }(std::make_index_sequence<child_count<S>>{});
+    };
+
+    template<auto Layout, class StrictureTable>
+    constexpr auto set_stricture_table_by_layout(StrictureTable& stricture_table)
+    {
+        if constexpr(indexical<decltype(Layout)>)
+        {
+            stricture_table | child<Layout> = stricture_t::readonly;
+        }
+        else return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            (..., set_stricture_table_by_layout<Layout | child<I>>(stricture_table));
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<auto Layout, size_t I, class S, class StrictureTables>
+    constexpr auto set_stricture_table_for_seq(StrictureTables& stricture_tables, S shape = {})
+    {
+        if constexpr(I == child_count<decltype(Layout)> - 1uz)
+        {
+            return;
+        }
+        else
+        {
+            stricture_tables | child<I> = stricture_tables | child<I + 1uz>;
+            auto& stricture_table =  stricture_tables | child<I>;
+            set_stricture_table_by_layout<Layout | child<I + 1uz>>(stricture_table);
+        }
+    }
+
+    // Layout should be normalize by S. 
+    // S should be branched.
+    template<auto Layout, class S>
+    constexpr auto stricture_tables_for_seq(S shape = {})
+    {
+        constexpr auto count = child_count<decltype(Layout)>;
+        constexpr auto init_stricture_tables = array<decltype(make_default_stricture_table(shape)), count>{};
+        auto stricture_tables = init_stricture_tables;
+        [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr auto count = child_count<decltype(Layout)>;
+            (..., set_stricture_table_for_seq<Layout, count - I - 1uz>(stricture_tables, shape));
+        }(std::make_index_sequence<count>{});
+        return stricture_tables;
+    }
+
+    // Layout should be normalize by S. 
+    // S should be branched.
+    template<auto Layout, class S>
+    constexpr auto stricture_table_for_use_child_sequentially(S shape = {})
+    {
+        return []<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr auto child_stricture_tables = stricture_tables_for_seq<Layout, S>();
+            return rzx::make_tuple(apply_layout<Layout | child<I>>(child_stricture_tables | child<I>)...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+}
+
+namespace rzx 
+{
+    namespace detail
+    {
+        struct sequence_t : adaptor_closure<sequence_t>
+        {
+            template<branched T>
+            constexpr decltype(auto) operator()(T&& t)const
+            {
+                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
+                constexpr auto layout = simplified_layout<T>;
+                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
+                constexpr auto stricture_table = detail::stricture_table_for_use_child_sequentially<nlayout, data_shape_t>();
+
+                using simplified_t = decltype(FWD(t) | simplify<>);
+
+                return astrict_view<simplified_t, stricture_table>{ FWD(t) | simplify<> };
+            }
+
+            template<terminal T>
+            constexpr tuple<> operator()(T&& t)const
+            {
+                return {};
+            }
+        };
+    }
+
+    inline constexpr detail::sequence_t sequence{};
 }
 
 #include "macro_undef.hpp"

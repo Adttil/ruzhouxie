@@ -4,6 +4,7 @@
 #include "general.hpp"
 #include "relayout.hpp"
 #include "simplify.hpp"
+#include "make.hpp"
 #include "view_interface.hpp"
 
 #include "macro_define.hpp"
@@ -224,7 +225,7 @@ namespace rzx
                 
                 constexpr decltype(auto) operator()(this auto&& self, auto&& args)
                 {
-                    return rzx::apply(FWD(self, fn), FWD(args));
+                    return rzx::apply(FWD(args), FWD(self, fn));
                 }
             };
 

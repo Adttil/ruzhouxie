@@ -377,14 +377,14 @@ namespace rzx
         }(std::make_index_sequence<child_count<S>>{});
     }
 
-    template<class F, class T>
-    constexpr decltype(auto) apply(F&& fn, T&& t)
-    {
-        return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
-        {
-            return FWD(fn)(FWD(t) | child<I>...);
-        }(std::make_index_sequence<child_count<T>>{});
-    }
+    // template<class F, class T>
+    // constexpr decltype(auto) apply(F&& fn, T&& t)
+    // {
+    //     return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
+    //     {
+    //         return FWD(fn)(FWD(t) | child<I>...);
+    //     }(std::make_index_sequence<child_count<T>>{});
+    // }
 }
 
 namespace rzx::detail

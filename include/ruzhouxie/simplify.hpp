@@ -199,10 +199,10 @@ namespace rzx
         };
     }
 
-    template<auto UsageTable>
+    template<auto UsageTable = usage_t::repeatedly>
     inline constexpr detail::simplified_data<UsageTable> simplified_data{};
 
-    template<class T, auto UsageTable>
+    template<class T, auto UsageTable = usage_t::repeatedly>
     inline constexpr auto simplified_layout = decltype(std::declval<T>() | get_simplifier<UsageTable>)::layout();
 }
 
