@@ -64,12 +64,37 @@ namespace rzx
         }
     };
 
+    template<typename T>
+    struct aggregate_maker
+    {
+        template<typename Arg>
+        constexpr T operator()(Arg&& arg)const
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                auto&& seq = FWD(arg) | sequence;
+                return T{ { FWD(seq) | make<detail::tuple_element_t_by_child<I, T>, I> }... };
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+    };
+
     namespace detail::make_t_ns
     {        
         template<typename T>
         constexpr auto get_maker(type_tag<T>)noexcept
         {
-            return children_maker<T>{};
+            if constexpr(aggregate_tree<T>)
+            {
+                return aggregate_maker<T>{};
+            }
+            else if constexpr(requires{ std::tuple_size<T>::value; })
+            {
+                return children_maker<T>{};
+            }
+            else
+            {
+
+            }
         }
     }
 

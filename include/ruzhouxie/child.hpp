@@ -77,7 +77,11 @@ namespace rzx
             {
                 return 0uz;
             }
-            else if constexpr (requires{ type{ {universal_type{}}, universal_type{args}... }; })
+            else if constexpr(sizeof...(args) == 0 && requires{ type{ {universal_type{}} }; })
+            {
+                return self.template operator()<true>(universal_type{});
+            }
+            else if constexpr (sizeof...(args) != 0 && requires{ type{ universal_type{}, universal_type{args}... }; })
             {
                 return self.template operator()<true>(universal_type{ args }..., universal_type{});
             }
@@ -122,7 +126,6 @@ namespace rzx
         template<size_t I>
         struct get_t
         {
-        private:
             template<typename T>
             consteval static choice_t<strategy_t> choose()
             {
@@ -168,7 +171,6 @@ namespace rzx
                 }
             }
 
-        public:
             template<typename T>
             constexpr decltype(auto) operator()(T&& t)const
             noexcept(choose<T>().nothrow)
@@ -363,6 +365,21 @@ namespace rzx
             return result;
         }(std::make_index_sequence<child_count<T>>{});
     }();
+
+    namespace detail
+    {
+        template<class T>
+        constexpr bool is_aggregate_tree()
+        {
+            return []<size_t...I>(std::index_sequence<I...>) -> bool
+            {
+                return (... && (detail::get_ns::get_t<I>::template choose<T>().strategy == detail::get_ns::strategy_t::aggregate));
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+    }
+
+    template<class T>
+    concept aggregate_tree = std::is_aggregate_v<std::remove_cvref_t<T>> && detail::is_aggregate_tree<T>();
 
     template<typename S, typename T>
     constexpr auto make_tree_of_same_value(const T& value, S shape = {})
@@ -755,17 +772,20 @@ namespace rzx::detail
         using type = const T&&;
     };
 
-    template<class T, size_t I>
+    template<size_t I, class T>
     struct tuple_element_by_child
     : storage_type<child_type<T&, I>, child_type<const T&, I>, child_type<T&&, I>, child_type<const T&&, I>>
     {};
+
+    template<size_t I, class T>
+    using tuple_element_t_by_child = tuple_element_by_child<I, T>::type;
 
     template<class T>
     consteval bool is_valid_for_tuple_element_by_child()
     {
         return []<size_t...I>(std::index_sequence<I...>)
         {
-            return (... && requires{ typename tuple_element_by_child<T, I>::type; });
+            return (... && requires{ typename tuple_element_by_child<I, T>::type; });
         }(std::make_index_sequence<child_count<T>>{});
     }
 }

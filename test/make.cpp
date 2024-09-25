@@ -16,7 +16,9 @@ TEST(make, tree_basic)
 
 struct X
 {
+private:
     size_t* copy_count;
+public:
     X(size_t& copy_count) : copy_count(&copy_count) {}
     X(const X& x) : copy_count(x.copy_count){ ++*copy_count; };
     X(X&& x) = default;
@@ -27,6 +29,21 @@ TEST(make, auto_move)
     size_t copy_count = 0;
     X{ copy_count } | rzx::refer | rzx::repeat<5> | rzx::make<rzx::array<X, 5>>;
     MAGIC_CHECK(copy_count, 4);
+}
+
+TEST(make, aggregate)
+{
+    struct Foo
+    {
+        X x;
+        X y;
+        X z;
+    };
+    MAGIC_CHECK(rzx::aggregate_tree<Foo>, true);
+    
+    size_t copy_count = 0;
+    X{ copy_count } | rzx::refer | rzx::repeat<3> | rzx::make<Foo>;
+    MAGIC_CHECK(copy_count, 2);
 }
 
 struct Foo
