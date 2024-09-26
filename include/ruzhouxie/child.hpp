@@ -126,8 +126,9 @@ namespace rzx
         template<size_t I>
         struct get_t
         {
+            //consteval coused error in msvc.
             template<typename T>
-            consteval static choice_t<strategy_t> choose()
+            static constexpr choice_t<strategy_t> choose()
             {
                 using type = std::remove_cvref_t<T>;
                 if constexpr(std::is_bounded_array_v<type>)
