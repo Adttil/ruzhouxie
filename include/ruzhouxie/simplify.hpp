@@ -115,6 +115,33 @@ namespace rzx
     template<class T, auto UsageTable = usage_t::repeatedly>
     concept simple = detail::get_simplifier_t_ns::is_simple<T, detail::normalize_usage(UsageTable, tree_shape<T>)>();
 
+    template<class T, auto UsageTable>
+    struct trivial_simplifier
+    {
+        T&& t;
+
+        static constexpr auto layout()
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(
+                    detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | get_simplifier<UsageTable | child<I>>)::layout(), array{ I })...
+                );
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+
+        constexpr auto data()const
+        {
+            return [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::tuple<decltype((FWD(t) | child<I> | rzx::get_simplifier<UsageTable | child<I>>).data())...>
+                {
+                    (FWD(t) | child<I> | rzx::get_simplifier<UsageTable | child<I>>).data()...
+                };
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+    };
+
     template<auto UsageTable>
     struct detail::get_simplifier_t_ns::get_simplifier_t : adaptor_closure<get_simplifier_t<UsageTable>>
     {
@@ -155,33 +182,7 @@ namespace rzx
             }
             else
             { 
-                struct simplifier_t
-                {
-                    T&& t;
-
-                    static constexpr auto layout()
-                    {
-                        return [&]<size_t...I>(std::index_sequence<I...>)
-                        {
-                            return rzx::make_tuple(
-                                detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | get_simplifier<NormalizedUsage | child<I>>)::layout(), array{ I })...
-                            );
-                        }(std::make_index_sequence<child_count<T>>{});
-                    }
-
-                    constexpr auto data()const
-                    {
-                        return [&]<size_t...I>(std::index_sequence<I...>)
-                        {
-                            return rzx::tuple<decltype((FWD(t) | child<I> | rzx::get_simplifier<NormalizedUsage | child<I>>).data())...>
-                            {
-                                (FWD(t) | child<I> | rzx::get_simplifier<NormalizedUsage | child<I>>).data()...
-                            };
-                        }(std::make_index_sequence<child_count<T>>{});
-                    }
-                };
-                
-                return simplifier_t{ FWD(t) };
+                return trivial_simplifier<T, NormalizedUsage>{ FWD(t) };
             }
         }
     };
