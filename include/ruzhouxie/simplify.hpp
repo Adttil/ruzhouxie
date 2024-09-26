@@ -110,7 +110,7 @@ namespace rzx
     }
 
     template<auto UsageTable = usage_t::repeatedly>
-    inline constexpr detail::get_simplifier_t_ns::get_simplifier_t<UsageTable> get_simplifier{};
+    inline constexpr detail::get_simplifier_t_ns::get_simplifier_t<UsageTable> simplifier{};
 
     template<class T, auto UsageTable = usage_t::repeatedly>
     concept simple = detail::get_simplifier_t_ns::is_simple<T, detail::normalize_usage(UsageTable, tree_shape<T>)>();
@@ -125,7 +125,7 @@ namespace rzx
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
                 return rzx::make_tuple(
-                    detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | get_simplifier<UsageTable | child<I>>)::layout(), array{ I })...
+                    detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | simplifier<UsageTable | child<I>>)::layout(), array{ I })...
                 );
             }(std::make_index_sequence<child_count<T>>{});
         }
@@ -134,9 +134,9 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return rzx::tuple<decltype((FWD(t) | child<I> | rzx::get_simplifier<UsageTable | child<I>>).data())...>
+                return rzx::tuple<decltype((FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>).data())...>
                 {
-                    (FWD(t) | child<I> | rzx::get_simplifier<UsageTable | child<I>>).data()...
+                    (FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>).data()...
                 };
             }(std::make_index_sequence<child_count<T>>{});
         }
@@ -195,7 +195,7 @@ namespace rzx
             template<typename T>
             constexpr decltype(auto) operator()(T&& t)const
             {
-                return (FWD(t) | get_simplifier<UsageTable>).data();
+                return (FWD(t) | simplifier<UsageTable>).data();
             }
         };
     }
@@ -204,7 +204,7 @@ namespace rzx
     inline constexpr detail::simplified_data<UsageTable> simplified_data{};
 
     template<class T, auto UsageTable = usage_t::repeatedly>
-    inline constexpr auto simplified_layout = decltype(std::declval<T>() | get_simplifier<UsageTable>)::layout();
+    inline constexpr auto simplified_layout = decltype(std::declval<T>() | simplifier<UsageTable>)::layout();
 }
 
 // namespace rzx 

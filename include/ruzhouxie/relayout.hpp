@@ -387,7 +387,7 @@ namespace rzx
         template<typename T>
         constexpr auto operator()(T&& t)const
         {
-            auto simplifier = FWD(t) | get_simplifier<UsageTable>;
+            auto simplifier = FWD(t) | rzx::simplifier<UsageTable>;
             using data_type = decltype(simplifier.data());
             constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
             if constexpr(equal(layout, indexes_of_whole))

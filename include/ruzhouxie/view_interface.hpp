@@ -59,7 +59,7 @@ namespace rzx
         template<auto UsageTable, typename Self>
         constexpr auto simplifier(this Self&& self)
         {
-            return FWD(self, base) | get_simplifier<UsageTable>;
+            return FWD(self, base) | rzx::simplifier<UsageTable>;
         }
 
         // template<auto UsageTable, typename Self>
