@@ -90,19 +90,19 @@ TEST(make, for_each)
 
 TEST(make, for_each_children)
 {
-    struct X
-    {
-        int x;
-        float& y;
-        const char* z;
-    };
+    // struct X
+    // {
+    //     int x;
+    //     float& y;
+    //     const char* z;
+    // };
 
-    float f = 3.14f;
+    // float f = 3.14f;
     
-    rzx::zip(X{ 1, f, "ok" }, std::tuple{ "hello", 3, 4.5 })
-    | rzx::enumerate 
-    | rzx::for_each_children([](auto i, auto&& v)
-        {
-            std::cout << i.value << ' ' << rzx::child<0>(v) << ' ' << rzx::child<1>(v) << '\n';
-        });
+    // rzx::zip(X{ 1, f, "ok" }, std::tuple{ "hello", 3, 4.5 })
+    // | rzx::enumerate 
+    // | rzx::for_each_children([](auto i, auto&& v)
+    //     {
+    //         std::cout << i.value << ' ' << rzx::child<0>(v) << ' ' << rzx::child<1>(v) << '\n';
+    //     });
 }

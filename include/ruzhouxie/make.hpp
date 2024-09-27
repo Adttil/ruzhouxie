@@ -6,7 +6,7 @@
 #include "general.hpp"
 #include "relayout.hpp"
 #include "astrict.hpp"
-#include "simplify.hpp"
+//#include "simplify.hpp"
 #include "view_interface.hpp"
 
 #include "macro_define.hpp"
@@ -45,7 +45,8 @@ namespace rzx
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
                 auto&& seq = FWD(arg) | inverse_sequence;
-                return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
+                constexpr size_t last_index = sizeof...(I) - 1;
+                return T{ FWD(seq) | make<std::tuple_element_t<I, T>, last_index - I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
     };
@@ -58,7 +59,7 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& seq = FWD(arg) | children;
+                auto&& seq = FWD(arg) | seperate;
                 return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
@@ -153,7 +154,8 @@ namespace rzx
             {
                 return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
                 {
-                    return FWD(fn)(args | child<I>...);
+                    auto&& seperate_args = FWD(args) | seperate;
+                    return FWD(fn)(FWD(seperate_args) | child<I>...);
                 }(std::make_index_sequence<child_count<Args>>{});
             }
         };

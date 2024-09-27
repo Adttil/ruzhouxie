@@ -3,7 +3,7 @@
 
 #include "constant.hpp"
 #include "general.hpp"
-#include "simplify.hpp"
+//#include "simplify.hpp"
 #include "relayout.hpp"
 #include "view_interface.hpp"
 
@@ -142,25 +142,25 @@ namespace rzx
             }
         }
 
-        template<auto UsageTable, typename Self>
-        constexpr auto simplifier(this Self&& self)
-        {
-            struct simplifier_t
-            {
-                decltype(FWD(self, base)) base;
+        // template<auto UsageTable, typename Self>
+        // constexpr auto simplifier(this Self&& self)
+        // {
+        //     struct simplifier_t
+        //     {
+        //         decltype(FWD(self, base)) base;
                 
-                static constexpr auto layout(){ return simplified_layout<decltype(FWD(self, base)), UsageTable>; }
+        //         static constexpr auto layout(){ return simplified_layout<decltype(FWD(self, base)), UsageTable>; }
 
-                constexpr decltype(auto) data()const
-                {
-                    return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
-                    {
-                        FWD(base) | rzx::simplified_data<UsageTable>
-                    };
-                }
-            };
-            return simplifier_t{ FWD(self, base) };
-        }        
+        //         constexpr decltype(auto) data()const
+        //         {
+        //             return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
+        //             {
+        //                 FWD(base) | rzx::simplified_data<UsageTable>
+        //             };
+        //         }
+        //     };
+        //     return simplifier_t{ FWD(self, base) };
+        // }        
 
     private:
         template<size_t I, class Self>
@@ -268,7 +268,6 @@ namespace rzx::detail
     }
 
     // Layout should be normalize by S. 
-    // S should be branched.
     template<auto Layout, class S>
     constexpr auto stricture_tables_for_seq(S shape = {})
     {
@@ -284,7 +283,6 @@ namespace rzx::detail
     }
 
     // Layout should be normalize by S. 
-    // S should be branched.
     template<auto Layout, class S>
     constexpr auto stricture_table_for_sequence(S shape = {})
     {
@@ -309,7 +307,6 @@ namespace rzx::detail
     }
 
     // Layout should be normalize by S. 
-    // S should be branched.
     template<auto Layout, class S>
     constexpr auto stricture_table_for_children(S shape = {})
     {
@@ -329,37 +326,246 @@ namespace rzx::detail
             );
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
+
+    template<auto Layout, bool Sequential, class S>
+    constexpr auto stricture_table_for_simple_relayout_seperate(S shape = {})
+    {
+        if constexpr(Sequential)
+        {
+            return stricture_table_for_sequence<Layout, S>();
+        }
+        else
+        {
+            return stricture_table_for_children<Layout, S>();
+        }
+    }
+
+    template<auto Layout, bool Sequential, class T>
+    constexpr decltype(auto) simple_relayout_seperate(T&& t) noexcept
+    {
+        using data_shape_t = tree_shape_t<T>;
+        constexpr auto layout = Layout;
+        constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
+        constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
+
+        using simplified_t = decltype(FWD(t) | refer | relayout<Layout>);
+        constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
+
+        return astrict_view<simplified_t, sstricture_table>{ FWD(t) | refer | relayout<Layout> };
+    }
+
+    
+}
+
+namespace rzx::detail 
+{
+    template<auto Layout, class S>
+    constexpr auto normalize_layout_for_relayout_seperate(S shape = {})
+    {
+        if constexpr(indexical<decltype(Layout)>)
+        {
+            if constexpr(not equal(Layout, indexes_of_whole))
+            {
+                return Layout;
+            }
+            else return []<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(array{ I }...);
+            }(std::make_index_sequence<child_count<S>>{});
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(normalize_layout_for_relayout_seperate<Layout | child<I>, S>()...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<auto Layout, size_t IStep>
+    constexpr auto init_after_layout_for_relayout_seperate_step()
+    {
+        if constexpr(indexical<decltype(Layout)>)
+        {
+            return array{ Layout[0], IStep, 0uz - 1uz };
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(init_after_layout_for_relayout_seperate_step<Layout | child<I>, IStep>()...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<auto Layout>
+    constexpr auto init_after_layout_for_relayout_seperate()
+    {
+        return []<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::make_tuple(init_after_layout_for_relayout_seperate_step<Layout | child<I>, I>()...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<size_t N, size_t I, class T>
+    constexpr auto make_tuple_with_single_at(const T& t)
+    {
+        return [&]<size_t...J, size_t...K>(std::index_sequence<J...>, std::index_sequence<K...>)
+        {
+            auto foo = tuple<tuple<>>{{}};
+            return rzx::make_tuple(foo | child<J - J>..., t, foo | child<K - K>...);
+        }(std::make_index_sequence<I>{}, std::make_index_sequence<N - I - 1uz>{});
+    }
+
+    template<class Tpl, class...Rest>
+    constexpr auto concat_children(const Tpl& tpl, const Rest&...rest)
+    {
+        return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            auto get = [&]<size_t J>()
+            {
+                return concat_to_tuple(tpl | child<J>, rest | child<J>...);
+            };
+
+            return rzx::make_tuple(get.template operator()<I>()...);
+        }(std::make_index_sequence<child_count<Tpl>>{});
+    }
+
+    template<auto Layout, size_t NChild, typename AfterLayout>
+    constexpr auto step_get_children_layout_impl(const array<size_t, NChild>& group_count, array<size_t, NChild>& pos_count, AfterLayout& after_layout)
+    {
+        if constexpr(indexical<decltype(Layout)>)
+        {
+            after_layout[1] = group_count[Layout[0]];
+            after_layout[2] = pos_count[Layout[0]]++;
+            return make_tuple_with_single_at<NChild, Layout[0]>(tuple{ rzx::array_drop<1uz>(Layout) });
+        }
+        else return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            auto children = rzx::tuple<decltype(detail::step_get_children_layout_impl<Layout | child<I>>(group_count, pos_count, after_layout | child<I>))...>
+            {
+                detail::step_get_children_layout_impl<Layout | child<I>>(group_count, pos_count, after_layout | child<I>)...
+            };
+            return detail::concat_children(children | child<I>...);
+        }(std::make_index_sequence<child_count<AfterLayout>>{});
+    }
+
+    template<auto Layout, size_t NChild, typename AfterLayout>
+    constexpr auto step_get_children_layout(array<size_t, NChild>& group_count, AfterLayout& after_layout)
+    {
+        std::array<size_t, NChild> pos_count{};
+        auto result = step_get_children_layout_impl<Layout>(group_count, pos_count, after_layout);
+        for(size_t i = 0; i < NChild; ++i)
+        {
+            if(pos_count[i]) ++group_count[i];
+        }
+
+        return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            auto optional = []<class...T>(const tuple<T...>& tpl)
+            {
+                if constexpr(sizeof...(T) == 0uz)
+                {
+                    return tpl;
+                }
+                else
+                {
+                    return tuple<tuple<T...>>{ tpl };
+                }
+            };
+            return rzx::make_tuple(optional(result | child<I>)...);
+        }(std::make_index_sequence<NChild>{});
+    }
+
+    template<auto Layout, size_t NChild, class AfterLayout>
+    constexpr auto get_children_layout(AfterLayout& after_layout)
+    {
+        return [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            std::array<size_t, NChild> group_count{};
+            auto steps = rzx::tuple<decltype(step_get_children_layout<Layout | child<I>>(group_count, after_layout | child<I>))...>
+            {
+                step_get_children_layout<Layout | child<I>>(group_count, after_layout | child<I>)...
+            };
+            return concat_children(steps | child<I>...);
+        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+    }
+
+    template<auto Layout, class S>
+    constexpr auto normal_relayout_seperate_info(S shape = {})
+    {
+        constexpr auto nlayout = normalize_layout_for_relayout_seperate<Layout, S>();
+        auto after_layout = init_after_layout_for_relayout_seperate<nlayout>();
+
+        auto children_layouts = get_children_layout<Layout, child_count<S>>(after_layout);
+
+        struct info
+        {
+            decltype(children_layouts) children_layouts;
+            decltype(after_layout) after_layout;
+        };
+
+        return info{ children_layouts, after_layout };
+    }
+
+    template<auto Layout, bool Sequential, class T>
+    constexpr decltype(auto) normal_relayout_seperate(T&& t)
+    {
+        constexpr auto info = normal_relayout_seperate_info<Layout>(tree_shape<T>);
+        constexpr auto children_layouts = info.children_layouts;
+        constexpr auto after_layout = info.after_layout;
+
+        auto get_children_seperate = [&]<size_t...I>(std::index_sequence<I...>)
+        {
+            return rzx::tuple<decltype(FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential>)...>
+            {
+                FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential> ...
+            };
+        };
+
+        return relayout_view{ get_children_seperate(std::make_index_sequence<child_count<T>>{}), constant_t<after_layout>{} };
+    }
 }
 
 namespace rzx 
 {
-    namespace detail
+    template<auto Layout, bool Sequential>
+    struct detail::relayout_seperate_t_ns::relayout_seperate_t : adaptor_closure<relayout_seperate_t<Layout, Sequential>>
     {
-        struct sequence_t : adaptor_closure<sequence_t>
+        template<typename T, auto SimplifiedLayout = detail::seperate_simplify_layout<Layout>(tree_shape<T>)>
+        constexpr auto operator()(T&& t)const
         {
-            template<branched T>
-            constexpr decltype(auto) operator()(T&& t)const
+            //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
+            //constexpr auto simplified_layout = detail::seperate_simplify_layout<Layout>(tree_shape<T>);
+            if constexpr(terminal<decltype(SimplifiedLayout)>)
             {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
-                constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
-
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
+                static_assert(not terminal<decltype(SimplifiedLayout)>);
             }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
+            if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(custom_t{}); })
             {
-                return {};
+                FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(custom_t{});
             }
-        };
-    }
+            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential>(FWD(t), custom_t{}); })
+            {
+                return relayout_seperate<SimplifiedLayout, Sequential>(FWD(t), custom_t{});
+            }
+            else if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(); })
+            {
+                return FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>();
+            }
+            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential>(FWD(t)); })
+            {
+                return relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+            }
+            else if constexpr(simple<T>)
+            {
+                return detail::simple_relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+            }
+            else
+            {
+                return detail::normal_relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+            }
+        }
+    };
+}
 
-    inline constexpr detail::sequence_t sequence{};
+namespace rzx 
+{
+    inline constexpr auto sequence = relayout_seperate<indexes_of_whole, true>;
 
     namespace detail
     {
@@ -368,54 +574,19 @@ namespace rzx
             template<branched T>
             constexpr decltype(auto) operator()(T&& t)const
             {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = inverse.relayout(detail::normalize_layout2<layout, data_shape_t>());
-                constexpr auto stricture_table = inverse.relayout(detail::stricture_table_for_sequence<nlayout, data_shape_t>());
+                constexpr auto inverse_layout = []<size_t...I>(std::index_sequence<I...>)
+                {
+                    return rzx::make_tuple(array{ child_count<T> - 1uz - I }...);
+                }(std::make_index_sequence<child_count<T>>{});
 
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
-            }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
-            {
-                return {};
+                return FWD(t) | relayout_seperate<inverse_layout, true>;
             }
         };
     }
 
     inline constexpr detail::inverse_sequence_t inverse_sequence{};
 
-    namespace detail
-    {
-        struct children_t : adaptor_closure<children_t>
-        {
-            template<branched T>
-            constexpr decltype(auto) operator()(T&& t)const
-            {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
-                constexpr auto stricture_table = detail::stricture_table_for_children<nlayout, data_shape_t>();
-
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
-            }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
-            {
-                return {};
-            }
-        };
-    }
-
-    inline constexpr detail::children_t children{};
+    inline constexpr auto seperate = relayout_seperate<indexes_of_whole, false>;
 }
 
 #include "macro_undef.hpp"

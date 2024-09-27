@@ -4,7 +4,8 @@
 #include "child.hpp"
 #include "constant.hpp"
 #include "general.hpp"
-#include "simplify.hpp"
+//#include "simplify.hpp"
+#include "relayout_seperate.hpp"
 #include "view_interface.hpp"
 
 #include "macro_define.hpp"
@@ -127,58 +128,45 @@ namespace rzx
             }
         }
 
-        template<auto UsageTable, typename Self>
-        constexpr auto simplifier(this Self&& self)
-        {
-            struct simplifier_t
-            {
-                decltype(FWD(self, base)) base;
-
-                static consteval auto base_usage()
-                {
-                    constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-                    return detail::inverse_apply_layout_on_usage<layout>(UsageTable, tree_shape<V>);
-                }
-
-                static consteval auto base_layout()
-                {
-                    constexpr auto base_simplifer_layout = simplified_layout<V, base_usage()>;
-                    return detail::normalize_layout(base_simplifer_layout, tree_shape<V>);
-                }
-
-                static consteval auto layout()
-                {
-                    return detail::apply_layout<Layout>(base_layout());
-                }
-
-                constexpr decltype(auto) data()
-                {
-                    return FWD(base) | simplified_data<base_usage()>;
-                }
-            };
-
-            return simplifier_t{ FWD(self, base) };
-        }
+        // template<auto UsageTable, typename Self>
+        // constexpr auto simplifier(this Self&& self)
+        // {
+        //     struct simplifier_t
+        //     {
+        //         decltype(FWD(self, base)) base;
+        //
+        //         static consteval auto base_usage()
+        //         {
+        //             constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+        //             return detail::inverse_apply_layout_on_usage<layout>(UsageTable, tree_shape<V>);
+        //         }
+        //
+        //         static consteval auto base_layout()
+        //         {
+        //             constexpr auto base_simplifer_layout = simplified_layout<V, base_usage()>;
+        //             return detail::normalize_layout(base_simplifer_layout, tree_shape<V>);
+        //         }
+        //
+        //         static consteval auto layout()
+        //         {
+        //             return detail::apply_layout<Layout>(base_layout());
+        //         }
+        //
+        //         constexpr decltype(auto) data()
+        //         {
+        //             return FWD(base) | simplified_data<base_usage()>;
+        //         }
+        //     };
+        //
+        //     return simplifier_t{ FWD(self, base) };
+        // }
         
-
-        // template<auto Usage, typename Self>
-        // constexpr decltype(auto) simplified_data(this Self&& self)
-        // {
-        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-        //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
-
-        //     return FWD(self, base) | rzx::simplified_data<base_usage>;
-        // }
-
-        // template<auto Usage, derived_from<relayout_view> Self>
-        // friend constexpr auto get_simplified_layout(type_tag<Self>)
-        // {
-        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-        //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
-        //     constexpr auto base_layout = detail::normalize_layout(rzx::simplified_layout<V, base_usage>, tree_shape<V>);
-
-        //     return detail::apply_layout<Layout>(base_layout);
-        // }
+        template<auto SeqLayout, bool Sequential, class Self>
+        constexpr decltype(auto) relayout_seperate(this Self&& self)
+        {
+            constexpr auto layout = detail::apply_layout<SeqLayout>(detail::normalize_layout(Layout, tree_shape<Self>));
+            return FWD(self, base) | rzx::relayout_seperate<layout, Sequential>;
+        }
     };
 
     template<typename V, auto Layout>
@@ -370,37 +358,37 @@ namespace rzx
     inline constexpr detail::zip_t zip{};
 }
 
-namespace rzx 
-{  
-    namespace detail
-    {
-        template<auto UsageTable>
-        struct simplify_t;
-    }
+// namespace rzx 
+// {  
+//     namespace detail
+//     {
+//         template<auto UsageTable>
+//         struct simplify_t;
+//     }
 
-    template<auto UsageTable = usage_t::repeatedly>
-    inline constexpr detail::simplify_t<UsageTable> simplify{};
+//     template<auto UsageTable = usage_t::repeatedly>
+//     inline constexpr detail::simplify_t<UsageTable> simplify{};
 
-    template<auto UsageTable>
-    struct detail::simplify_t : adaptor_closure<simplify_t<UsageTable>>
-    {
-        template<typename T>
-        constexpr auto operator()(T&& t)const
-        {
-            auto simplifier = FWD(t) | rzx::simplifier<UsageTable>;
-            using data_type = decltype(simplifier.data());
-            constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
-            if constexpr(equal(layout, indexes_of_whole))
-            {
-                return simplifier.data();
-            }
-            else
-            {
-                return relayout_view<data_type, layout>{ simplifier.data() };
-            }
-        }
-    };
-}
+//     template<auto UsageTable>
+//     struct detail::simplify_t : adaptor_closure<simplify_t<UsageTable>>
+//     {
+//         template<typename T>
+//         constexpr auto operator()(T&& t)const
+//         {
+//             auto simplifier = FWD(t) | rzx::simplifier<UsageTable>;
+//             using data_type = decltype(simplifier.data());
+//             constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
+//             if constexpr(equal(layout, indexes_of_whole))
+//             {
+//                 return simplifier.data();
+//             }
+//             else
+//             {
+//                 return relayout_view<data_type, layout>{ simplifier.data() };
+//             }
+//         }
+//     };
+// }
 
 #include "macro_undef.hpp"
 #endif

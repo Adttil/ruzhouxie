@@ -2,7 +2,9 @@
 #define RUZHOUXIE_VIEW_INTERFACE_HPP
 
 #include "general.hpp"
-#include "simplify.hpp"
+#include "child.hpp"
+#include "relayout_seperate.hpp"
+//#include "simplify.hpp"
 
 #include "macro_define.hpp"
 
@@ -56,23 +58,17 @@ namespace rzx
             } 
         }
 
-        template<auto UsageTable, typename Self>
-        constexpr auto simplifier(this Self&& self)
-        {
-            return FWD(self, base) | rzx::simplifier<UsageTable>;
-        }
-
         // template<auto UsageTable, typename Self>
-        // constexpr decltype(auto) simplified_data(this Self&& self)
+        // constexpr auto simplifier(this Self&& self)
         // {
-        //     return FWD(self, base) | rzx::simplified_data<UsageTable>;
+        //     return FWD(self, base) | rzx::simplifier<UsageTable>;
         // }
 
-        // template<auto UsageTable, derived_from<view> Self>
-        // friend constexpr auto get_simplified_layout(type_tag<Self>)
-        // {
-        //     return simplified_layout<T, UsageTable>;
-        // }
+        template<auto Layout, bool Sequential, class Self>
+        constexpr decltype(auto) relayout_seperate(this Self&& self)
+        {
+            return FWD(self, base) | rzx::relayout_seperate<Layout, Sequential>;
+        }
     };
 
     template<class T>
