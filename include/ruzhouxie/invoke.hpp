@@ -59,7 +59,7 @@ namespace rzx
             {
                 return invoke_view<decltype(FWD(self, base) | child<I>), std::decay_t<child_type<InvokeShape, I>>>
                 {
-                    FWD(self, fn_table) | child<I>
+                    FWD(self, base) | child<I>
                 };
             }
         }
@@ -67,15 +67,15 @@ namespace rzx
         template<auto Layout, bool Sequential, bool Borrow, class Self>
         constexpr decltype(auto) relayout_seperate(this Self&& self)
         {
-            return FWD(self, base) 
-                //| seperate
-                | invoke(InvokeShape{})
-                | relayout<Layout>;
-                ;
-            // return FWD(self, base)
-            //     | refer 
-            //     | rzx::relayout_seperate<Layout, Sequential>
-            //     | invoke(tree_shape<decltype(detail::apply_layout<Layout>(InvokeShape{}))>);
+            // return FWD(self, base) 
+            //     | seperate
+            //     | invoke(InvokeShape{})
+            //     | relayout<Layout>;
+            //     ;
+            return FWD(self, base)
+                // | refer 
+                 | rzx::relayout_seperate<Layout, Sequential>
+                 | invoke(tree_shape<decltype(detail::apply_layout<Layout>(InvokeShape{}))>);
         }
     };
 

@@ -11,11 +11,17 @@ TEST(invoke, transform)
 
     constexpr auto b = a | rzx::transform([](auto x){ return x * x; }) | rzx::make<rzx::tuple<int, float>>;
 
-    auto base = rzx::zip([](auto x){ return x * x; } | rzx::repeat<2>, a);
-    auto t = base | rzx::seperate;// | rzx::invoke(rzx::tuple{ rzx::leaf_tag_t{}, rzx::leaf_tag_t{} }) | rzx::seperate;
+    
 
     MAGIC_CHECK(b | rzx::child<0>, 4);
     MAGIC_CHECK(b | rzx::child<1>, 0.25f);
+    
+    auto f = [](auto x){ return x * x; };
+    auto base = rzx::zip(f | rzx::repeat<2>, a);
+    auto t = rzx::tuple{ f | rzx::repeat<2>, rzx::tuple{ 1, 2 } }
+            | rzx::transpose<> 
+            | rzx::invoke(rzx::tuple{ rzx::leaf_tag_t{}, rzx::leaf_tag_t{} }) 
+            | rzx::seperate;
 }
 
 TEST(invoke, zip_transform)
