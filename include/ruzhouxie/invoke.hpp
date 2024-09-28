@@ -64,10 +64,18 @@ namespace rzx
             }
         }
 
-        template<auto Layout, bool Sequential, class Self>
+        template<auto Layout, bool Sequential, bool Borrow, class Self>
         constexpr decltype(auto) relayout_seperate(this Self&& self)
         {
-            return FWD(self, base) | refer | rzx::relayout_seperate<Layout, Sequential> | invoke(InvokeShape{});
+            return FWD(self, base) 
+                //| seperate
+                | invoke(InvokeShape{})
+                | relayout<Layout>;
+                ;
+            // return FWD(self, base)
+            //     | refer 
+            //     | rzx::relayout_seperate<Layout, Sequential>
+            //     | invoke(tree_shape<decltype(detail::apply_layout<Layout>(InvokeShape{}))>);
         }
     };
 

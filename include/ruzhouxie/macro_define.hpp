@@ -8,11 +8,11 @@
 
 #ifdef _MSC_VER
 
-#define RUZHOUXIE_no_unique_address [[msvc::no_unique_address]]
+#define RUZHOUXIE_no_unique_address //[[msvc::no_unique_address]]
 
 #else
 
-#define RUZHOUXIE_no_unique_address [[no_unique_address]]
+#define RUZHOUXIE_no_unique_address //[[no_unique_address]]
 
 #endif
 

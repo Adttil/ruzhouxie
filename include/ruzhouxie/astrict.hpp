@@ -126,7 +126,10 @@ namespace rzx
             }
             else if constexpr(std::is_reference_v<decltype(FWD(self).template base_child<I>())>)
             {
-                return FWD(self).template base_child<I>() | astrict<child_stricture_table>;
+                return unwrap_t<decltype(FWD(self).template base_child<I>() | refer | astrict<child_stricture_table>)>
+                {
+                    FWD(self).template base_child<I>()
+                };
             }
             else if constexpr(detail::is_totally_const<const decltype(FWD(self, base) | child<I>)&>()
                             || equal(child_stricture_table, stricture_t::none))
@@ -135,7 +138,7 @@ namespace rzx
             }
             else
             {
-                return astrict_view<decltype(FWD(self).template base_child<I>()), child_stricture_table>
+                return unwrap_t<decltype(FWD(self).template base_child<I>() | refer | astrict<child_stricture_table>)>
                 {
                     FWD(self).template base_child<I>()
                 };
@@ -205,13 +208,20 @@ namespace rzx
             }
             else if constexpr(simplified_stricture_table == stricture_t::none)
             {
-                return FWD(view);
+                return rzx::view<unwrap_t<V>>{ unwrap(FWD(view)) };
             }
             else if constexpr(simplified_stricture_table == stricture_t::readonly)
             {
-                if constexpr(detail::is_totally_const<decltype(std::as_const(view))>())
+                if constexpr(detail::is_totally_const<decltype(std::as_const(unwrap(view)))>() && not (std::is_object_v<V> && not terminal<V>))
                 {
-                    return std::as_const(view);
+                    if constexpr(std::is_object_v<unwrap_t<V>>)
+                    {
+                        return rzx::view<const unwrap_t<V>>{ unwrap(view) };
+                    }
+                    else
+                    {
+                        return wrap(std::as_const(unwrap(view)));
+                    }
                 }
                 else
                 {
@@ -340,18 +350,37 @@ namespace rzx::detail
         }
     }
 
-    template<auto Layout, bool Sequential, class T>
+    template<auto Layout, bool Sequential, bool Borrow, class T>
     constexpr decltype(auto) simple_relayout_seperate(T&& t) noexcept
     {
+        static_assert(not terminal<decltype(Layout)>);
         using data_shape_t = tree_shape_t<T>;
         constexpr auto layout = Layout;
         constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
         constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
 
-        using simplified_t = decltype(FWD(t) | refer | relayout<Layout>);
-        constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
+        if constexpr(Borrow)
+        {
+            using simplified_t = decltype(FWD(t) | refer | relayout<nlayout>);
+            constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
 
-        return astrict_view<simplified_t, sstricture_table>{ FWD(t) | refer | relayout<Layout> };
+            return decltype(FWD(t) | refer | relayout<nlayout> | astrict<sstricture_table>)
+            {
+                FWD(t) | refer | relayout<nlayout>
+                //unwrap_t<decltype(FWD(t) | relayout<nlayout>)>{ FWD(t) }
+            };
+        }
+        else
+        {
+            using simplified_t = decltype(FWD(t) | relayout<nlayout>);
+            constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
+
+            return decltype(FWD(t) | relayout<nlayout> | astrict<sstricture_table>)
+            {
+                FWD(t) | relayout<nlayout>
+                //unwrap_t<decltype(FWD(t) | relayout<nlayout>)>{ FWD(t) }
+            };
+        }
     }
 
     
@@ -502,22 +531,43 @@ namespace rzx::detail
         return info{ children_layouts, after_layout };
     }
 
-    template<auto Layout, bool Sequential, class T>
+    template<auto Layout, bool Sequential, bool Borrow, class T>
     constexpr decltype(auto) normal_relayout_seperate(T&& t)
     {
         constexpr auto info = normal_relayout_seperate_info<Layout>(tree_shape<T>);
         constexpr auto children_layouts = info.children_layouts;
         constexpr auto after_layout = info.after_layout;
 
-        auto get_children_seperate = [&]<size_t...I>(std::index_sequence<I...>)
+        if constexpr(Borrow)
         {
-            return rzx::tuple<decltype(FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential>)...>
+            auto get_children_seperate = [&]<size_t...I>(std::index_sequence<I...>)
             {
-                FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential> ...
+                return rzx::tuple<decltype(FWD(t) | child<I> | refer | relayout_seperate<children_layouts | child<I>, Sequential>)...>
+                {
+                    FWD(t) | child<I> | refer | relayout_seperate<children_layouts | child<I>, Sequential> ...
+                };
             };
-        };
+    
+            return decltype(get_children_seperate(std::make_index_sequence<child_count<T>>{}) | relayout<after_layout>)
+            {
+                 get_children_seperate(std::make_index_sequence<child_count<T>>{}) 
+            };
+        }
+        else
+        {
+            auto get_children_seperate = [&]<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::tuple<decltype(FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential>)...>
+                {
+                    FWD(t) | child<I> | relayout_seperate<children_layouts | child<I>, Sequential> ...
+                };
+            };
 
-        return relayout_view{ get_children_seperate(std::make_index_sequence<child_count<T>>{}), constant_t<after_layout>{} };
+            return decltype(get_children_seperate(std::make_index_sequence<child_count<T>>{}) | relayout<after_layout>)
+            {
+                 get_children_seperate(std::make_index_sequence<child_count<T>>{}) 
+            };
+        }
     }
 }
 
@@ -526,8 +576,15 @@ namespace rzx
     template<auto Layout, bool Sequential>
     struct detail::relayout_seperate_t_ns::relayout_seperate_t : adaptor_closure<relayout_seperate_t<Layout, Sequential>>
     {
-        template<typename T, auto SimplifiedLayout = detail::seperate_simplify_layout<Layout>(tree_shape<T>)>
-        constexpr auto operator()(T&& t)const
+        template<class T>
+        constexpr decltype(auto) operator()(T&& t) const
+        {
+            constexpr auto simplified_layout = detail::seperate_simplify_layout<Layout>(tree_shape<T>);
+            return impl<simplified_layout, std::is_reference_v<unwrap_t<T>>>(unwrap(FWD(t)));
+        }
+
+        template<auto SimplifiedLayout, bool Borrow, class T>
+        static constexpr decltype(auto) impl(T&& t)
         {
             //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
             //constexpr auto simplified_layout = detail::seperate_simplify_layout<Layout>(tree_shape<T>);
@@ -535,29 +592,29 @@ namespace rzx
             {
                 static_assert(not terminal<decltype(SimplifiedLayout)>);
             }
-            if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(custom_t{}); })
+            if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential, Borrow>(custom_t{}); })
             {
-                FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(custom_t{});
+                FWD(t).template relayout_seperate<SimplifiedLayout, Sequential, Borrow>(custom_t{});
             }
-            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential>(FWD(t), custom_t{}); })
+            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t), custom_t{}); })
             {
-                return relayout_seperate<SimplifiedLayout, Sequential>(FWD(t), custom_t{});
+                return relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t), custom_t{});
             }
-            else if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>(); })
+            else if constexpr(requires{ FWD(t).template relayout_seperate<SimplifiedLayout, Sequential, Borrow>(); })
             {
-                return FWD(t).template relayout_seperate<SimplifiedLayout, Sequential>();
+                return FWD(t).template relayout_seperate<SimplifiedLayout, Sequential, Borrow>();
             }
-            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential>(FWD(t)); })
+            else if constexpr(requires{ relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t)); })
             {
-                return relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+                return relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t));
             }
             else if constexpr(simple<T>)
             {
-                return detail::simple_relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+                return detail::simple_relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t));
             }
             else
             {
-                return detail::normal_relayout_seperate<SimplifiedLayout, Sequential>(FWD(t));
+                return detail::normal_relayout_seperate<SimplifiedLayout, Sequential, Borrow>(FWD(t));
             }
         }
     };

@@ -16,7 +16,7 @@ namespace rzx::detail
         {
             return []<size_t...I>(std::index_sequence<I...>)
             {
-                return rzx::make_tuple(rzx::array_cat(Layout, array{ I })...);
+                return rzx::make_tuple(rzx::array_cat(to_indexes(Layout), array{ I })...);
             }(std::make_index_sequence<child_count<child_type<S, Layout>>>{});
         }
         else return []<size_t...I>(std::index_sequence<I...>)
@@ -33,7 +33,7 @@ namespace rzx
         template<auto Layout, bool Sequential>
         struct relayout_seperate_t;
         
-        template<auto Layout, bool Sequential>
+        template<auto Layout, bool Sequential, bool Borrow>
         void relayout_seperate();
 
         template<class T, auto SimplifiedLayout = detail::seperate_simplify_layout<indexes_of_whole>(tree_shape<T>)>
@@ -41,13 +41,13 @@ namespace rzx
         {
             constexpr bool no_custom = not bool
             {
-                requires{ std::declval<T>().template relayout_seperate<SimplifiedLayout, false>(custom_t{}); }
+                requires{ std::declval<T>().template relayout_seperate<SimplifiedLayout, false, false>(custom_t{}); }
                 ||
-                requires{ relayout_seperate<SimplifiedLayout, false>(std::declval<T>(), custom_t{}); }
+                requires{ relayout_seperate<SimplifiedLayout, false, false>(std::declval<T>(), custom_t{}); }
                 ||
-                requires{ std::declval<T>().template relayout_seperate<SimplifiedLayout, false>(); }
+                requires{ std::declval<T>().template relayout_seperate<SimplifiedLayout, false, false>(); }
                 ||
-                requires{ relayout_seperate<SimplifiedLayout, false>(std::declval<T>()); }
+                requires{ relayout_seperate<SimplifiedLayout, false, false>(std::declval<T>()); }
             };
             return [&]<size_t...I>(std::index_sequence<I...>)
             {

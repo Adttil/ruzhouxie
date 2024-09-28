@@ -30,7 +30,7 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& seq = FWD(arg) | sequence;
+                auto&& seq = FWD(arg) | refer | sequence;
                 return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
@@ -44,7 +44,7 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& seq = FWD(arg) | inverse_sequence;
+                auto&& seq = FWD(arg) | refer | inverse_sequence;
                 constexpr size_t last_index = sizeof...(I) - 1;
                 return T{ FWD(seq) | make<std::tuple_element_t<I, T>, last_index - I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
@@ -59,7 +59,7 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& seq = FWD(arg) | seperate;
+                auto&& seq = FWD(arg) | refer | seperate;
                 return T{ FWD(seq) | make<std::tuple_element_t<I, T>, I>... };
             }(std::make_index_sequence<std::tuple_size_v<T>>{});
         }
@@ -73,7 +73,7 @@ namespace rzx
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                auto&& seq = FWD(arg) | sequence;
+                auto&& seq = FWD(arg) | refer | sequence;
                 return T{ { FWD(seq) | make<detail::tuple_element_t_by_child<I, T>, I> }... };
             }(std::make_index_sequence<child_count<T>>{});
         }
@@ -107,11 +107,11 @@ namespace rzx
         {
             if constexpr(terminal<child_type<Arg, indexes>>)
             {
-                return FWD(arg) | child<indexes>;
+                return T{ FWD(arg) | child<indexes> };
             }
             else if constexpr(std::same_as<std::remove_cvref_t<child_type<Arg, indexes>>, T> && requires{ T{ FWD(arg) | child<indexes> }; })
             {
-                return FWD(arg) | child<indexes>;
+                return T{ FWD(arg) | child<indexes> };
             }
             else if constexpr(requires{ get_maker(type_tag<T>{}); })
             {
@@ -136,7 +136,7 @@ namespace rzx
             {
                 [&]<size_t...I>(std::index_sequence<I...>)
                 {
-                    auto&& seq = FWD(arg) | sequence;
+                    auto&& seq = FWD(arg) | refer | sequence;
                     (..., fn(FWD(seq) | child<I>));
                 }(std::make_index_sequence<child_count<Arg>>{});
             }
@@ -154,7 +154,7 @@ namespace rzx
             {
                 return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
                 {
-                    auto&& seperate_args = FWD(args) | seperate;
+                    auto&& seperate_args = FWD(args) | refer | seperate;
                     return FWD(fn)(FWD(seperate_args) | child<I>...);
                 }(std::make_index_sequence<child_count<Args>>{});
             }

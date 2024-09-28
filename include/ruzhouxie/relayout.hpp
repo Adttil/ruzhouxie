@@ -161,11 +161,19 @@ namespace rzx
         //     return simplifier_t{ FWD(self, base) };
         // }
         
-        template<auto SeqLayout, bool Sequential, class Self>
+        template<auto SeqLayout, bool Sequential, bool Borrow, class Self>
         constexpr decltype(auto) relayout_seperate(this Self&& self)
         {
+            static_assert(not terminal<decltype(SeqLayout)>);
             constexpr auto layout = detail::apply_layout<SeqLayout>(detail::normalize_layout(Layout, tree_shape<Self>));
-            return FWD(self, base) | rzx::relayout_seperate<layout, Sequential>;
+            if constexpr(std::is_object_v<Self> && std::is_object_v<V> && not Borrow)
+            {
+                return FWD(self, base) | rzx::relayout_seperate<layout, Sequential>;
+            }
+            else
+            {
+                return FWD(self, base) | refer | rzx::relayout_seperate<layout, Sequential>;
+            }
         }
     };
 
@@ -179,9 +187,9 @@ namespace rzx
         constexpr decltype(auto) operator()(T&& t)const
         {
             constexpr auto simplified_layout = detail::simplify_layout<Layout>(tree_shape<T>);
-            if constexpr(indexical<decltype(simplified_layout)>)
+            if constexpr(rzx::equal(simplified_layout, indexes_of_whole))
             {
-                return decltype(wrap(FWD(t) | child<simplified_layout>)){ rzx::unwrap(FWD(t) | child<simplified_layout>) };
+                return view<unwrap_t<T>>{ rzx::unwrap(FWD(t)) };
                 
                 //using type = decltype(FWD(t) | child<simplified_layout>);
                 //return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };

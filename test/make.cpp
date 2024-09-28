@@ -27,6 +27,28 @@ public:
 TEST(make, auto_move)
 {
     size_t copy_count = 0;
+    auto&& x = X{ copy_count };
+
+    decltype(auto) t0 = std::move(x) 
+    | rzx::refer 
+    | rzx::repeat<2>
+    | rzx::relayout<rzx::indexes_of_whole>
+    | rzx::astrict<rzx::tuple{ rzx::stricture_t::readonly, rzx::stricture_t::none }>;
+
+    auto&& r = std::move(x) | rzx::refer | rzx::repeat<2>;
+    auto&& tt = std::move(r) | rzx::sequence;
+    auto&& ttt = std::move(r) 
+                | rzx::relayout<rzx::indexes_of_whole>
+                | rzx::astrict<rzx::tuple{ rzx::stricture_t::readonly, rzx::stricture_t::none }>;
+
+    auto&& tttt = std::move(x)
+                | rzx::refer
+                | rzx::relayout_seperate<rzx::tuple{ rzx::indexes_of_whole, rzx::indexes_of_whole }, true>;
+                // | rzx::repeat<2>
+                // | rzx::astrict<rzx::tuple{ rzx::stricture_t::readonly, rzx::stricture_t::none }>;
+
+    MAGIC_TCHECK(decltype(std::move(tt) | rzx::child<0>), const X&);
+
     X{ copy_count } | rzx::refer | rzx::repeat<5> | rzx::make<rzx::array<X, 5>>;
     MAGIC_CHECK(copy_count, 4);
 }

@@ -32,18 +32,12 @@ namespace rzx
     template<class T>
     struct view : detail::view_storage<T>, view_interface<view<T>>
     {
-        // template<class Self>
-        // constexpr decltype(auto) self(this Self&& self)
-        // {
-        //     if constexpr(std::is_object_v<Self> && std::is_reference_v<T>)
-        //     {
-        //         return view{ FWD(self) };
-        //     }
-        //     else
-        //     {
-        //         return FWD(self);
-        //     }
-        // }
+        template<class To, class Self>
+        constexpr operator To(this Self self)
+        requires requires{ To{ FWD(self, base) }; }
+        {
+            return To{ FWD(self, base) };
+        }
 
         template<size_t I, class Self>
         constexpr decltype(auto) get(this Self&& self)
@@ -58,17 +52,13 @@ namespace rzx
             } 
         }
 
-        // template<auto UsageTable, typename Self>
-        // constexpr auto simplifier(this Self&& self)
-        // {
-        //     return FWD(self, base) | rzx::simplifier<UsageTable>;
-        // }
+        
 
-        template<auto Layout, bool Sequential, class Self>
-        constexpr decltype(auto) relayout_seperate(this Self&& self)
-        {
-            return FWD(self, base) | rzx::relayout_seperate<Layout, Sequential>;
-        }
+        // template<auto Layout, bool Sequential, class Self>
+        // constexpr decltype(auto) relayout_seperate(this Self&& self)
+        // {
+        //     return FWD(self, base) | rzx::relayout_seperate<Layout, Sequential>;
+        // }
     };
 
     template<class T>
@@ -89,7 +79,7 @@ namespace rzx
             {
                 return type_tag<T>{};
             }
-            else if constexpr(std::is_lvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
+            else if constexpr(std::is_rvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
             {
                 return type_tag<decltype(T::base)>{};
             }

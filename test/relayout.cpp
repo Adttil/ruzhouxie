@@ -35,3 +35,12 @@ TEST(relayout, transpose)
     MAGIC_CHECK(2, b | rzx::child<1, 0>);
     MAGIC_CHECK(4, b | rzx::child<1, 1>);
 }
+
+TEST(relayout, zip)
+{
+    auto a = rzx::zip(rzx::array{ 1, 2 }, rzx::tuple{ 3.14, 4 });
+    MAGIC_CHECK(1, a | rzx::child<0, 0>);
+    MAGIC_CHECK(3.14, a | rzx::child<0, 1>);
+    MAGIC_CHECK(2, a | rzx::child<1, 0>);
+    MAGIC_CHECK(4, a | rzx::child<1, 1>);
+}
