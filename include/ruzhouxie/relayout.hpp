@@ -132,7 +132,7 @@ namespace rzx
         {
             struct simplifier_t
             {
-                decltype(FWD(self, base)) base;
+                Self&& self;
 
                 static consteval auto base_usage()
                 {
@@ -160,16 +160,16 @@ namespace rzx
                 {
                     if constexpr(std::is_reference_v<V>)
                     {
-                        return FWD(base) | refer | simplified_data<base_usage()>;
+                        return FWD(self, base) | refer | simplified_data<base_usage()>;
                     }
                     else
                     {
-                        return FWD(base) | simplified_data<base_usage()>;
+                        return FWD(self, base) | simplified_data<base_usage()>;
                     }
                 }
             };
 
-            return simplifier_t{ FWD(self, base) };
+            return simplifier_t{ FWD(self) };
         }
         
 

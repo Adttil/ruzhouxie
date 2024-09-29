@@ -1,6 +1,8 @@
 #ifndef RUZHOUXIE_INVOKE_HPP
 #define RUZHOUXIE_INVOKE_HPP
 
+#include <functional>
+
 #include "astrict.hpp"
 #include "general.hpp"
 #include "relayout.hpp"
@@ -106,7 +108,7 @@ namespace rzx
             constexpr auto result(ArgTable&& arg_table, OperationTable)const
             {
                 constexpr auto op_table = detail::simplify_operation_table<OperationTable{}>();
-                if constexpr(equal(op_table, no_operation))
+                if constexpr(rzx::equal(op_table, no_operation))
                 {
                     return view<unwrap_t<ArgTable>>{ unwrap(FWD(arg_table)) };
                 }
@@ -138,7 +140,8 @@ namespace rzx {
             }
             else if constexpr(terminal<child_type<OperationTable, I>>)
             {
-                return std::decay_t<child_type<OperationTable, I>>{}(FWD(self, arg_table) | child<I>);
+                return detail::apply_operate(FWD(self, arg_table) | child<I>, OperationTable{} | child<I>);
+                //return std::decay_t<child_type<OperationTable, I>>{}(FWD(self, arg_table) | child<I>);
             }
             else
             {
@@ -149,7 +152,6 @@ namespace rzx {
             }
         }
 
-        //todo 
         template<auto UsageTable, typename Self>
         constexpr auto simplifier(this Self&& self)
         {
@@ -248,7 +250,11 @@ namespace rzx
                 using simplified_t = decltype(simplifier.data() | relayout<layout>);
                 constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
 
-                return simplifier.data() | relayout<layout> | astrict<sstricture_table> | operate(simplifier.operation_table());
+                return simplifier.data()
+                 | relayout<layout>
+                 | astrict<sstricture_table>
+                 | operate(simplifier.operation_table());
+                 ;
             }
 
             template<terminal T>
@@ -269,8 +275,9 @@ namespace rzx
             return [&]<size_t...I>(std::index_sequence<I...>) -> decltype(auto)
             {
                 auto&& seperate_args = FWD(args) | refer | seperate;
-                return std::invoke(FWD(seperate_args) | child<I> ...);
-            }(std::make_index_sequence<child_count<Args>>{});
+                return (FWD(seperate_args) | child<0>)(FWD(seperate_args) | child<I + 1uz> ...);
+                //return std::invoke(FWD(seperate_args) | child<I> ...);
+            }(std::make_index_sequence<child_count<Args> - 1>{});
         }
 
         friend constexpr bool operator==(apply_invoke_t, apply_invoke_t) = default;

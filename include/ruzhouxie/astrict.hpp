@@ -124,21 +124,49 @@ namespace rzx
             {
                 return end();
             }
+            else if constexpr(terminal<decltype(FWD(self).template base_child<I>())>)
+            {
+                if constexpr(child_stricture_table == stricture_t::readonly 
+                    && std::is_reference_v<decltype(FWD(self).template base_child<I>())>)
+                {
+                    auto&& ref = FWD(self).template base_child<I>();
+                    return std::as_const(ref);
+                }
+                else
+                {
+                    return FWD(self).template base_child<I>();
+                }
+            }
             else if constexpr(std::is_reference_v<decltype(FWD(self).template base_child<I>())>)
             {
-                return FWD(self).template base_child<I>() | astrict<child_stricture_table>;
+                // using bchild_t = decltype(FWD(self).template base_child<I>());
+                // if constexpr(detail::is_totally_const<>() )
+                return astrict_view<decltype(FWD(self).template base_child<I>()), child_stricture_table>
+                {
+                    FWD(self).template base_child<I>()
+                };
+
+                // return
+                //  unwrap_t<decltype(FWD(self).template base_child<I>() | refer | astrict<child_stricture_table>)>
+                // {
+                //     FWD(self).template base_child<I>()
+                // };
             }
-            else if constexpr(detail::is_totally_const<const decltype(FWD(self, base) | child<I>)&>()
-                            || equal(child_stricture_table, stricture_t::none))
-            {
-                return FWD(self).template base_child<I>();
-            }
+            // else if constexpr(detail::is_totally_const<decltype(std::as_const(FWD(self).template base_child<I>()))>()
+            //                 || equal(child_stricture_table, stricture_t::none))
+            // {
+            //     return FWD(self).template base_child<I>();
+            // }
             else
             {
                 return astrict_view<decltype(FWD(self).template base_child<I>()), child_stricture_table>
                 {
                     FWD(self).template base_child<I>()
                 };
+                // return unwrap_t<decltype(FWD(self).template base_child<I>() | astrict<child_stricture_table>)>
+                // {
+                //     FWD(self).template base_child<I>()
+                // };
             }
         }
 
@@ -147,9 +175,9 @@ namespace rzx
         {
             struct simplifier_t
             {
-                decltype(FWD(self, base)) base;
+                Self&& self;
                 
-                static constexpr auto operation_table(){ return decltype(FWD(base) | rzx::simplifier<UsageTable>)::operation_table; }
+                static constexpr auto operation_table(){ return decltype(FWD(self, base) | rzx::simplifier<UsageTable>)::operation_table(); }
 
                 static constexpr auto layout(){ return simplified_layout<decltype(FWD(self, base)), UsageTable>; }
 
@@ -157,21 +185,15 @@ namespace rzx
                 {
                     if constexpr(std::is_reference_v<V>)
                     {
-                        return astrict_view<decltype(FWD(base) | refer | rzx::simplified_data<UsageTable>), StrictureTable>
-                        {
-                            FWD(base) | refer | rzx::simplified_data<UsageTable>
-                        };
+                        return FWD(self, base) | refer | rzx::simplified_data<UsageTable> | astrict<StrictureTable>;
                     }
                     else
                     {
-                        return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
-                        {
-                            FWD(base) | rzx::simplified_data<UsageTable>
-                        };
+                        return FWD(self, base) | rzx::simplified_data<UsageTable> | astrict<StrictureTable>;
                     }
                 }
             };
-            return simplifier_t{ FWD(self, base) };
+            return simplifier_t{ FWD(self) };
         }        
 
     private:
@@ -211,25 +233,36 @@ namespace rzx
         {
             constexpr auto simplified_stricture_table = detail::simplify_stricture_table<StrictureTable>(tree_shape<V>);
             //return astrict_view<unwrap_t<V>, Stricture>{ unwrap(FWD(view)) };
-            if constexpr(branched<decltype(simplified_stricture_table)>)
+            if constexpr(rzx::equal(simplified_stricture_table, stricture_t::none))
+            {
+                return rzx::view<unwrap_t<V>>{ unwrap(FWD(view)) };
+            }
+            else
             {
                 return astrict_view<unwrap_t<V>, simplified_stricture_table>{ unwrap(FWD(view)) };
             }
-            else if constexpr(simplified_stricture_table == stricture_t::none)
-            {
-                return FWD(view);
-            }
-            else if constexpr(simplified_stricture_table == stricture_t::readonly)
-            {
-                if constexpr(detail::is_totally_const<decltype(std::as_const(view))>())
-                {
-                    return std::as_const(view);
-                }
-                else
-                {
-                    return astrict_view<unwrap_t<V>, stricture_t::readonly>{ unwrap(FWD(view)) };
-                }
-            }
+            // else if constexpr(simplified_stricture_table == stricture_t::none)
+            // {
+            //     return rzx::view<unwrap_t<V>>{ unwrap(FWD(view)) };
+            // }
+            // else if constexpr(simplified_stricture_table == stricture_t::readonly)
+            // {
+            //     if constexpr(detail::is_totally_const<decltype(std::as_const(unwrap(view)))>() && not (std::is_object_v<V> && not terminal<V>))
+            //     {
+            //         if constexpr(std::is_object_v<unwrap_t<V>>)
+            //         {
+            //             return rzx::view<const unwrap_t<V>>{ unwrap(view) };
+            //         }
+            //         else
+            //         {
+            //             return wrap(std::as_const(unwrap(view)));
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return astrict_view<unwrap_t<V>, stricture_t::readonly>{ unwrap(FWD(view)) };
+            //     }
+            // }
         }
     };
 }

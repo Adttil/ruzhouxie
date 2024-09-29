@@ -155,7 +155,7 @@ namespace rzx
         }
 
         template<class V>
-        static constexpr decltype(auto) unwrap_copy(V&& v)
+        static constexpr unwrap_t<V> unwrap_copy(V&& v)
         {
             return unwrap_t<V>{ unwrap(FWD(v)) };
         }
@@ -166,14 +166,14 @@ namespace rzx
             if constexpr((std::is_object_v<T> && std::is_object_v<rzx::detail::tuple_element_t_by_child<I, T>>) 
                         || std::is_object_v<child_type<T, I>>)
             {
-                return decltype(unwrap_copy((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data()))
+                return unwrap_t<decltype((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())>
                 {
                     unwrap((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())
                 };
             }
             else
             {
-                return decltype(unwrap_copy((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data()))
+                return unwrap_t<decltype((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data())>
                 {
                     unwrap((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data())
                 };

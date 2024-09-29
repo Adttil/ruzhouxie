@@ -81,13 +81,13 @@ namespace rzx
     namespace detail
     {
         template<class T>
-        auto unwrap_type_tag()
+        auto unwrap_type_tag(T&&)
         {
             if constexpr(not wrapped<T>)
             {
                 return type_tag<T>{};
             }
-            else if constexpr(std::is_lvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
+            else if constexpr(std::is_rvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
             {
                 return type_tag<decltype(T::base)>{};
             }
@@ -99,7 +99,7 @@ namespace rzx
     }
 
     template<class T>
-    using unwrap_t = decltype(detail::unwrap_type_tag<T>())::type;
+    using unwrap_t = decltype(detail::unwrap_type_tag(std::declval<T>()))::type;
 
     template<class T>
     constexpr decltype(auto) unwrap(T&& t)
