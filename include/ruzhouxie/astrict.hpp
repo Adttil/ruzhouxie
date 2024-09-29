@@ -149,14 +149,26 @@ namespace rzx
             {
                 decltype(FWD(self, base)) base;
                 
+                static constexpr auto operation_table(){ return decltype(FWD(base) | rzx::simplifier<UsageTable>)::operation_table; }
+
                 static constexpr auto layout(){ return simplified_layout<decltype(FWD(self, base)), UsageTable>; }
 
                 constexpr decltype(auto) data()const
                 {
-                    return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
+                    if constexpr(std::is_reference_v<V>)
                     {
-                        FWD(base) | rzx::simplified_data<UsageTable>
-                    };
+                        return astrict_view<decltype(FWD(base) | refer | rzx::simplified_data<UsageTable>), StrictureTable>
+                        {
+                            FWD(base) | refer | rzx::simplified_data<UsageTable>
+                        };
+                    }
+                    else
+                    {
+                        return astrict_view<decltype(FWD(base) | rzx::simplified_data<UsageTable>), StrictureTable>
+                        {
+                            FWD(base) | rzx::simplified_data<UsageTable>
+                        };
+                    }
                 }
             };
             return simplifier_t{ FWD(self, base) };
@@ -329,93 +341,6 @@ namespace rzx::detail
             );
         }(std::make_index_sequence<child_count<decltype(Layout)>>{});
     }
-}
-
-namespace rzx 
-{
-    namespace detail
-    {
-        struct sequence_t : adaptor_closure<sequence_t>
-        {
-            template<branched T>
-            constexpr decltype(auto) operator()(T&& t)const
-            {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
-                constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
-
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
-            }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
-            {
-                return {};
-            }
-        };
-    }
-
-    inline constexpr detail::sequence_t sequence{};
-
-    namespace detail
-    {
-        struct inverse_sequence_t : adaptor_closure<inverse_sequence_t>
-        {
-            template<branched T>
-            constexpr decltype(auto) operator()(T&& t)const
-            {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = inverse.relayout(detail::normalize_layout2<layout, data_shape_t>());
-                constexpr auto stricture_table = inverse.relayout(detail::stricture_table_for_sequence<nlayout, data_shape_t>());
-
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
-            }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
-            {
-                return {};
-            }
-        };
-    }
-
-    inline constexpr detail::inverse_sequence_t inverse_sequence{};
-
-    namespace detail
-    {
-        struct children_t : adaptor_closure<children_t>
-        {
-            template<branched T>
-            constexpr decltype(auto) operator()(T&& t)const
-            {
-                using data_shape_t = tree_shape_t<decltype(FWD(t) | rzx::simplified_data<>)>;
-                constexpr auto layout = simplified_layout<T>;
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
-                constexpr auto stricture_table = detail::stricture_table_for_children<nlayout, data_shape_t>();
-
-                using simplified_t = decltype(FWD(t) | simplify<>);
-                constexpr auto sstricture_table = detail::simplify_stricture_table<stricture_table>(tree_shape<simplified_t>);
-
-                return astrict_view<simplified_t, sstricture_table>{ FWD(t) | simplify<> };
-            }
-
-            template<terminal T>
-            constexpr tuple<> operator()(T&& t)const
-            {
-                return {};
-            }
-        };
-    }
-
-    inline constexpr detail::children_t children{};
 }
 
 #include "macro_undef.hpp"

@@ -150,10 +150,22 @@ namespace rzx
                 {
                     return detail::apply_layout<Layout>(base_layout());
                 }
-
-                constexpr decltype(auto) data()
+                
+                static consteval auto operation_table()
                 {
-                    return FWD(base) | simplified_data<base_usage()>;
+                    return no_operation;
+                }
+
+                constexpr decltype(auto) data()const
+                {
+                    if constexpr(std::is_reference_v<V>)
+                    {
+                        return FWD(base) | refer | simplified_data<base_usage()>;
+                    }
+                    else
+                    {
+                        return FWD(base) | simplified_data<base_usage()>;
+                    }
                 }
             };
 

@@ -2,7 +2,7 @@
 #define RUZHOUXIE_VIEW_INTERFACE_HPP
 
 #include "general.hpp"
-#include "simplify.hpp"
+#include "child.hpp"
 
 #include "macro_define.hpp"
 
@@ -54,12 +54,6 @@ namespace rzx
             {
                 return end();
             } 
-        }
-
-        template<auto UsageTable, typename Self>
-        constexpr auto simplifier(this Self&& self)
-        {
-            return FWD(self, base) | rzx::simplifier<UsageTable>;
         }
 
         // template<auto UsageTable, typename Self>

@@ -2,12 +2,26 @@
 #define RUZHOUXIE_SIMPLIFY_HPP
 
 #include "child.hpp"
+#include "view_interface.hpp"
 #include "general.hpp"
 
 #include "macro_define.hpp"
 
 namespace rzx 
 {  
+    struct no_operation_t
+    {
+        template<class T>
+        constexpr T&& operator()(T&& t)const noexcept
+        {
+            return FWD(t);
+        }
+
+        friend constexpr bool operator==(no_operation_t, no_operation_t) = default;
+    };
+
+    inline constexpr no_operation_t no_operation{};
+
     enum class usage_t
     {
         discard,
@@ -120,9 +134,19 @@ namespace rzx
     {
         T&& t;
 
+        static constexpr auto operation_table()
+        { 
+            return []<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(
+                    decltype(std::declval<child_type<T, I>>() | simplifier<UsageTable | child<I>>)::operation_table()...
+                );
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+
         static constexpr auto layout()
         {
-            return [&]<size_t...I>(std::index_sequence<I...>)
+            return []<size_t...I>(std::index_sequence<I...>)
             {
                 return rzx::make_tuple(
                     detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | simplifier<UsageTable | child<I>>)::layout(), array{ I })...
@@ -130,23 +154,109 @@ namespace rzx
             }(std::make_index_sequence<child_count<T>>{});
         }
 
+        template<class V>
+        static constexpr decltype(auto) unwrap_copy(V&& v)
+        {
+            return unwrap_t<V>{ unwrap(FWD(v)) };
+        }
+
+        template<size_t I>
+        constexpr decltype(auto) child_data()const
+        {
+            if constexpr((std::is_object_v<T> && std::is_object_v<rzx::detail::tuple_element_t_by_child<I, T>>) 
+                        || std::is_object_v<child_type<T, I>>)
+            {
+                return decltype(unwrap_copy((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data()))
+                {
+                    unwrap((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())
+                };
+            }
+            else
+            {
+                return decltype(unwrap_copy((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data()))
+                {
+                    unwrap((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data())
+                };
+            }
+        }
+
         constexpr auto data()const
         {
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return rzx::tuple<decltype((FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>).data())...>
+                return rzx::tuple<decltype(child_data<I>())...>
                 {
-                    (FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>).data()...
+                    child_data<I>()...
                 };
             }(std::make_index_sequence<child_count<T>>{});
+        }
+    };
+
+    template<class T>
+    struct simple_simplifier
+    {
+        T&& t;
+
+        static constexpr auto operation_table(){ return no_operation; }
+
+        static constexpr auto layout(){ return indexes_of_whole; }
+
+        constexpr decltype(auto) data()const
+        {
+            if constexpr(std::is_object_v<T>)
+            {
+                return FWD(t); 
+            } 
+            else
+            {
+                return FWD(t) | refer;
+            }
+        }
+    };
+
+    template<class S>
+    struct ref_view_simplifier
+    {
+        S base_simplifer;
+
+        static constexpr auto operation_table(){ return S::operation_table(); }
+
+        static constexpr auto layout(){ return S::layout(); }
+
+        constexpr decltype(auto) data()const
+        {
+            if constexpr(std::is_rvalue_reference_v<decltype(base_simplifer.data())>)
+            {
+                return base_simplifer.data() | refer; 
+            } 
+            else
+            {
+                return base_simplifer.data();
+            }
         }
     };
 
     template<auto UsageTable>
     struct detail::get_simplifier_t_ns::get_simplifier_t : adaptor_closure<get_simplifier_t<UsageTable>>
     {
-        template<typename T, auto NormalizedUsage = detail::normalize_usage(UsageTable, tree_shape<T>)>
+        template<typename T>
         constexpr auto operator()(T&& t)const
+        {
+            //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
+            constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
+
+            if constexpr(std::is_rvalue_reference_v<unwrap_t<T>>)
+            {
+                return ref_view_simplifier{ impl<unwrap_t<T>, normalized_usage_table>(unwrap(FWD(t))) };
+            }
+            else
+            {
+                return impl<unwrap_t<T>, normalized_usage_table>(unwrap(FWD(t)));
+            }
+        }
+
+        template<typename T, auto NormalizedUsage>
+        constexpr auto impl(T&& t)const
         {
             //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
             //constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
@@ -168,17 +278,8 @@ namespace rzx
                 return simplifier<NormalizedUsage>(FWD(t));
             }
             else if constexpr(simple<T, NormalizedUsage>)
-            {
-                struct simplifier_t
-                {
-                    T&& t;
-
-                    static constexpr auto layout(){ return indexes_of_whole; }
-
-                    constexpr T&& data()const{ return FWD(t); }
-                };
-                
-                return simplifier_t{ FWD(t) };
+            {                
+                return simple_simplifier<T>{ FWD(t) };
             }
             else
             { 

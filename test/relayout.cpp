@@ -43,6 +43,6 @@ TEST(relayout, transpose)
 TEST(relayout, simplify)
 {
     auto a = rzx::array{ 1, 2, 3 };
-    auto&& b = a | rzx::simplify<>;
-    MAGIC_TCHECK(decltype(a)&&, decltype(b));
+    decltype(auto) b = std::move(a) | rzx::simplify<>;
+    MAGIC_TCHECK(decltype(a), decltype(b));
 }
