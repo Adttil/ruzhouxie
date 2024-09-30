@@ -166,17 +166,26 @@ namespace rzx
             if constexpr((std::is_object_v<T> && std::is_object_v<rzx::detail::tuple_element_t_by_child<I, T>>) 
                         || std::is_object_v<child_type<T, I>>)
             {
-                return unwrap_t<decltype((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())>
-                {
-                    unwrap((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())
-                };
+                // return unwrap_t<decltype((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())>
+                // {
+                //     unwrap((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())
+                // };
+
+                auto simplifier = FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>;
+
+                //https://gcc.godbolt.org/z/rM983Yh9f
+                return unwrap_t<decltype(simplifier.data())>
+                (
+                    simplifier.data()
+                );
             }
             else
             {
-                return unwrap_t<decltype((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data())>
-                {
-                    unwrap((FWD(t) | child<I> | refer | simplifier<UsageTable | child<I>>).data())
-                };
+                auto simplifier = FWD(t) | child<I> | refer | rzx::simplifier<UsageTable | child<I>>;
+                return unwrap_t<decltype(simplifier.data())>
+                (
+                    simplifier.data()
+                );
             }
         }
 

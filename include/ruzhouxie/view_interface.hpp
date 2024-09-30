@@ -56,17 +56,23 @@ namespace rzx
             } 
         }
 
-        // template<auto UsageTable, typename Self>
-        // constexpr decltype(auto) simplified_data(this Self&& self)
-        // {
-        //     return FWD(self, base) | rzx::simplified_data<UsageTable>;
-        // }
+        template<class Self>
+        constexpr explicit operator std::decay_t<T>(this Self&& self)
+        {
+            return FWD(self, base);
+        }
 
-        // template<auto UsageTable, derived_from<view> Self>
-        // friend constexpr auto get_simplified_layout(type_tag<Self>)
-        // {
-        //     return simplified_layout<T, UsageTable>;
-        // }
+        template<typename To, class Self> requires std::same_as<decltype(FWD(std::declval<Self>(), base)), To&>
+        constexpr explicit operator To&(this Self&& self)
+        {
+            return FWD(self, base);
+        }
+
+        template<typename To, class Self> requires std::same_as<decltype(FWD(std::declval<Self>(), base)), To&&>
+        constexpr explicit operator To&&(this Self&& self)
+        {
+            return FWD(self, base);
+        }
     };
 
     template<class T>
@@ -87,7 +93,7 @@ namespace rzx
             {
                 return type_tag<T>{};
             }
-            else if constexpr(std::is_rvalue_reference_v<T&&> && std::is_object_v<decltype(T::base)>)
+            else if constexpr(std::is_object_v<T> && requires{ requires std::is_object_v<decltype(T::base)>; })
             {
                 return type_tag<decltype(T::base)>{};
             }
@@ -102,7 +108,7 @@ namespace rzx
     using unwrap_t = decltype(detail::unwrap_type_tag(std::declval<T>()))::type;
 
     template<class T>
-    constexpr decltype(auto) unwrap(T&& t)
+    constexpr auto&& unwrap(T&& t)
     {
         if constexpr(not wrapped<T>)
         {
@@ -112,6 +118,12 @@ namespace rzx
         {
             return FWD(t, base);
         }
+    }
+
+    template<class T>
+    constexpr unwrap_t<T> unwrap_result(T&& t)
+    {
+        return unwrap(FWD(t));
     }
 
     namespace detail 

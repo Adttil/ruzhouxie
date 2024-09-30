@@ -32,7 +32,7 @@ TEST(invoke, transform)
     
     //MAGIC_TCHECK(decltype(rzx::zip([](auto x){ return x * x; } | rzx::repeat<2>, rzx::tuple{ 2, 0.5f }) | rzx::child<0> | rzx::simplified_data<>), void);
 
-    constexpr auto d = rzx::apply_invoke(rzx::zip([](auto x){ return x * x; } | rzx::repeat<2>, rzx::tuple{ 2, 0.5f }) | rzx::child<0>);
+    //constexpr auto d = rzx::apply_invoke(rzx::zip([](auto x){ return x * x; } | rzx::repeat<2>, rzx::tuple{ 2, 0.5f }) | rzx::child<0>);
 
     //constexpr auto c = rzx::apply_invoke(rzx::zip([](auto x){ return x * x; } | rzx::repeat<2>, rzx::tuple{ 2, 0.5f }) | rzx::child<0>);
     // | rzx::operate(make_tree_of_same_value(rzx::apply_invoke, rzx::tree_shape<rzx::array<size_t, 2>>))

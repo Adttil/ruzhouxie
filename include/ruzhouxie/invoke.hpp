@@ -63,14 +63,15 @@ namespace rzx::detail
     {
         if constexpr(terminal<OperationTable>)
         {
-            if constexpr(std::same_as<OperationTable, no_operation_t>)
-            {
-                return ArgTable{ FWD(arg_table) };
-            }
-            else
-            {
-                return OperationTable{}(FWD(arg_table));
-            }
+            return OperationTable{}(FWD(arg_table));
+            // if constexpr(std::same_as<OperationTable, no_operation_t>)
+            // {
+            //     return ArgTable{ FWD(arg_table) };
+            // }
+            // else
+            // {
+            //     return OperationTable{}(FWD(arg_table));
+            // }
         }
         else return [&]<size_t...I>(std::index_sequence<I...>)
         {
@@ -140,8 +141,8 @@ namespace rzx {
             }
             else if constexpr(terminal<child_type<OperationTable, I>>)
             {
-                return detail::apply_operate(FWD(self, arg_table) | child<I>, OperationTable{} | child<I>);
-                //return std::decay_t<child_type<OperationTable, I>>{}(FWD(self, arg_table) | child<I>);
+                //return detail::apply_operate(FWD(self, arg_table) | child<I>, OperationTable{} | child<I>);
+                return std::decay_t<child_type<OperationTable, I>>{}(FWD(self, arg_table) | child<I>);
             }
             else
             {
