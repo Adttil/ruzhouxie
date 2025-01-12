@@ -179,5 +179,15 @@ namespace rzx
 	}
 }
 
+namespace rzx
+{
+	template<class T>
+	decltype(auto) to_readonly(T&& t)
+	{
+		return std::as_const(t);
+	}
+}
+
+
 #include "macro_undef.hpp"
 #endif

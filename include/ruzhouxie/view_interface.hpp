@@ -78,6 +78,7 @@ namespace rzx
     template<class T>
     view(T) -> view<T>;
 
+    //any view<T>, view<T>&, const view<T>&, view<T>&&...
     template<class T>
     concept wrapped = requires(std::remove_cvref_t<T>& t)
     {

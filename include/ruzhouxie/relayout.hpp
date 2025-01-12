@@ -22,11 +22,11 @@ namespace rzx
 
     namespace detail 
     {
-        template<typename V, auto Layout>
+        template<typename V, auto FoldedLayout>
         struct relayout_view_storage
         {
-            RUZHOUXIE(no_unique_address) V base;
-            RUZHOUXIE(no_unique_address) constant_t<Layout> layout;
+            RUZHOUXIE(no_unique_address) V                        base;
+            RUZHOUXIE(no_unique_address) constant_t<FoldedLayout> layout;
         };
 
         enum class relayout_view_child_strategy
@@ -38,21 +38,23 @@ namespace rzx
         };
     }
 
-    template<typename V, auto Layout>
-    struct relayout_view : detail::relayout_view_storage<V, Layout>
+    template<typename V, auto FoldedLayout>
+    struct relayout_view : detail::relayout_view_storage<V, FoldedLayout>
     {
     private:
+        static constexpr auto unfolded_layout = detail::unfold_layout<FoldedLayout>(tree_shape<V>);
+
         template<size_t I, typename Self>
         static consteval choice_t<detail::relayout_view_child_strategy> child_choose()
         {
             using strategy_t = detail::relayout_view_child_strategy;
-            using layout_type = decltype(Layout);
+            using layout_type = decltype(FoldedLayout);
 
             if constexpr(indexical_array<layout_type>)
             {
-                if constexpr(I < child_count<child_type<V, Layout>>)
+                if constexpr(I < child_count<child_type<V, FoldedLayout>>)
                 {
-                    return { strategy_t::indices, noexcept(FWD(std::declval<Self>(), base) | child<Layout> | child<I>) };
+                    return { strategy_t::indices, noexcept(FWD(std::declval<Self>(), base) | child<FoldedLayout> | child<I>) };
                 }
                 else
                 {
@@ -65,9 +67,9 @@ namespace rzx
             }
             else if constexpr(indexical_array<child_type<layout_type, I>>)
             {
-                if constexpr(requires{ FWD(std::declval<Self>(), base) | child<Layout | child<I>>; })
+                if constexpr(requires{ FWD(std::declval<Self>(), base) | child<FoldedLayout | child<I>>; })
                 {
-                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), base) | child<Layout | child<I>>) };
+                    return { strategy_t::child, noexcept(FWD(std::declval<Self>(), base) | child<FoldedLayout | child<I>>) };
                 }
                 else
                 {
@@ -107,16 +109,16 @@ namespace rzx
             }
             else if constexpr(strategy == strategy_t::indices)
             {
-                return FWD(self, base) | child<Layout> | child<I>;
+                return FWD(self, base) | child<FoldedLayout> | child<I>;
             }
             else if constexpr(strategy == strategy_t::child)
             {
-                constexpr auto index_pack = Layout | child<I>;
+                constexpr auto index_pack = FoldedLayout | child<I>;
                 return FWD(self, base) | child<index_pack>;
             }
             else if constexpr(strategy == strategy_t::relayout)
             {
-                return relayout_view<decltype(FWD(self, base)), Layout | child<I>>
+                return relayout_view<decltype(FWD(self, base)), FoldedLayout | child<I>>
                 {
                     FWD(self, base)
                 };
@@ -127,45 +129,58 @@ namespace rzx
             }
         }
 
-        template<auto UsageTable, typename Self>
+        template<auto UnfoldedUsageTable, typename Self>
         constexpr auto simplifier(this Self&& self)
         {
             struct simplifier_t
             {
                 Self&& self;
 
-                static consteval auto base_usage()
+                static constexpr auto base_simplifer(Self&& self)
                 {
-                    constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
-                    return detail::inverse_apply_layout_on_usage<layout>(UsageTable, tree_shape<V>);
+                    constexpr auto base_usage = detail::inverse_apply_layout_on_usage<unfolded_layout>(UnfoldedUsageTable, tree_shape<V>);
+                    if constexpr(std::is_reference_v<V>)
+                    {
+                        return FWD(self, base) | refer | rzx::simplifier<base_usage>;
+                    }
+                    else
+                    {
+                        return FWD(self, base) | rzx::simplifier<base_usage>;
+                    }
                 }
 
-                static consteval auto base_layout()
-                {
-                    constexpr auto base_simplifer_layout = simplified_layout<V, base_usage()>;
-                    return detail::normalize_layout(base_simplifer_layout, tree_shape<V>);
-                }
+                using base_simplifer_t = decltype(base_simplifer(std::declval<Self>()));
 
                 static consteval auto layout()
                 {
-                    return detail::apply_layout<Layout>(base_layout());
+                    constexpr auto base_layout = detail::unfold_layout_by_relayouted_shape(base_simplifer_t::layout(), tree_shape<V>);
+                    return detail::apply_layout<FoldedLayout>(base_layout);
                 }
                 
+                static consteval auto stricture_table()
+                {
+                    //constexpr auto unfolded_base_stricture_table = detail::unfold_stricture_table(base_simplifer_t::stricture_table(), tree_shape<V>);
+                    //return detail::apply_layout<FoldedLayout>(unfolded_base_stricture_table);
+                }
+
                 static consteval auto operation_table()
                 {
+
+                    //return detail::apply_layout<FoldedLayout>(base_simplifer_t::stricture_table());
                     return no_operation;
                 }
 
                 constexpr decltype(auto) data()const
                 {
-                    if constexpr(std::is_reference_v<V>)
-                    {
-                        return FWD(self, base) | refer | simplified_data<base_usage()>;
-                    }
-                    else
-                    {
-                        return FWD(self, base) | simplified_data<base_usage()>;
-                    }
+                    return base_simplifer(FWD(self)).data();
+                    // if constexpr(std::is_reference_v<V>)
+                    // {
+                    //     return FWD(self, base) | refer | simplified_data<base_usage()>;
+                    // }
+                    // else
+                    // {
+                    //     return FWD(self, base) | simplified_data<base_usage()>;
+                    // }
                 }
             };
 
@@ -176,7 +191,7 @@ namespace rzx
         // template<auto Usage, typename Self>
         // constexpr decltype(auto) simplified_data(this Self&& self)
         // {
-        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+        //     constexpr auto layout = detail::unfold_layout(Layout, tree_shape<Self>);
         //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
 
         //     return FWD(self, base) | rzx::simplified_data<base_usage>;
@@ -185,16 +200,16 @@ namespace rzx
         // template<auto Usage, derived_from<relayout_view> Self>
         // friend constexpr auto get_simplified_layout(type_tag<Self>)
         // {
-        //     constexpr auto layout = detail::normalize_layout(Layout, tree_shape<Self>);
+        //     constexpr auto layout = detail::unfold_layout(Layout, tree_shape<Self>);
         //     constexpr auto base_usage = detail::inverse_apply_layout_on_usage<layout>(Usage, tree_shape<V>);
-        //     constexpr auto base_layout = detail::normalize_layout(rzx::simplified_layout<V, base_usage>, tree_shape<V>);
+        //     constexpr auto base_layout = detail::unfold_layout(rzx::simplified_layout<V, base_usage>, tree_shape<V>);
 
         //     return detail::apply_layout<Layout>(base_layout);
         // }
     };
 
-    template<typename V, auto Layout>
-    relayout_view(V, constant_t<Layout>) -> relayout_view<V, Layout>;
+    template<typename V, auto FoldedLayout>
+    relayout_view(V, constant_t<FoldedLayout>) -> relayout_view<V, FoldedLayout>;
 
     template<auto Layout>
     struct detail::relayout_t : adaptor_closure<relayout_t<Layout>>
@@ -202,10 +217,10 @@ namespace rzx
         template<typename T>
         constexpr decltype(auto) operator()(T&& t)const
         {
-            constexpr auto simplified_layout = detail::simplify_layout<Layout>(tree_shape<T>);
-            if constexpr(indexical<decltype(simplified_layout)>)
+            constexpr auto folded_layout = detail::fold_layout<Layout>(tree_shape<T>);
+            if constexpr(indexical<decltype(folded_layout)>)
             {
-                return decltype(wrap(FWD(t) | child<simplified_layout>)){ rzx::unwrap(FWD(t) | child<simplified_layout>) };
+                return decltype(wrap(FWD(t) | child<folded_layout>)){ rzx::unwrap(FWD(t) | child<folded_layout>) };
                 
                 //using type = decltype(FWD(t) | child<simplified_layout>);
                 //return std::remove_cvref_t<type>{ FWD(t) | child<simplified_layout> };
@@ -221,7 +236,7 @@ namespace rzx
             }
             else
             {
-                return relayout_view<unwrap_t<T>, simplified_layout>{ rzx::unwrap(FWD(t)) };
+                return relayout_view<unwrap_t<T>, folded_layout>{ rzx::unwrap(FWD(t)) };
             }
             // else if constexpr(wrapped<T>)
             // {
@@ -250,7 +265,7 @@ namespace rzx
     }
 
     template<typename T>
-    constexpr auto default_layout = []()
+    constexpr auto default_unfolded_layout = []()
     {
         if constexpr (terminal<T>)
         {
@@ -258,7 +273,7 @@ namespace rzx
         }
         else return[]<size_t...I>(std::index_sequence<I...>)
         {
-            return rzx::make_tuple(detail::layout_add_prefix(default_layout<child_type<T, I>>, array{I})...);
+            return rzx::make_tuple(detail::layout_add_prefix(default_unfolded_layout<child_type<T, I>>, array{I})...);
         }(std::make_index_sequence<child_count<T>>{});    
     }();
 
@@ -271,7 +286,7 @@ namespace rzx
         template<typename V, derived_from<Relayouter> Self>
         constexpr auto operator()(this Self&& self, V&& view)
         {
-            constexpr auto layout = detail::simplify_layout<Relayouter::relayout(default_layout<V>)>(tree_shape<V>);
+            constexpr auto layout = Relayouter::relayout(default_unfolded_layout<V>);
             return FWD(view) | relayout<layout>;
         }
     };
@@ -300,19 +315,19 @@ namespace rzx
         struct component_t : relayouter_interface<component_t<I, Axis>>
         {
             template<typename TLayout>
-            static constexpr auto relayout(const TLayout& layout)
+            static constexpr auto relayout(const TLayout& unfolded_layout)
             {
                 if constexpr (Axis == 0uz)
                 {
                     static_assert(I < child_count<TLayout>, "Component index out of range.");
-                    return layout | child<I>;
+                    return unfolded_layout | child<I>;
                 }
                 else
                 {
                     static_assert(branched<TLayout>, "Axis index out of range.");
                     return[&]<size_t...J>(std::index_sequence<J...>)
                     {
-                        return make_tuple(component_t<I, Axis - 1uz>::relayout(layout | child<J>)...);
+                        return make_tuple(component_t<I, Axis - 1uz>::relayout(unfolded_layout | child<J>)...);
                     }(std::make_index_sequence<child_count<TLayout>>{});
                 }
             }
@@ -328,19 +343,19 @@ namespace rzx
         struct transpose_t : relayouter_interface<transpose_t<Axis1, Axis2>>
         {
             template<typename TLayout>
-            static constexpr auto relayout(const TLayout& layout)
+            static constexpr auto relayout(const TLayout& unfolded_layout)
             {
                 if constexpr (Axis1 == 0uz)
                 {
                     constexpr size_t N = tensor_shape<TLayout>[Axis2];
                     return[&]<size_t...I>(std::index_sequence<I...>)
                     {
-                        return rzx::make_tuple(component_t<I, Axis2>::relayout(layout)...);
+                        return rzx::make_tuple(component_t<I, Axis2>::relayout(unfolded_layout)...);
                     }(std::make_index_sequence<N>{});
                 }
                 else return[&]<size_t...I>(std::index_sequence<I...>)
                 {
-                    return rzx::make_tuple(transpose_t<Axis1 - 1uz, Axis2 - 1uz>::relayout(layout | child<I>)...);
+                    return rzx::make_tuple(transpose_t<Axis1 - 1uz, Axis2 - 1uz>::relayout(unfolded_layout | child<I>)...);
                 }(std::make_index_sequence<child_count<TLayout>>{});
             }
         };
@@ -354,12 +369,12 @@ namespace rzx
         struct inverse_t : relayouter_interface<inverse_t>
         {
             template<typename TLayout>
-            static constexpr auto relayout(const TLayout& layout)
+            static constexpr auto relayout(const TLayout& unfolded_layout)
             {
                 return[&]<size_t...I>(std::index_sequence<I...>)
                 {
                     constexpr auto last_index = child_count<TLayout> - 1uz;
-                    return rzx::make_tuple(layout | child<last_index - I> ...);
+                    return rzx::make_tuple(unfolded_layout | child<last_index - I> ...);
                 }(std::make_index_sequence<child_count<TLayout>>{});
             }
         };
@@ -384,34 +399,34 @@ namespace rzx
 
 namespace rzx 
 {  
-    namespace detail
-    {
-        template<auto UsageTable>
-        struct simplify_t;
-    }
+    // namespace detail
+    // {
+    //     template<auto UsageTable>
+    //     struct simplify_t;
+    // }
 
-    template<auto UsageTable = usage_t::repeatedly>
-    inline constexpr detail::simplify_t<UsageTable> simplify{};
+    // template<auto UsageTable = usage_t::repeatedly>
+    // inline constexpr detail::simplify_t<UsageTable> simplify{};
 
-    template<auto UsageTable>
-    struct detail::simplify_t : adaptor_closure<simplify_t<UsageTable>>
-    {
-        template<typename T>
-        constexpr auto operator()(T&& t)const
-        {
-            auto simplifier = FWD(t) | rzx::simplifier<UsageTable>;
-            using data_type = decltype(simplifier.data());
-            constexpr auto layout = detail::simplify_layout<simplifier.layout()>(tree_shape<data_type>);
-            if constexpr(equal(layout, indexes_of_whole))
-            {
-                return simplifier.data();
-            }
-            else
-            {
-                return relayout_view<data_type, layout>{ simplifier.data() };
-            }
-        }
-    };
+    // template<auto UsageTable>
+    // struct detail::simplify_t : adaptor_closure<simplify_t<UsageTable>>
+    // {
+    //     template<typename T>
+    //     constexpr auto operator()(T&& t)const
+    //     {
+    //         auto simplifier = FWD(t) | rzx::simplifier<UsageTable>;
+    //         using data_type = decltype(simplifier.data());
+    //         constexpr auto layout = detail::fold_layout<simplifier.layout()>(tree_shape<data_type>);
+    //         if constexpr(equal(layout, indexes_of_whole))
+    //         {
+    //             return simplifier.data();
+    //         }
+    //         else
+    //         {
+    //             return relayout_view<data_type, layout>{ simplifier.data() };
+    //         }
+    //     }
+    // };
 }
 
 #include "macro_undef.hpp"

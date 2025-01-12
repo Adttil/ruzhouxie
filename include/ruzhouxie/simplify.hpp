@@ -9,6 +9,18 @@
 
 namespace rzx 
 {  
+    enum class stricture_t
+    {
+        none,
+        readonly
+    };
+
+    enum class operation_t
+    {
+        none,
+
+    };
+
     struct no_operation_t
     {
         template<class T>
@@ -38,12 +50,12 @@ namespace rzx
 
 namespace rzx::detail 
 {
-    template<auto Layout, typename U, typename R>
+    template<auto UnfoldedLayout, typename U, typename R>
     constexpr void inverse_apply_layout_on_usage_at(const U& usage, R& result)
     {
-        if constexpr(indexical<decltype(Layout)>)
+        if constexpr(indexical<decltype(UnfoldedLayout)>)
         {
-            auto&& result_usage = result | child<Layout>;
+            auto&& result_usage = result | child<UnfoldedLayout>;
             if constexpr(terminal<decltype(result_usage)>)
             {
                 result_usage = result_usage + usage;
@@ -55,42 +67,102 @@ namespace rzx::detail
         }
         else return[&]<size_t...I>(std::index_sequence<I...>)
         {
-            (..., inverse_apply_layout_on_usage_at<Layout | child<I>>(usage | child<I>, result));
-        }(std::make_index_sequence<child_count<decltype(Layout)>>{});
+            (..., inverse_apply_layout_on_usage_at<UnfoldedLayout | child<I>>(usage | child<I>, result));
+        }(std::make_index_sequence<child_count<decltype(UnfoldedLayout)>>{});
     }
 
-    template<auto Layout, typename U, typename S>
+    template<auto UnfoldedLayout, typename U, typename S>
     constexpr auto inverse_apply_layout_on_usage(const U& usage, const S& shape)
     {
         auto result = make_tree_of_same_value(usage_t::discard, shape);
-        inverse_apply_layout_on_usage_at<Layout>(usage, result);
+        inverse_apply_layout_on_usage_at<UnfoldedLayout>(usage, result);
         return result;
     }
 
-    template<typename UsageTable, typename Shape>
-    constexpr auto normalize_usage(const UsageTable& usage_table, const Shape& shape)
+    template<auto FoldedLayout, typename U, typename S>
+    constexpr auto inverse_apply_layout_on_usage_table(const U& usage, S shape = {})
+    {
+
+    }
+
+    template<typename Tag, typename Shape, typename TagTable>
+    constexpr auto unfold_tag_table(const TagTable& tag_table, Shape shape = {})
     {
         if constexpr(terminal<Shape>)
         {
-            static_assert(std::same_as<UsageTable, usage_t>, "Invalid usage table.");
-            return usage_table;
+            static_assert(std::same_as<TagTable, Tag>, "Invalid tag table.");
+            return tag_table;
         }
         else return [&]<size_t...I>(std::index_sequence<I...>)
         {
-            if constexpr(branched<UsageTable>)
+            if constexpr(branched<TagTable>)
             {
-                constexpr size_t n_pad = child_count<Shape> > child_count<UsageTable> ? child_count<Shape> - child_count<UsageTable> : 0uz;
-                constexpr auto pad = array<usage_t, n_pad>{};
-                const auto padded_usage_table = concat_to_tuple(usage_table, pad);
-                return rzx::make_tuple(normalize_usage(padded_usage_table | child<I>, shape | child<I>)...);
+                constexpr size_t n_pad = child_count<Shape> > child_count<TagTable> ? child_count<Shape> - child_count<TagTable> : 0uz;
+                constexpr auto pad = array<Tag, n_pad>{};
+                const auto padded_tag_table = concat_to_tuple(tag_table, pad);
+                return rzx::make_tuple(unfold_tag_table<Tag>(padded_tag_table | child<I>, shape | child<I>)...);
             }
             else
             {
-                static_assert(std::same_as<UsageTable, usage_t>, "Invalid usage table.");
-                return rzx::make_tuple(normalize_usage(usage_table, shape | child<I>)...);
+                static_assert(std::same_as<TagTable, Tag>, "Invalid tag table.");
+                return rzx::make_tuple(unfold_tag_table<Tag>(tag_table, shape | child<I>)...);
             }
         }(std::make_index_sequence<child_count<Shape>>{});
     }
+
+    template<typename Shape, typename UsageTable>
+    constexpr auto unfold_usage_table(const UsageTable& usage_table, Shape shape = {})
+    {
+        return unfold_tag_table<usage_t>(usage_table, shape);
+    }
+
+    template<typename Shape, typename StrictureTable>
+    constexpr auto unfold_stricture_table(const StrictureTable& stricture_table, Shape shape = {})
+    {
+        return unfold_tag_table<stricture_t>(stricture_table, shape);
+    }
+
+    template<auto OperationTable>
+    constexpr auto fold_operation_table()
+    {
+        if constexpr(terminal<decltype(OperationTable)>)
+        {
+            return OperationTable;
+        }
+        else return []<size_t...I>(std::index_sequence<I...>)
+        {
+            constexpr auto result = rzx::make_tuple(fold_operation_table<OperationTable | child<I>>()...);
+            if constexpr((... && rzx::equal(result | child<I>, no_operation)))
+            {
+                return no_operation;
+            }
+            else
+            {
+                return result;
+            }
+        }(std::make_index_sequence<child_count<decltype(OperationTable)>>{});
+    }
+
+    // template<auto OperationTable>
+    // constexpr auto unfold_operation_table()
+    // {
+    //     if constexpr(terminal<decltype(OperationTable)>)
+    //     {
+    //         return OperationTable;
+    //     }
+    //     else return []<size_t...I>(std::index_sequence<I...>)
+    //     {
+    //         constexpr auto result = rzx::make_tuple(fold_operation_table<OperationTable | child<I>>()...);
+    //         if constexpr((... && rzx::equal(result | child<I>, no_operation)))
+    //         {
+    //             return no_operation;
+    //         }
+    //         else
+    //         {
+    //             return result;
+    //         }
+    //     }(std::make_index_sequence<child_count<decltype(OperationTable)>>{});
+    // }
 }
 
 namespace rzx 
@@ -103,22 +175,22 @@ namespace rzx
         template<auto UsageTable>
         void simplifier();
         
-        template<class T, auto UsageTable>
+        template<class T, auto UnfoldedUsageTable>
         constexpr bool is_simple()
         {
             constexpr bool no_custom = not bool
             {
-                requires{ std::declval<T>().template simplifier<UsageTable>(custom_t{}); }
+                requires{ std::declval<T>().template simplifier<UnfoldedUsageTable>(custom_t{}); }
                 ||
-                requires{ simplifier<UsageTable>(std::declval<T>(), custom_t{}); }
+                requires{ simplifier<UnfoldedUsageTable>(std::declval<T>(), custom_t{}); }
                 ||
-                requires{ std::declval<T>().template simplifier<UsageTable>(); }
+                requires{ std::declval<T>().template simplifier<UnfoldedUsageTable>(); }
                 ||
-                requires{ simplifier<UsageTable>(std::declval<T>()); }
+                requires{ simplifier<UnfoldedUsageTable>(std::declval<T>()); }
             };
             return [&]<size_t...I>(std::index_sequence<I...>)
             {
-                return (no_custom && ... && is_simple<child_type<T, I>, UsageTable | child<I>>());
+                return (no_custom && ... && is_simple<child_type<T, I>, UnfoldedUsageTable | child<I>>());
             }(std::make_index_sequence<child_count<T>>{});
         }
     }
@@ -127,9 +199,34 @@ namespace rzx
     inline constexpr detail::get_simplifier_t_ns::get_simplifier_t<UsageTable> simplifier{};
 
     template<class T, auto UsageTable = usage_t::repeatedly>
-    concept simple = detail::get_simplifier_t_ns::is_simple<T, detail::normalize_usage(UsageTable, tree_shape<T>)>();
+    concept simple = detail::get_simplifier_t_ns::is_simple<T, detail::unfold_usage_table(UsageTable, tree_shape<T>)>();
 
-    template<class T, auto UsageTable>
+    template<class T>
+    struct simple_simplifier
+    {
+        T&& t;
+
+        static constexpr auto operation_table(){ return no_operation; }
+
+        static constexpr auto stricture_table(){ return stricture_t::none; }
+
+        static constexpr auto layout(){ return indexes_of_whole; }
+
+        constexpr decltype(auto) data()const
+        {
+            //???
+            if constexpr(std::is_object_v<T>)
+            {
+                return FWD(t); 
+            } 
+            else
+            {
+                return FWD(t) | refer;
+            }
+        }
+    };
+
+    template<class T, auto UnfoldedUsageTable>
     struct trivial_simplifier
     {
         T&& t;
@@ -139,7 +236,17 @@ namespace rzx
             return []<size_t...I>(std::index_sequence<I...>)
             {
                 return rzx::make_tuple(
-                    decltype(std::declval<child_type<T, I>>() | simplifier<UsageTable | child<I>>)::operation_table()...
+                    decltype(std::declval<child_type<T, I>>() | simplifier<UnfoldedUsageTable | child<I>>)::operation_table()...
+                );
+            }(std::make_index_sequence<child_count<T>>{});
+        }
+
+        static constexpr auto stricture_table()
+        {
+            return []<size_t...I>(std::index_sequence<I...>)
+            {
+                return rzx::make_tuple(
+                    decltype(std::declval<child_type<T, I>>() | simplifier<UnfoldedUsageTable | child<I>>)::stricture_table()...
                 );
             }(std::make_index_sequence<child_count<T>>{});
         }
@@ -149,7 +256,7 @@ namespace rzx
             return []<size_t...I>(std::index_sequence<I...>)
             {
                 return rzx::make_tuple(
-                    detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | simplifier<UsageTable | child<I>>)::layout(), array{ I })...
+                    detail::layout_add_prefix(decltype(std::declval<child_type<T, I>>() | simplifier<UnfoldedUsageTable | child<I>>)::layout(), array{ I })...
                 );
             }(std::make_index_sequence<child_count<T>>{});
         }
@@ -171,7 +278,7 @@ namespace rzx
                 //     unwrap((FWD(t) | child<I> | simplifier<UsageTable | child<I>>).data())
                 // };
 
-                auto simplifier = FWD(t) | child<I> | rzx::simplifier<UsageTable | child<I>>;
+                auto simplifier = FWD(t) | child<I> | rzx::simplifier<UnfoldedUsageTable | child<I>>;
 
                 //https://gcc.godbolt.org/z/rM983Yh9f
                 return unwrap_t<decltype(simplifier.data())>
@@ -181,7 +288,7 @@ namespace rzx
             }
             else
             {
-                auto simplifier = FWD(t) | child<I> | refer | rzx::simplifier<UsageTable | child<I>>;
+                auto simplifier = FWD(t) | child<I> | refer | rzx::simplifier<UnfoldedUsageTable | child<I>>;
                 return unwrap_t<decltype(simplifier.data())>
                 (
                     simplifier.data()
@@ -201,27 +308,7 @@ namespace rzx
         }
     };
 
-    template<class T>
-    struct simple_simplifier
-    {
-        T&& t;
-
-        static constexpr auto operation_table(){ return no_operation; }
-
-        static constexpr auto layout(){ return indexes_of_whole; }
-
-        constexpr decltype(auto) data()const
-        {
-            if constexpr(std::is_object_v<T>)
-            {
-                return FWD(t); 
-            } 
-            else
-            {
-                return FWD(t) | refer;
-            }
-        }
-    };
+    
 
     template<class S>
     struct ref_view_simplifier
@@ -229,6 +316,8 @@ namespace rzx
         S base_simplifer;
 
         static constexpr auto operation_table(){ return S::operation_table(); }
+
+        static constexpr auto stricture_table(){ return S::stricture_table(); }
 
         static constexpr auto layout(){ return S::layout(); }
 
@@ -252,47 +341,47 @@ namespace rzx
         constexpr auto operator()(T&& t)const
         {
             //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
-            constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
+            constexpr auto unfolded_usage_table = detail::unfold_usage_table(UsageTable, tree_shape<T>);
 
             if constexpr(std::is_rvalue_reference_v<unwrap_t<T>>)
             {
-                return ref_view_simplifier{ impl<unwrap_t<T>, normalized_usage_table>(unwrap(FWD(t))) };
+                return ref_view_simplifier{ impl<unwrap_t<T>, unfolded_usage_table>(unwrap(FWD(t))) };
             }
             else
             {
-                return impl<unwrap_t<T>, normalized_usage_table>(unwrap(FWD(t)));
+                return impl<unwrap_t<T>, unfolded_usage_table>(unwrap(FWD(t)));
             }
         }
 
-        template<typename T, auto NormalizedUsage>
+        template<typename T, auto UnfoldedUsageTable>
         constexpr auto impl(T&& t)const
         {
             //clang bug(clang 18.1): https://gcc.godbolt.org/z/8KfEo94Kv
-            //constexpr auto normalized_usage_table =detail::normalize_usage(UsageTable, tree_shape<T>);
+            //constexpr auto unfolded_usage_table = detail::unfold_usage_table(UsageTable, tree_shape<T>);
 
-            if constexpr(requires{ FWD(t).template simplifier<NormalizedUsage>(custom_t{}); })
+            if constexpr(requires{ FWD(t).template simplifier<UnfoldedUsageTable>(custom_t{}); })
             {
-                return FWD(t).template simplifier<NormalizedUsage>(custom_t{});
+                return FWD(t).template simplifier<UnfoldedUsageTable>(custom_t{});
             }
-            else if constexpr(requires{ simplifier<NormalizedUsage>(FWD(t), custom_t{}); })
+            else if constexpr(requires{ simplifier<UnfoldedUsageTable>(FWD(t), custom_t{}); })
             {
-                return simplifier<NormalizedUsage>(FWD(t), custom_t{});
+                return simplifier<UnfoldedUsageTable>(FWD(t), custom_t{});
             }
-            else if constexpr(requires{ FWD(t).template simplifier<NormalizedUsage>(); })
+            else if constexpr(requires{ FWD(t).template simplifier<UnfoldedUsageTable>(); })
             {
-                return FWD(t).template simplifier<NormalizedUsage>();
+                return FWD(t).template simplifier<UnfoldedUsageTable>();
             }
-            else if constexpr(requires{ simplifier<NormalizedUsage>(FWD(t)); })
+            else if constexpr(requires{ simplifier<UnfoldedUsageTable>(FWD(t)); })
             {
-                return simplifier<NormalizedUsage>(FWD(t));
+                return simplifier<UnfoldedUsageTable>(FWD(t));
             }
-            else if constexpr(simple<T, NormalizedUsage>)
+            else if constexpr(simple<T, UnfoldedUsageTable>)
             {                
                 return simple_simplifier<T>{ FWD(t) };
             }
             else
             { 
-                return trivial_simplifier<T, NormalizedUsage>{ FWD(t) };
+                return trivial_simplifier<T, UnfoldedUsageTable>{ FWD(t) };
             }
         }
     };
@@ -315,6 +404,12 @@ namespace rzx
 
     template<class T, auto UsageTable = usage_t::repeatedly>
     inline constexpr auto simplified_layout = decltype(std::declval<T>() | simplifier<UsageTable>)::layout();
+
+    template<class T, auto UsageTable = usage_t::repeatedly>
+    inline constexpr auto simplified_stricture_table = decltype(std::declval<T>() | simplifier<UsageTable>)::stricture_table();
+
+    template<class T, auto UsageTable = usage_t::repeatedly>
+    inline constexpr auto simplified_operation_table = decltype(std::declval<T>() | simplifier<UsageTable>)::operation_table();
 }
 
 // namespace rzx 

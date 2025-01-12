@@ -13,27 +13,6 @@
 
 namespace rzx::detail
 {
-    template<auto OperationTable>
-    constexpr auto simplify_operation_table()
-    {
-        if constexpr(terminal<decltype(OperationTable)>)
-        {
-            return OperationTable;
-        }
-        else return []<size_t...I>(std::index_sequence<I...>)
-        {
-            constexpr auto result = rzx::make_tuple(simplify_operation_table<OperationTable | child<I>>()...);
-            if constexpr((... && rzx::equal(result | child<I>, no_operation)))
-            {
-                return no_operation;
-            }
-            else
-            {
-                return result;
-            }
-        }(std::make_index_sequence<child_count<decltype(OperationTable)>>{});
-    }
-
     template<class UsageTable>
     constexpr auto set_usage_table_all_repeat(UsageTable& usage_table)
     {
@@ -108,7 +87,7 @@ namespace rzx
             template<class ArgTable, class OperationTable>
             constexpr auto result(ArgTable&& arg_table, OperationTable)const
             {
-                constexpr auto op_table = detail::simplify_operation_table<OperationTable{}>();
+                constexpr auto op_table = detail::fold_operation_table<OperationTable{}>();
                 if constexpr(rzx::equal(op_table, no_operation))
                 {
                     return view<unwrap_t<ArgTable>>{ unwrap(FWD(arg_table)) };
@@ -210,7 +189,7 @@ namespace rzx
 
                 using data_shape_t = tree_shape_t<decltype(simplifier.data())>;
                 constexpr auto layout = simplifier.layout();
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
+                constexpr auto nlayout = detail::unfold_layout<layout, data_shape_t>();
                 constexpr auto stricture_table = detail::stricture_table_for_sequence<nlayout, data_shape_t>();
 
                 using simplified_t = decltype(simplifier.data() | relayout<layout>);
@@ -245,7 +224,7 @@ namespace rzx
 
                 using data_shape_t = tree_shape_t<decltype(simplifier.data())>;
                 constexpr auto layout = simplifier.layout();
-                constexpr auto nlayout = detail::normalize_layout2<layout, data_shape_t>();
+                constexpr auto nlayout = detail::unfold_layout<layout, data_shape_t>();
                 constexpr auto stricture_table = detail::stricture_table_for_children<nlayout, data_shape_t>();
 
                 using simplified_t = decltype(simplifier.data() | relayout<layout>);

@@ -9,15 +9,6 @@
 
 #include "macro_define.hpp"
 
-namespace rzx 
-{
-    enum class stricture_t
-    {
-        none,
-        readonly
-    };
-}
-
 namespace rzx::detail 
 {
     template<class T>
